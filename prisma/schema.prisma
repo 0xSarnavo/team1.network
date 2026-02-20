@@ -1,0 +1,691 @@
+// Prisma Schema - Complete Database Schema
+// Based on platform architecture plan
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// MIGRATION 001: CORE TABLES
+// ============================================================
+
+model Region {
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String   @db.VarChar(100)
+  slug          String   @unique @db.VarChar(100)
+  description   String?  @db.Text
+  country       String?  @db.VarChar(100)
+  city          String?  @db.VarChar(100)
+  logoUrl       String?  @map("logo_url") @db.Text
+  coverImageUrl String?  @map("cover_image_url") @db.Text
+  isActive      Boolean  @default(true) @map("is_active")
+  sortOrder     Int      @default(0) @map("sort_order")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  memberships UserRegionMembership[]
+
+  @@map("regions")
+}
+
+model User {
+  id                   String    @id @default(uuid()) @db.Uuid
+  email                String    @unique @db.VarChar(255)
+  passwordHash         String?   @map("password_hash") @db.VarChar(255)
+  emailVerified        Boolean   @default(false) @map("email_verified")
+  emailVerifiedAt      DateTime? @map("email_verified_at") @db.Timestamptz()
+  username             String?   @unique @db.VarChar(50)
+  displayName          String    @map("display_name") @db.VarChar(200)
+  avatarUrl            String?   @map("avatar_url") @db.Text
+  coverPhotoUrl        String?   @map("cover_photo_url") @db.Text
+  bio                  String?   @db.VarChar(500)
+  title                String?   @db.VarChar(200)
+  xHandle              String?   @map("x_handle") @db.VarChar(100)
+  availability         String?   @db.VarChar(50)
+  currentProjectType   String?   @map("current_project_type") @db.VarChar(20)
+  currentProjectId     String?   @map("current_project_id") @db.Uuid
+  currentProjectText   String?   @map("current_project_text") @db.VarChar(300)
+  country              String?   @db.VarChar(100)
+  city                 String?   @db.VarChar(100)
+  totalXp              Int       @default(0) @map("total_xp")
+  level                Int       @default(1)
+  isActive             Boolean   @default(true) @map("is_active")
+  onboardingCompleted  Boolean   @default(false) @map("onboarding_completed")
+  deactivatedAt        DateTime? @map("deactivated_at") @db.Timestamptz()
+  deletionRequestedAt  DateTime? @map("deletion_requested_at") @db.Timestamptz()
+  deletionScheduledAt  DateTime? @map("deletion_scheduled_at") @db.Timestamptz()
+  twoFactorEnabled     Boolean   @default(false) @map("two_factor_enabled")
+  twoFactorSecret      String?   @map("two_factor_secret") @db.Text
+  lastLoginAt          DateTime? @map("last_login_at") @db.Timestamptz()
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt            DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  // Relations
+  authAccounts         AuthAccount[]
+  authSessions         AuthSession[]
+  emailVerifications   AuthEmailVerification[]
+  passwordResets       AuthPasswordReset[]
+  skills               UserSkill[]
+  interests            UserInterest[]
+  profileRoles         UserProfileRole[]
+  socialLinks          UserSocialLink[]
+  wallets              UserWallet[]
+  customLinks          UserCustomLink[]
+  privacySettings      UserPrivacySetting[]
+  regionMemberships    UserRegionMembership[]
+  xpTransactions       XpTransaction[]
+  badges               UserBadge[]
+  poaps                UserPoap[]
+  rewards              UserReward[]
+  notifications        Notification[]
+  notificationPrefs    NotificationPreference[]
+  activities           UserActivity[]
+  fileUploads          FileUpload[]
+  platformAdmin        PlatformAdmin?       @relation("AdminUser")
+  assignedAdmins       PlatformAdmin[]      @relation("AssignedBy")
+  removedAdmins        PlatformAdmin[]      @relation("RemovedBy")
+  moduleLead           ModuleLead[]         @relation("LeadUser")
+  assignedLeads        ModuleLead[]         @relation("LeadAssignedBy")
+  auditLogs            AuditLog[]
+
+  @@index([email], map: "idx_users_email")
+  @@index([username], map: "idx_users_username")
+  @@map("users")
+}
+
+// ============================================================
+// MIGRATION 002: AUTH TABLES
+// ============================================================
+
+model AuthAccount {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  provider     String    @db.VarChar(50)
+  providerId   String    @map("provider_id") @db.VarChar(255)
+  email        String?   @db.VarChar(255)
+  accessToken  String?   @map("access_token") @db.Text
+  refreshToken String?   @map("refresh_token") @db.Text
+  tokenExpires DateTime? @map("token_expires") @db.Timestamptz()
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerId])
+  @@index([userId], map: "idx_auth_accounts_user")
+  @@map("auth_accounts")
+}
+
+model AuthSession {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  refreshToken String   @unique @map("refresh_token") @db.VarChar(255)
+  ipAddress    String?  @map("ip_address") @db.VarChar(45)
+  userAgent    String?  @map("user_agent") @db.Text
+  deviceName   String?  @map("device_name") @db.VarChar(255)
+  expiresAt    DateTime @map("expires_at") @db.Timestamptz()
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "idx_auth_sessions_user")
+  @@map("auth_sessions")
+}
+
+model AuthEmailVerification {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  token      String    @unique @db.VarChar(255)
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz()
+  verifiedAt DateTime? @map("verified_at") @db.Timestamptz()
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("auth_email_verifications")
+}
+
+model AuthPasswordReset {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  token     String    @unique @db.VarChar(255)
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz()
+  usedAt    DateTime? @map("used_at") @db.Timestamptz()
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("auth_password_resets")
+}
+
+// ============================================================
+// MIGRATION 003: PROFILE TABLES
+// ============================================================
+
+model Skill {
+  id        String      @id @default(uuid()) @db.Uuid
+  name      String      @unique @db.VarChar(100)
+  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz()
+  users     UserSkill[]
+
+  @@map("skills")
+}
+
+model UserSkill {
+  id      String @id @default(uuid()) @db.Uuid
+  userId  String @map("user_id") @db.Uuid
+  skillId String @map("skill_id") @db.Uuid
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, skillId])
+  @@map("user_skills")
+}
+
+model Interest {
+  id           String         @id @default(uuid()) @db.Uuid
+  name         String         @unique @db.VarChar(100)
+  isPredefined Boolean        @default(false) @map("is_predefined")
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz()
+  users        UserInterest[]
+
+  @@map("interests")
+}
+
+model UserInterest {
+  id         String @id @default(uuid()) @db.Uuid
+  userId     String @map("user_id") @db.Uuid
+  interestId String @map("interest_id") @db.Uuid
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  interest Interest @relation(fields: [interestId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, interestId])
+  @@map("user_interests")
+}
+
+model UserProfileRole {
+  id         String  @id @default(uuid()) @db.Uuid
+  userId     String  @map("user_id") @db.Uuid
+  role       String  @db.VarChar(100)
+  roleDetail String? @map("role_detail") @db.VarChar(255)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, role])
+  @@map("user_profile_roles")
+}
+
+model UserSocialLink {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  platform  String   @db.VarChar(50)
+  handle    String   @db.VarChar(255)
+  url       String?  @db.Text
+  isPublic  Boolean  @default(true) @map("is_public")
+  sortOrder Int      @default(0) @map("sort_order")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platform])
+  @@map("user_social_links")
+}
+
+model UserWallet {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  address     String   @db.VarChar(100)
+  chain       String   @default("ethereum") @db.VarChar(50)
+  label       String?  @db.VarChar(100)
+  isPrimary   Boolean  @default(false) @map("is_primary")
+  connectedAt DateTime @default(now()) @map("connected_at") @db.Timestamptz()
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, address])
+  @@map("user_wallets")
+}
+
+model UserCustomLink {
+  id        String  @id @default(uuid()) @db.Uuid
+  userId    String  @map("user_id") @db.Uuid
+  label     String  @db.VarChar(100)
+  url       String  @db.Text
+  sortOrder Int     @default(0) @map("sort_order")
+  isPublic  Boolean @default(true) @map("is_public")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_custom_links")
+}
+
+model UserPrivacySetting {
+  id         String  @id @default(uuid()) @db.Uuid
+  userId     String  @map("user_id") @db.Uuid
+  settingKey String  @map("setting_key") @db.VarChar(100)
+  enabled    Boolean @default(true)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, settingKey])
+  @@map("user_privacy_settings")
+}
+
+// ============================================================
+// MIGRATION 004: REGION MEMBERSHIP
+// ============================================================
+
+model UserRegionMembership {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  regionId   String    @map("region_id") @db.Uuid
+  isPrimary  Boolean   @default(false) @map("is_primary")
+  role       String    @default("member") @db.VarChar(50)
+  status     String    @default("pending") @db.VarChar(20)
+  appliedAt  DateTime  @default(now()) @map("applied_at") @db.Timestamptz()
+  acceptedAt DateTime? @map("accepted_at") @db.Timestamptz()
+  isActive   Boolean   @default(true) @map("is_active")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  region Region @relation(fields: [regionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, regionId])
+  @@index([userId], map: "idx_region_members_user")
+  @@index([regionId], map: "idx_region_members_region")
+  @@map("user_region_memberships")
+}
+
+// ============================================================
+// MIGRATION 005: ADMIN SYSTEM
+// ============================================================
+
+enum PlatformAdminRole {
+  super_super_admin
+  super_admin
+
+  @@map("platform_admin_role")
+}
+
+model PlatformAdmin {
+  id         String            @id @default(uuid()) @db.Uuid
+  userId     String            @unique @map("user_id") @db.Uuid
+  role       PlatformAdminRole
+  assignedBy String?           @map("assigned_by") @db.Uuid
+  isActive   Boolean           @default(true) @map("is_active")
+  assignedAt DateTime          @default(now()) @map("assigned_at") @db.Timestamptz()
+  removedAt  DateTime?         @map("removed_at") @db.Timestamptz()
+  removedBy  String?           @map("removed_by") @db.Uuid
+
+  user       User  @relation("AdminUser", fields: [userId], references: [id], onDelete: Cascade)
+  assigner   User? @relation("AssignedBy", fields: [assignedBy], references: [id])
+  remover    User? @relation("RemovedBy", fields: [removedBy], references: [id])
+
+  @@index([role], map: "idx_platform_admins_role")
+  @@map("platform_admins")
+}
+
+model ModuleLead {
+  id         String    @id @default(uuid()) @db.Uuid
+  module     String    @unique @db.VarChar(50)
+  userId     String    @map("user_id") @db.Uuid
+  assignedBy String?   @map("assigned_by") @db.Uuid
+  isActive   Boolean   @default(true) @map("is_active")
+  assignedAt DateTime  @default(now()) @map("assigned_at") @db.Timestamptz()
+  removedAt  DateTime? @map("removed_at") @db.Timestamptz()
+
+  user     User  @relation("LeadUser", fields: [userId], references: [id], onDelete: Cascade)
+  assigner User? @relation("LeadAssignedBy", fields: [assignedBy], references: [id])
+
+  @@index([module], map: "idx_module_leads_active")
+  @@map("module_leads")
+}
+
+// ============================================================
+// MIGRATION 006: XP & ACHIEVEMENTS
+// ============================================================
+
+model XpTransaction {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  amount      Int
+  sourceType  String   @map("source_type") @db.VarChar(50)
+  sourceId    String?  @map("source_id") @db.Uuid
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)], map: "idx_xp_user")
+  @@index([sourceType], map: "idx_xp_source")
+  @@map("xp_transactions")
+}
+
+enum BadgeCategory {
+  bounty
+  quest
+  event
+  community
+  special
+
+  @@map("badge_category")
+}
+
+enum BadgeRarity {
+  common
+  uncommon
+  rare
+  epic
+  legendary
+
+  @@map("badge_rarity")
+}
+
+enum BadgeAwardType {
+  auto
+  manual
+  both
+
+  @@map("badge_award_type")
+}
+
+model Badge {
+  id          String         @id @default(uuid()) @db.Uuid
+  name        String         @db.VarChar(200)
+  description String         @db.Text
+  iconUrl     String?        @map("icon_url") @db.Text
+  emoji       String?        @db.VarChar(10)
+  category    BadgeCategory
+  rarity      BadgeRarity    @default(common)
+  awardType   BadgeAwardType @map("award_type")
+  conditions  Json?
+  bonusXp     Int            @default(0) @map("bonus_xp")
+  isActive    Boolean        @default(true) @map("is_active")
+  createdBy   String?        @map("created_by") @db.Uuid
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  userBadges UserBadge[]
+
+  @@index([isActive], map: "idx_badges_active")
+  @@map("badges")
+}
+
+model UserBadge {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  badgeId     String    @map("badge_id") @db.Uuid
+  awardedType String    @map("awarded_type") @db.VarChar(20)
+  awardedBy   String?   @map("awarded_by") @db.Uuid
+  awardReason String?   @map("award_reason") @db.Text
+  isClaimed   Boolean   @default(false) @map("is_claimed")
+  claimedAt   DateTime? @map("claimed_at") @db.Timestamptz()
+  isPinned    Boolean   @default(false) @map("is_pinned")
+  pinOrder    Int?      @map("pin_order")
+  unlockedAt  DateTime  @default(now()) @map("unlocked_at") @db.Timestamptz()
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@index([userId], map: "idx_user_badges_user")
+  @@map("user_badges")
+}
+
+model Poap {
+  id              String    @id @default(uuid()) @db.Uuid
+  name            String    @db.VarChar(255)
+  description     String?   @db.Text
+  imageUrl        String    @map("image_url") @db.Text
+  eventId         String?   @map("event_id") @db.Uuid
+  chain           String    @default("base") @db.VarChar(50)
+  contractAddress String?   @map("contract_address") @db.Text
+  claimDeadline   DateTime? @map("claim_deadline") @db.Timestamptz()
+  isActive        Boolean   @default(true) @map("is_active")
+  createdBy       String?   @map("created_by") @db.Uuid
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  userPoaps UserPoap[]
+
+  @@map("poaps")
+}
+
+model UserPoap {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  poapId     String    @map("poap_id") @db.Uuid
+  isEligible Boolean   @default(true) @map("is_eligible")
+  isClaimed  Boolean   @default(false) @map("is_claimed")
+  claimedAt  DateTime? @map("claimed_at") @db.Timestamptz()
+  txHash     String?   @map("tx_hash") @db.Text
+  tokenId    String?   @map("token_id") @db.VarChar(100)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  poap Poap @relation(fields: [poapId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, poapId])
+  @@map("user_poaps")
+}
+
+enum RewardType {
+  nft
+  token
+  physical
+  coupon
+
+  @@map("reward_type")
+}
+
+enum RewardClaimStatus {
+  available
+  claimed
+  fulfilled
+  expired
+
+  @@map("reward_claim_status")
+}
+
+model Reward {
+  id               String    @id @default(uuid()) @db.Uuid
+  name             String    @db.VarChar(255)
+  description      String?   @db.Text
+  imageUrl         String?   @map("image_url") @db.Text
+  type             RewardType
+  chain            String?   @db.VarChar(50)
+  contractAddress  String?   @map("contract_address") @db.Text
+  tokenAmount      Decimal?  @map("token_amount") @db.Decimal(18, 6)
+  tokenSymbol      String?   @map("token_symbol") @db.VarChar(20)
+  shippingRequired Boolean   @default(false) @map("shipping_required")
+  couponCode       String?   @map("coupon_code") @db.Text
+  couponUrl        String?   @map("coupon_url") @db.Text
+  sourceType       String?   @map("source_type") @db.VarChar(50)
+  sourceId         String?   @map("source_id") @db.Uuid
+  isActive         Boolean   @default(true) @map("is_active")
+  claimDeadline    DateTime? @map("claim_deadline") @db.Timestamptz()
+  maxClaims        Int?      @map("max_claims")
+  currentClaims    Int       @default(0) @map("current_claims")
+  createdBy        String?   @map("created_by") @db.Uuid
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  userRewards UserReward[]
+
+  @@map("rewards")
+}
+
+model UserReward {
+  id              String            @id @default(uuid()) @db.Uuid
+  userId          String            @map("user_id") @db.Uuid
+  rewardId        String            @map("reward_id") @db.Uuid
+  status          RewardClaimStatus @default(available)
+  claimedAt       DateTime?         @map("claimed_at") @db.Timestamptz()
+  txHash          String?           @map("tx_hash") @db.Text
+  tokenId         String?           @map("token_id") @db.VarChar(100)
+  shippingName    String?           @map("shipping_name") @db.VarChar(255)
+  shippingAddress String?           @map("shipping_address") @db.Text
+  shippingNotes   String?           @map("shipping_notes") @db.Text
+  shippedAt       DateTime?         @map("shipped_at") @db.Timestamptz()
+  trackingNumber  String?           @map("tracking_number") @db.VarChar(100)
+  revealedCode    String?           @map("revealed_code") @db.Text
+  fulfilledBy     String?           @map("fulfilled_by") @db.Uuid
+  fulfilledAt     DateTime?         @map("fulfilled_at") @db.Timestamptz()
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reward Reward @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, rewardId])
+  @@map("user_rewards")
+}
+
+// ============================================================
+// MIGRATION 007: NOTIFICATIONS
+// ============================================================
+
+model Notification {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  module      String    @db.VarChar(50)
+  type        String    @db.VarChar(100)
+  title       String    @db.VarChar(255)
+  body        String    @db.Text
+  actionUrl   String?   @map("action_url") @db.Text
+  actionLabel String?   @map("action_label") @db.VarChar(100)
+  isRead      Boolean   @default(false) @map("is_read")
+  readAt      DateTime? @map("read_at") @db.Timestamptz()
+  sentEmail   Boolean   @default(false) @map("sent_email")
+  sentPush    Boolean   @default(false) @map("sent_push")
+  metadata    Json?
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)], map: "idx_notif_user_date")
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  id               String  @id @default(uuid()) @db.Uuid
+  userId           String  @map("user_id") @db.Uuid
+  notificationType String  @map("notification_type") @db.VarChar(100)
+  channelEmail     Boolean @default(true) @map("channel_email")
+  channelInapp     Boolean @default(true) @map("channel_inapp")
+  channelPush      Boolean @default(true) @map("channel_push")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, notificationType])
+  @@map("notification_preferences")
+}
+
+model EmailTemplate {
+  id               String   @id @default(uuid()) @db.Uuid
+  notificationType String   @unique @map("notification_type") @db.VarChar(100)
+  subjectTemplate  String   @map("subject_template") @db.VarChar(500)
+  bodyHtml         String   @map("body_html") @db.Text
+  bodyText         String?  @map("body_text") @db.Text
+  isActive         Boolean  @default(true) @map("is_active")
+  updatedBy        String?  @map("updated_by") @db.Uuid
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@map("email_templates")
+}
+
+// ============================================================
+// MIGRATION 008: AUDIT LOG
+// ============================================================
+
+enum AuditSeverity {
+  normal
+  sensitive
+  critical
+
+  @@map("audit_severity")
+}
+
+model AuditLog {
+  id         String        @id @default(uuid()) @db.Uuid
+  userId     String?       @map("user_id") @db.Uuid
+  userEmail  String?       @map("user_email") @db.VarChar(255)
+  userName   String?       @map("user_name") @db.VarChar(255)
+  module     String        @db.VarChar(50)
+  action     String        @db.VarChar(200)
+  severity   AuditSeverity @default(normal)
+  entityType String?       @map("entity_type") @db.VarChar(100)
+  entityId   String?       @map("entity_id") @db.Uuid
+  entityName String?       @map("entity_name") @db.VarChar(255)
+  details    Json?
+  ipAddress  String?       @map("ip_address") @db.VarChar(45)
+  userAgent  String?       @map("user_agent") @db.Text
+  createdAt  DateTime      @default(now()) @map("created_at") @db.Timestamptz()
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([module, createdAt(sort: Desc)], map: "idx_audit_module")
+  @@index([userId, createdAt(sort: Desc)], map: "idx_audit_user")
+  @@index([severity, createdAt(sort: Desc)], map: "idx_audit_severity")
+  @@map("audit_log")
+}
+
+// ============================================================
+// MIGRATION 009: ACTIVITY LOG
+// ============================================================
+
+model UserActivity {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  activityType String   @map("activity_type") @db.VarChar(100)
+  title        String   @db.VarChar(255)
+  description  String?  @db.Text
+  xpEarned     Int      @default(0) @map("xp_earned")
+  sourceModule String?  @map("source_module") @db.VarChar(50)
+  sourceId     String?  @map("source_id") @db.Uuid
+  sourceUrl    String?  @map("source_url") @db.Text
+  isPublic     Boolean  @default(true) @map("is_public")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)], map: "idx_activity_user")
+  @@map("user_activity")
+}
+
+// ============================================================
+// MIGRATION 010: FILE UPLOADS
+// ============================================================
+
+model FileUpload {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String?  @map("user_id") @db.Uuid
+  filename     String   @db.VarChar(500)
+  originalName String?  @map("original_name") @db.VarChar(500)
+  contentType  String?  @map("content_type") @db.VarChar(100)
+  size         BigInt?
+  fileUrl      String   @map("file_url") @db.Text
+  thumbnailUrl String?  @map("thumbnail_url") @db.Text
+  context      String?  @db.VarChar(50)
+  entityType   String?  @map("entity_type") @db.VarChar(50)
+  entityId     String?  @map("entity_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("file_uploads")
+}
+
+// ============================================================
+// MIGRATION 011: PLATFORM SETTINGS
+// ============================================================
+
+model PlatformSetting {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String   @unique @db.VarChar(100)
+  value     Json
+  updatedBy String?  @map("updated_by") @db.Uuid
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@map("platform_settings")
+}
