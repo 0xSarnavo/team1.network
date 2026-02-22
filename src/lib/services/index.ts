@@ -8,3 +8,5 @@ export { xpService } from './xp.service';
 export { auditService } from './audit.service';
 export { notificationService } from './notification.service';
 export { uploadService } from './upload.service';
+export { homeService } from './home.service';
+export { portalService } from './portal.service';
