@@ -121,6 +121,84 @@ export default function AdminHubPage() {
     setShowAnnForm(true);
   };
 
+  // ---- Region management state ----
+  interface AdminRegion {
+    id: string;
+    name: string;
+    slug: string;
+    description: string | null;
+    country: string | null;
+    city: string | null;
+    isActive: boolean;
+    memberCount: number;
+  }
+
+  const { data: adminRegions, loading: regLoading, refetch: refetchRegions } = useApi<AdminRegion[]>('/api/portal/admin/regions');
+
+  const [showRegForm, setShowRegForm] = useState(false);
+  const [regSaving, setRegSaving] = useState(false);
+  const [regForm, setRegForm] = useState({ name: '', slug: '', description: '', country: '', city: '' });
+
+  // Lead assignment
+  const [assigningLeadRegion, setAssigningLeadRegion] = useState<string | null>(null);
+  const [leadEmail, setLeadEmail] = useState('');
+  const [leadSaving, setLeadSaving] = useState(false);
+
+  const resetRegForm = () => {
+    setRegForm({ name: '', slug: '', description: '', country: '', city: '' });
+    setShowRegForm(false);
+  };
+
+  const handleRegSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRegSaving(true);
+    const res = await api.post('/api/portal/admin/regions', {
+      name: regForm.name,
+      slug: regForm.slug,
+      description: regForm.description || undefined,
+      country: regForm.country || undefined,
+      city: regForm.city || undefined,
+    });
+    if (res.success) {
+      addToast('success', `Region "${regForm.name}" created`);
+      resetRegForm();
+      refetchRegions();
+    } else {
+      addToast('error', res.error?.message || 'Failed to create region');
+    }
+    setRegSaving(false);
+  };
+
+  const handleAssignLead = async (regionId: string) => {
+    if (!leadEmail.trim()) return;
+    setLeadSaving(true);
+
+    // First find user by email
+    const searchRes = await api.get<{ id: string; displayName: string }[]>(`/api/admin/users?search=${encodeURIComponent(leadEmail)}&limit=1`);
+    if (!searchRes.success || !searchRes.data || searchRes.data.length === 0) {
+      addToast('error', 'User not found with that email');
+      setLeadSaving(false);
+      return;
+    }
+
+    const targetUserId = searchRes.data[0].id;
+    const res = await api.put(`/api/admin/users/${targetUserId}`, {
+      action: 'assign_region',
+      regionId,
+      role: 'lead',
+    });
+
+    if (res.success) {
+      addToast('success', `${searchRes.data[0].displayName} assigned as region lead`);
+      setLeadEmail('');
+      setAssigningLeadRegion(null);
+      refetchRegions();
+    } else {
+      addToast('error', res.error?.message || 'Failed to assign lead');
+    }
+    setLeadSaving(false);
+  };
+
   const modules = [
     {
       name: 'Home',
@@ -475,6 +553,151 @@ export default function AdminHubPage() {
                         Delete
                       </Button>
                     </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
+
+      {/* Regions Management */}
+      {isSuperAdmin && (
+        <div>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-zinc-200">Regions</h2>
+            <Button
+              variant={showRegForm ? 'ghost' : 'primary'}
+              size="sm"
+              onClick={() => { if (showRegForm) resetRegForm(); else setShowRegForm(true); }}
+            >
+              {showRegForm ? 'Cancel' : 'Add Region'}
+            </Button>
+          </div>
+
+          {/* Create Region form */}
+          {showRegForm && (
+            <Card className="mb-4">
+              <CardTitle>Create New Region</CardTitle>
+              <form onSubmit={handleRegSubmit} className="mt-4 space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Input
+                    label="Region Name"
+                    value={regForm.name}
+                    onChange={(e) => {
+                      const name = e.target.value;
+                      setRegForm((f) => ({
+                        ...f,
+                        name,
+                        slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+                      }));
+                    }}
+                    placeholder="e.g. South Korea"
+                    required
+                  />
+                  <Input
+                    label="Slug (URL-friendly)"
+                    value={regForm.slug}
+                    onChange={(e) => setRegForm((f) => ({ ...f, slug: e.target.value }))}
+                    placeholder="e.g. south-korea"
+                    required
+                  />
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Input
+                    label="Country"
+                    value={regForm.country}
+                    onChange={(e) => setRegForm((f) => ({ ...f, country: e.target.value }))}
+                    placeholder="e.g. South Korea"
+                  />
+                  <Input
+                    label="City"
+                    value={regForm.city}
+                    onChange={(e) => setRegForm((f) => ({ ...f, city: e.target.value }))}
+                    placeholder="e.g. Seoul"
+                  />
+                </div>
+                <Textarea
+                  label="Description"
+                  value={regForm.description}
+                  onChange={(e) => setRegForm((f) => ({ ...f, description: e.target.value }))}
+                  placeholder="Brief description of this region community..."
+                />
+                <Button type="submit" loading={regSaving}>Create Region</Button>
+              </form>
+            </Card>
+          )}
+
+          {/* Regions list */}
+          <Card>
+            {regLoading ? (
+              <p className="text-sm text-zinc-500">Loading regions...</p>
+            ) : !adminRegions || adminRegions.length === 0 ? (
+              <p className="text-sm text-zinc-500">No regions yet. Add one to get started.</p>
+            ) : (
+              <div className="space-y-3">
+                {adminRegions.map((region) => (
+                  <div
+                    key={region.id}
+                    className="rounded-lg border border-zinc-800 bg-zinc-800/30 px-4 py-3"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-900/30 text-sm font-bold text-red-400">
+                          {region.name[0]}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-zinc-200 truncate">{region.name}</p>
+                            <Badge variant={region.isActive ? 'success' : 'danger'}>
+                              {region.isActive ? 'Active' : 'Inactive'}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-zinc-500">
+                            /{region.slug}
+                            {region.country && ` · ${region.country}`}
+                            {region.city && `, ${region.city}`}
+                            {' · '}{region.memberCount} members
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <Link href={`/portal/regions/${region.slug}`}>
+                          <Button variant="ghost" size="sm">View</Button>
+                        </Link>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setAssigningLeadRegion(assigningLeadRegion === region.id ? null : region.id);
+                            setLeadEmail('');
+                          }}
+                        >
+                          {assigningLeadRegion === region.id ? 'Cancel' : 'Assign Lead'}
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Assign Lead inline form */}
+                    {assigningLeadRegion === region.id && (
+                      <div className="mt-3 flex items-end gap-3 border-t border-zinc-800 pt-3">
+                        <div className="flex-1">
+                          <Input
+                            label="User email"
+                            value={leadEmail}
+                            onChange={(e) => setLeadEmail(e.target.value)}
+                            placeholder="Enter user email to assign as lead..."
+                          />
+                        </div>
+                        <Button
+                          size="sm"
+                          loading={leadSaving}
+                          onClick={() => handleAssignLead(region.id)}
+                        >
+                          Assign
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
