@@ -41,6 +41,8 @@ class HomeService {
           id: true,
           name: true,
           slug: true,
+          country: true,
+          city: true,
           logoUrl: true,
           description: true,
           _count: {
@@ -62,6 +64,8 @@ class HomeService {
       id: r.id,
       name: r.name,
       slug: r.slug,
+      country: r.country,
+      city: r.city,
       logoUrl: r.logoUrl,
       description: r.description,
       memberCount: r._count.memberships,

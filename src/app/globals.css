@@ -31,3 +31,15 @@ body {
 .animate-in.slide-in-from-right {
   animation: slide-in-from-right 0.2s ease-out;
 }
+
+/* World map pulsing dot */
+@keyframes map-pulse {
+  0% { transform: scale(1); opacity: 0.6; }
+  70% { transform: scale(3); opacity: 0; }
+  100% { transform: scale(3); opacity: 0; }
+}
+.map-dot-pulse {
+  animation: map-pulse 2s ease-out infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
