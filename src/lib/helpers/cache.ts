@@ -5,21 +5,30 @@ import Redis from 'ioredis';
 // ============================================================
 
 let redis: Redis | null = null;
+let redisUnavailable = false;
 
-function getRedis(): Redis {
+function getRedis(): Redis | null {
+  if (redisUnavailable) return null;
   if (!redis) {
-    const url = process.env.REDIS_URL || 'redis://localhost:6379';
+    const url = process.env.REDIS_URL;
+    if (!url) {
+      redisUnavailable = true;
+      return null;
+    }
     redis = new Redis(url, {
       maxRetriesPerRequest: 3,
       retryStrategy(times) {
-        if (times > 3) return null;
+        if (times > 3) {
+          redisUnavailable = true;
+          return null;
+        }
         return Math.min(times * 200, 2000);
       },
       lazyConnect: true,
     });
 
-    redis.on('error', (err) => {
-      console.error('Redis connection error:', err.message);
+    redis.on('error', () => {
+      redisUnavailable = true;
     });
   }
   return redis;
@@ -27,8 +36,10 @@ function getRedis(): Redis {
 
 export const cache = {
   async get<T = string>(key: string): Promise<T | null> {
+    const r = getRedis();
+    if (!r) return null;
     try {
-      const value = await getRedis().get(key);
+      const value = await r.get(key);
       if (!value) return null;
       try {
         return JSON.parse(value) as T;
@@ -36,60 +47,67 @@ export const cache = {
         return value as T;
       }
     } catch {
-      console.warn('Cache get failed for key:', key);
       return null;
     }
   },
 
   async set(key: string, value: unknown, ttlSeconds?: number): Promise<void> {
+    const r = getRedis();
+    if (!r) return;
     try {
       const serialized = typeof value === 'string' ? value : JSON.stringify(value);
       if (ttlSeconds) {
-        await getRedis().setex(key, ttlSeconds, serialized);
+        await r.setex(key, ttlSeconds, serialized);
       } else {
-        await getRedis().set(key, serialized);
+        await r.set(key, serialized);
       }
     } catch {
-      console.warn('Cache set failed for key:', key);
+      // silent
     }
   },
 
   async del(key: string): Promise<void> {
+    const r = getRedis();
+    if (!r) return;
     try {
-      await getRedis().del(key);
+      await r.del(key);
     } catch {
-      console.warn('Cache del failed for key:', key);
+      // silent
     }
   },
 
   async invalidatePattern(pattern: string): Promise<void> {
+    const r = getRedis();
+    if (!r) return;
     try {
-      const keys = await getRedis().keys(pattern);
+      const keys = await r.keys(pattern);
       if (keys.length > 0) {
-        await getRedis().del(...keys);
+        await r.del(...keys);
       }
     } catch {
-      console.warn('Cache invalidate pattern failed:', pattern);
+      // silent
     }
   },
 
   async increment(key: string, ttlSeconds?: number): Promise<number> {
+    const r = getRedis();
+    if (!r) return 0;
     try {
-      const r = getRedis();
       const count = await r.incr(key);
       if (count === 1 && ttlSeconds) {
         await r.expire(key, ttlSeconds);
       }
       return count;
     } catch {
-      console.warn('Cache increment failed for key:', key);
       return 0;
     }
   },
 
   async getTTL(key: string): Promise<number> {
+    const r = getRedis();
+    if (!r) return -1;
     try {
-      return await getRedis().ttl(key);
+      return await r.ttl(key);
     } catch {
       return -1;
     }

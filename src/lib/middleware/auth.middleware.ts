@@ -25,8 +25,10 @@ type AuthenticatedHandler = (
  * loads full user context including admin roles and permissions.
  */
 export function withAuth(handler: AuthenticatedHandler) {
-  return async (req: NextRequest, context: { params: Record<string, string> }) => {
+  return async (req: NextRequest, context: { params: Promise<Record<string, string>> }) => {
     try {
+      const params = await context.params;
+
       // Extract token from Authorization header
       const authHeader = req.headers.get('authorization');
       if (!authHeader?.startsWith('Bearer ')) {
@@ -76,7 +78,7 @@ export function withAuth(handler: AuthenticatedHandler) {
         modulePermissions: {}, // TODO: load from module team permissions tables
       };
 
-      return handler(req, { params: context.params, user: authUser });
+      return handler(req, { params, user: authUser });
     } catch (error) {
       console.error('Auth middleware error:', error);
       return apiError(new AppError('INTERNAL_ERROR', 'Authentication failed'));
@@ -90,16 +92,18 @@ export function withAuth(handler: AuthenticatedHandler) {
 export function withOptionalAuth(
   handler: (req: NextRequest, context: { params: Record<string, string>; user: AuthUser | null }) => Promise<NextResponse>
 ) {
-  return async (req: NextRequest, context: { params: Record<string, string> }) => {
+  return async (req: NextRequest, context: { params: Promise<Record<string, string>> }) => {
+    const params = await context.params;
+
     const authHeader = req.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      return handler(req, { params: context.params, user: null });
+      return handler(req, { params, user: null });
     }
 
     const token = authHeader.slice(7);
     const jwtSecret = process.env.JWT_SECRET;
     if (!jwtSecret) {
-      return handler(req, { params: context.params, user: null });
+      return handler(req, { params, user: null });
     }
 
     try {
@@ -107,7 +111,7 @@ export function withOptionalAuth(
       const user = await loadUserContext(payload.userId);
 
       if (!user || !user.isActive) {
-        return handler(req, { params: context.params, user: null });
+        return handler(req, { params, user: null });
       }
 
       const authUser: AuthUser = {
@@ -125,9 +129,9 @@ export function withOptionalAuth(
         modulePermissions: {},
       };
 
-      return handler(req, { params: context.params, user: authUser });
+      return handler(req, { params, user: authUser });
     } catch {
-      return handler(req, { params: context.params, user: null });
+      return handler(req, { params, user: null });
     }
   };
 }
