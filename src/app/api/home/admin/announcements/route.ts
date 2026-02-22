@@ -42,3 +42,44 @@ export const POST = withAuth(
     }
   })
 );
+
+// ============================================================
+// PUT /api/home/admin/announcements?id=xxx
+// Update an announcement
+// ============================================================
+
+export const PUT = withAuth(
+  withPermission('home', 'edit_announcements', async (req, { user }) => {
+    try {
+      const { searchParams } = new URL(req.url);
+      const id = searchParams.get('id');
+      if (!id) return apiError(new Error('Missing id parameter'));
+
+      const body = await req.json();
+      const announcement = await homeService.updateAnnouncement(id, body);
+      return apiSuccess(announcement);
+    } catch (error) {
+      return apiError(error);
+    }
+  })
+);
+
+// ============================================================
+// DELETE /api/home/admin/announcements?id=xxx
+// Delete an announcement
+// ============================================================
+
+export const DELETE = withAuth(
+  withPermission('home', 'edit_announcements', async (req, { user }) => {
+    try {
+      const { searchParams } = new URL(req.url);
+      const id = searchParams.get('id');
+      if (!id) return apiError(new Error('Missing id parameter'));
+
+      await homeService.deleteAnnouncement(id);
+      return apiSuccess({ deleted: true });
+    } catch (error) {
+      return apiError(error);
+    }
+  })
+);

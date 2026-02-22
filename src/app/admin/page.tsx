@@ -1,14 +1,17 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/context/auth-context';
 import { useApi } from '@/lib/hooks/use-api';
+import { useToast } from '@/lib/context/toast-context';
+import { api } from '@/lib/api/client';
 import { Card, CardTitle } from '@/components/ui/card';
 import { StatCard } from '@/components/ui/stat-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
+import { Input, Textarea, Select } from '@/components/ui/input';
 import { PageLoader } from '@/components/ui/spinner';
 
 interface AdminStats {
@@ -38,9 +41,85 @@ interface AdminStats {
   }[];
 }
 
+interface Announcement {
+  id: string;
+  title: string;
+  summary: string | null;
+  content: string | null;
+  linkUrl: string | null;
+  status: string;
+  sortOrder: number;
+  createdAt: string;
+}
+
 export default function AdminHubPage() {
   const { user, hasModuleLead, isSuperAdmin } = useAuth();
+  const { addToast } = useToast();
   const { data, loading, error } = useApi<AdminStats>('/api/admin/stats');
+  const { data: announcements, loading: annLoading, refetch: refetchAnn } = useApi<Announcement[]>('/api/home/admin/announcements');
+
+  // Announcement form state
+  const [showAnnForm, setShowAnnForm] = useState(false);
+  const [annSaving, setAnnSaving] = useState(false);
+  const [editingAnn, setEditingAnn] = useState<Announcement | null>(null);
+  const [annForm, setAnnForm] = useState({ title: '', summary: '', content: '', linkUrl: '', status: 'published' });
+
+  const resetAnnForm = () => {
+    setAnnForm({ title: '', summary: '', content: '', linkUrl: '', status: 'published' });
+    setEditingAnn(null);
+    setShowAnnForm(false);
+  };
+
+  const handleAnnSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAnnSaving(true);
+    const payload = {
+      title: annForm.title,
+      summary: annForm.summary || undefined,
+      content: annForm.content || undefined,
+      linkUrl: annForm.linkUrl || undefined,
+      status: annForm.status,
+      createdBy: user?.id,
+    };
+
+    let res;
+    if (editingAnn) {
+      res = await api.put(`/api/home/admin/announcements?id=${editingAnn.id}`, payload);
+    } else {
+      res = await api.post('/api/home/admin/announcements', payload);
+    }
+
+    if (res.success) {
+      addToast('success', editingAnn ? 'Announcement updated' : 'Announcement created');
+      resetAnnForm();
+      refetchAnn();
+    } else {
+      addToast('error', res.error?.message || 'Failed to save announcement');
+    }
+    setAnnSaving(false);
+  };
+
+  const handleAnnDelete = async (id: string) => {
+    const res = await api.delete(`/api/home/admin/announcements?id=${id}`);
+    if (res.success) {
+      addToast('success', 'Announcement deleted');
+      refetchAnn();
+    } else {
+      addToast('error', res.error?.message || 'Failed to delete');
+    }
+  };
+
+  const startEditAnn = (a: Announcement) => {
+    setEditingAnn(a);
+    setAnnForm({
+      title: a.title,
+      summary: a.summary || '',
+      content: a.content || '',
+      linkUrl: a.linkUrl || '',
+      status: a.status,
+    });
+    setShowAnnForm(true);
+  };
 
   const modules = [
     {
@@ -294,6 +373,113 @@ export default function AdminHubPage() {
               </Link>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Announcements Management */}
+      {isSuperAdmin && (
+        <div>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-zinc-200">Announcements</h2>
+            <Button
+              variant={showAnnForm ? 'ghost' : 'primary'}
+              size="sm"
+              onClick={() => { if (showAnnForm) resetAnnForm(); else setShowAnnForm(true); }}
+            >
+              {showAnnForm ? 'Cancel' : 'New Announcement'}
+            </Button>
+          </div>
+
+          {/* Create / Edit form */}
+          {showAnnForm && (
+            <Card className="mb-4">
+              <CardTitle>{editingAnn ? 'Edit Announcement' : 'Create Announcement'}</CardTitle>
+              <form onSubmit={handleAnnSubmit} className="mt-4 space-y-4">
+                <Input
+                  label="Title"
+                  value={annForm.title}
+                  onChange={(e) => setAnnForm((f) => ({ ...f, title: e.target.value }))}
+                  placeholder="Announcement title"
+                  required
+                />
+                <Input
+                  label="Summary (short description)"
+                  value={annForm.summary}
+                  onChange={(e) => setAnnForm((f) => ({ ...f, summary: e.target.value }))}
+                  placeholder="Brief summary shown on the homepage"
+                />
+                <Textarea
+                  label="Content (full body)"
+                  value={annForm.content}
+                  onChange={(e) => setAnnForm((f) => ({ ...f, content: e.target.value }))}
+                  placeholder="Full announcement content..."
+                />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Input
+                    label="Link URL (optional)"
+                    value={annForm.linkUrl}
+                    onChange={(e) => setAnnForm((f) => ({ ...f, linkUrl: e.target.value }))}
+                    placeholder="https://..."
+                  />
+                  <Select
+                    label="Status"
+                    value={annForm.status}
+                    onChange={(e) => setAnnForm((f) => ({ ...f, status: e.target.value }))}
+                    options={[
+                      { value: 'published', label: 'Published (visible on homepage)' },
+                      { value: 'draft', label: 'Draft (hidden)' },
+                    ]}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button type="submit" loading={annSaving}>
+                    {editingAnn ? 'Update' : 'Create'}
+                  </Button>
+                  {editingAnn && (
+                    <Button variant="ghost" type="button" onClick={resetAnnForm}>
+                      Cancel Edit
+                    </Button>
+                  )}
+                </div>
+              </form>
+            </Card>
+          )}
+
+          {/* Announcements list */}
+          <Card>
+            {annLoading ? (
+              <p className="text-sm text-zinc-500">Loading announcements...</p>
+            ) : !announcements || announcements.length === 0 ? (
+              <p className="text-sm text-zinc-500">No announcements yet. Create one to display on the homepage.</p>
+            ) : (
+              <div className="space-y-3">
+                {announcements.map((a) => (
+                  <div
+                    key={a.id}
+                    className="flex items-start justify-between gap-4 rounded-lg border border-zinc-800 bg-zinc-800/30 px-4 py-3"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-zinc-200 truncate">{a.title}</p>
+                        <Badge variant={a.status === 'published' ? 'success' : 'default'}>
+                          {a.status}
+                        </Badge>
+                      </div>
+                      {a.summary && <p className="mt-1 text-sm text-zinc-500 truncate">{a.summary}</p>}
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => startEditAnn(a)}>
+                        Edit
+                      </Button>
+                      <Button variant="danger" size="sm" onClick={() => handleAnnDelete(a.id)}>
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
         </div>
       )}
 
