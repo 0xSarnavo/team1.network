@@ -42,6 +42,13 @@ const sections: SidebarSection[] = [
     ],
   },
   {
+    title: 'Bounties',
+    links: [
+      { href: '/admin/bounties', label: 'All Bounties', module: 'bounty' },
+      { href: '/admin/bounties/submissions', label: 'Submissions', module: 'bounty' },
+    ],
+  },
+  {
     title: 'Portal',
     links: [
       { href: '/portal/admin', label: 'Portal Admin', module: 'portal' },
