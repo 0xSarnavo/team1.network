@@ -27,7 +27,9 @@ model Region {
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
-  memberships UserRegionMembership[]
+  memberships     UserRegionMembership[]
+  bounties        Bounty[]
+  bountyReviewers BountyReviewer[]
 
   @@map("regions")
 }
@@ -91,6 +93,11 @@ model User {
   moduleLead           ModuleLead[]         @relation("LeadUser")
   assignedLeads        ModuleLead[]         @relation("LeadAssignedBy")
   auditLogs            AuditLog[]
+  createdBounties      Bounty[]             @relation("BountyCreator")
+  bountySubmissions    BountySubmission[]   @relation("BountySubmitter")
+  bountyReviews        BountySubmission[]   @relation("BountyReviewer")
+  bountyReviewerRoles  BountyReviewer[]     @relation("BountyReviewerUser")
+  bountyReviewerAdded  BountyReviewer[]     @relation("BountyReviewerAddedBy")
 
   @@index([email], map: "idx_users_email")
   @@index([username], map: "idx_users_username")
@@ -962,4 +969,112 @@ model HomeFooter {
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
   @@map("home_footer")
+}
+
+// ============================================================
+// MIGRATION 017: BOUNTY SYSTEM
+// ============================================================
+
+enum BountyCategory {
+  content
+  development
+  design
+  community
+  translation
+  security
+
+  @@map("bounty_category")
+}
+
+enum BountyType {
+  one_time
+  recurring_weekly
+  recurring_monthly
+
+  @@map("bounty_type")
+}
+
+enum BountyStatus {
+  draft
+  active
+  completed
+  archived
+
+  @@map("bounty_status")
+}
+
+enum BountySubmissionStatus {
+  pending
+  approved
+  rejected
+
+  @@map("bounty_submission_status")
+}
+
+model Bounty {
+  id                String         @id @default(uuid()) @db.Uuid
+  title             String         @db.VarChar(300)
+  description       String         @db.Text
+  category          BountyCategory
+  xpReward          Int            @map("xp_reward")
+  type              BountyType     @default(one_time)
+  regionId          String?        @map("region_id") @db.Uuid
+  status            BountyStatus   @default(draft)
+  maxSubmissions    Int?           @map("max_submissions")
+  startsAt          DateTime?      @map("starts_at") @db.Timestamptz()
+  endsAt            DateTime?      @map("ends_at") @db.Timestamptz()
+  proofRequirements String?        @map("proof_requirements") @db.Text
+  createdBy         String         @map("created_by") @db.Uuid
+  createdAt         DateTime       @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt         DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  region      Region?            @relation(fields: [regionId], references: [id])
+  creator     User               @relation("BountyCreator", fields: [createdBy], references: [id])
+  submissions BountySubmission[]
+  reviewers   BountyReviewer[]
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([regionId])
+  @@map("bounties")
+}
+
+model BountySubmission {
+  id         String                 @id @default(uuid()) @db.Uuid
+  bountyId   String                 @map("bounty_id") @db.Uuid
+  userId     String                 @map("user_id") @db.Uuid
+  proofUrl   String?                @map("proof_url") @db.Text
+  proofText  String?                @map("proof_text") @db.Text
+  status     BountySubmissionStatus @default(pending)
+  reviewedBy String?                @map("reviewed_by") @db.Uuid
+  reviewedAt DateTime?              @map("reviewed_at") @db.Timestamptz()
+  rejectNote String?                @map("reject_note") @db.Text
+  xpAwarded  Int?                   @map("xp_awarded")
+  createdAt  DateTime               @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt  DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  bounty   Bounty @relation(fields: [bountyId], references: [id], onDelete: Cascade)
+  user     User   @relation("BountySubmitter", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer User?  @relation("BountyReviewer", fields: [reviewedBy], references: [id])
+
+  @@index([bountyId, status])
+  @@index([userId])
+  @@map("bounty_submissions")
+}
+
+model BountyReviewer {
+  id        String   @id @default(uuid()) @db.Uuid
+  bountyId  String?  @map("bounty_id") @db.Uuid
+  regionId  String   @map("region_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  canCreate Boolean  @default(false) @map("can_create")
+  addedBy   String   @map("added_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  bounty  Bounty? @relation(fields: [bountyId], references: [id])
+  region  Region  @relation(fields: [regionId], references: [id])
+  user    User    @relation("BountyReviewerUser", fields: [userId], references: [id], onDelete: Cascade)
+  addedByUser User @relation("BountyReviewerAddedBy", fields: [addedBy], references: [id])
+
+  @@unique([regionId, userId])
+  @@map("bounty_reviewers")
 }
