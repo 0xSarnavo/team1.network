@@ -17,6 +17,10 @@ export const GET = withAuth(
         totalQuests,
         totalGuides,
         pendingSubmissions,
+        totalBounties,
+        activeBounties,
+        pendingBountySubmissions,
+        totalXpDistributed,
       ] = await Promise.all([
         db.user.count(),
         db.user.count({ where: { isActive: true } }),
@@ -27,6 +31,10 @@ export const GET = withAuth(
         db.portalQuest.count({ where: { isActive: true } }),
         db.portalGuide.count({ where: { status: 'published' } }),
         db.questSubmission.count({ where: { status: 'pending' } }),
+        db.bounty.count(),
+        db.bounty.count({ where: { status: 'active' } }),
+        db.bountySubmission.count({ where: { status: 'pending' } }),
+        db.xpTransaction.aggregate({ _sum: { amount: true } }),
       ]);
 
       // Recent users
@@ -56,6 +64,10 @@ export const GET = withAuth(
           totalQuests,
           totalGuides,
           pendingSubmissions,
+          totalBounties,
+          activeBounties,
+          pendingBountySubmissions,
+          totalXpDistributed: totalXpDistributed._sum.amount || 0,
         },
         recentUsers,
         regions: regions.map(r => ({

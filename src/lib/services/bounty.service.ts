@@ -344,6 +344,7 @@ class BountyService {
     category: string;
     xpReward: number;
     type?: string;
+    status?: string;
     regionId?: string;
     maxSubmissions?: number;
     startsAt?: string;
@@ -357,6 +358,7 @@ class BountyService {
         category: data.category as any,
         xpReward: data.xpReward,
         type: (data.type as any) || 'one_time',
+        status: (data.status as any) || 'draft',
         regionId: data.regionId || null,
         maxSubmissions: data.maxSubmissions || null,
         startsAt: data.startsAt ? new Date(data.startsAt) : null,
