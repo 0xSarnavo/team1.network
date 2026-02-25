@@ -43,3 +43,45 @@ body {
   transform-origin: center;
   transform-box: fill-box;
 }
+
+/* Portal Background Variables */
+:root {
+  --portal-bg-color: #ffffff;
+  --portal-accent-glow: rgba(255, 57, 74, 0.15); /* Increased opacity for light mode */
+  --portal-noise-opacity: 0.03;
+}
+
+[data-theme='dark'], .dark {
+  --portal-bg-color: #0a0a0a;
+  --portal-accent-glow: rgba(255, 57, 74, 0.07);
+  --portal-noise-opacity: 0.05;
+}
+
+@keyframes portal-breathe {
+  0% { opacity: 0.8; }
+  50% { opacity: 1; }
+  100% { opacity: 0.8; }
+}
+
+.portal-background {
+  background-color: var(--portal-bg-color);
+  background-image: 
+    /* Top Right Glow (reduced size) */
+    radial-gradient(ellipse at 85% 15%, var(--portal-accent-glow) 0px, transparent 35%),
+    /* Bottom Left Glow (increased size) */
+    radial-gradient(ellipse at 15% 85%, var(--portal-accent-glow) 0px, transparent 70%),
+    /* SVG Noise Texturing */
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 250 250' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  
+  height: 100vh;
+  width: 100%;
+  position: fixed;
+  z-index: -1;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  filter: blur(8px);
+  transform: scale(1.02);
+  animation: portal-breathe 8s ease-in-out infinite;
+  transition: background-color 0.4s ease;
+}
