@@ -1,17 +1,15 @@
 'use client';
 
 import React from 'react';
-import { Navbar } from '@/components/layout/navbar';
 import { AdminSidebar } from '@/components/layout/admin-sidebar';
 import { AuthGuard } from '@/components/layout/auth-guard';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard requireAdmin>
-      <Navbar />
-      <div className="flex">
+      <div className="flex h-screen overflow-hidden bg-zinc-950">
         <AdminSidebar />
-        <main className="flex-1 p-6 lg:p-8">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 lg:p-8 bg-black">{children}</main>
       </div>
     </AuthGuard>
   );
