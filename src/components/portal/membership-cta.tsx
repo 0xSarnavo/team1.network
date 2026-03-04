@@ -40,7 +40,7 @@ export function MembershipCTA() {
           </p>
           
           <Link
-            href={isMember ? '/portal/dashboard' : '/portal/membership'}
+            href={isMember ? '/member' : '/portal/membership'}
             className="inline-flex items-center gap-2 rounded-full bg-[#FF394A] px-6 py-2.5 text-[13px] font-bold text-white transition-all hover:opacity-90 active:scale-95"
           >
             {isMember ? 'Dashboard' : 'Apply Now'}

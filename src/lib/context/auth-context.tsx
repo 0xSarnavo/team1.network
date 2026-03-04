@@ -13,6 +13,8 @@ interface User {
   level: number;
   totalXp: number;
   onboardingCompleted: boolean;
+  isMember: boolean;
+  primaryRegionSlug: string | null;
   adminRoles?: {
     isSuperAdmin: boolean;
     isSuperSuperAdmin: boolean;
@@ -28,6 +30,7 @@ interface AuthContextType {
   refreshUser: () => Promise<void>;
   isAdmin: boolean;
   isSuperAdmin: boolean;
+  isMember: boolean;
   hasModuleLead: (module: string) => boolean;
 }
 
@@ -110,6 +113,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const isSuperAdmin = !!user?.adminRoles?.isSuperAdmin || !!user?.adminRoles?.isSuperSuperAdmin;
 
+  const isMember = !!user?.isMember;
+
   const hasModuleLead = useCallback((module: string) => {
     if (!user?.adminRoles) return false;
     if (user.adminRoles.isSuperAdmin || user.adminRoles.isSuperSuperAdmin) return true;
@@ -117,7 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser, isAdmin, isSuperAdmin, hasModuleLead }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser, isAdmin, isSuperAdmin, isMember, hasModuleLead }}>
       {children}
     </AuthContext.Provider>
   );

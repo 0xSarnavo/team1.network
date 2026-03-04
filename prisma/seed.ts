@@ -135,7 +135,7 @@ async function main() {
   }
   console.log(`  ${regions.length} regions`);
 
-  // Add demo user to India region
+  // Add demo user to India region as member
   const indiaRegion = await prisma.region.findUnique({ where: { slug: 'india' } });
   if (indiaRegion) {
     await prisma.userRegionMembership.upsert({
@@ -150,6 +150,41 @@ async function main() {
         acceptedAt: new Date(),
       },
     });
+  }
+
+  // Assign core1 as India region lead
+  if (indiaRegion) {
+    await prisma.userRegionMembership.upsert({
+      where: { userId_regionId: { userId: core1.id, regionId: indiaRegion.id } },
+      update: { role: 'lead' },
+      create: {
+        userId: core1.id,
+        regionId: indiaRegion.id,
+        isPrimary: true,
+        role: 'lead',
+        status: 'accepted',
+        acceptedAt: new Date(),
+      },
+    });
+    console.log('  core1 assigned as India region lead');
+  }
+
+  // Assign core2 as Dubai region lead
+  const dubaiRegion = await prisma.region.findUnique({ where: { slug: 'dubai' } });
+  if (dubaiRegion) {
+    await prisma.userRegionMembership.upsert({
+      where: { userId_regionId: { userId: core2.id, regionId: dubaiRegion.id } },
+      update: { role: 'lead' },
+      create: {
+        userId: core2.id,
+        regionId: dubaiRegion.id,
+        isPrimary: true,
+        role: 'lead',
+        status: 'accepted',
+        acceptedAt: new Date(),
+      },
+    });
+    console.log('  core2 assigned as Dubai region lead');
   }
 
   // ============================================================

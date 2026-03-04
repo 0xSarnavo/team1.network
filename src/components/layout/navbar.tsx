@@ -21,14 +21,14 @@ const navLinks = [
 ];
 
 export function Navbar() {
-  const { user, loading, logout, isAdmin } = useAuth();
+  const { user, loading, logout, isAdmin, isMember } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [authDropdownOpen, setAuthDropdownOpen] = useState(false);
 
-  const isPortal = pathname.startsWith('/portal');
+  const isPortal = pathname.startsWith('/portal') || pathname.startsWith('/member');
   const isGrantDetail = pathname === '/grants/minigrants';
   const grantTab = useGrantTab();
 
@@ -119,7 +119,7 @@ export function Navbar() {
                     </div>
                     
                     <div className="flex flex-col py-1 shrink-0">
-                      <Link href="/portal/dashboard" className="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200" onClick={(e) => { e.stopPropagation(); setProfileOpen(false); }}>
+                      <Link href="/member" className="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200" onClick={(e) => { e.stopPropagation(); setProfileOpen(false); }}>
                         Dashboard
                       </Link>
                       <Link href={`/profile/${user.username || user.id}`} className="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200" onClick={(e) => { e.stopPropagation(); setProfileOpen(false); }}>
@@ -219,7 +219,7 @@ export function Navbar() {
           
           <div className="flex flex-col gap-2 sm:gap-4 mt-2">
             {navLinks.map((link, index) => {
-              const isLocked = link.requiresAuth && !user;
+              const isLocked = link.requiresAuth && (!user || !isMember);
 
               if (isLocked) {
                 return (
