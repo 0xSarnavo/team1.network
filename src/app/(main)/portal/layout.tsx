@@ -7,7 +7,6 @@ export default function PortalLayout({
 }) {
   return (
     <>
-      <div className="portal-background" aria-hidden="true" />
       {children}
     </>
   );

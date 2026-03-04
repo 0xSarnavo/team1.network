@@ -1,48 +1,107 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
+import React, { useEffect } from 'react';
+import { useAuth } from '@/lib/context/auth-context';
 import { useApi } from '@/lib/hooks/use-api';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { PageLoader } from '@/components/ui/spinner';
+import { useRegionFilter } from '@/components/portal/region-filter-context';
+import { MembershipCTA } from '@/components/portal/membership-cta';
+import { EventsCarousel } from '@/components/portal/events-carousel';
+import { ResourceTabs } from '@/components/portal/resource-tabs';
+import { MemberVerification } from '@/components/portal/member-verification';
+import { ContactBrandKit } from '@/components/portal/contact-brandkit';
+import { PersonalCard } from '@/components/portal/personal-card';
+import { QuestsPanel } from '@/components/portal/quests-panel';
+import { LeaderboardPanel } from '@/components/portal/leaderboard-panel';
 
-interface HubData {
-  regions: { id: string; name: string; slug: string; description: string | null; logoUrl: string | null; memberCount: number }[];
-  counts: { upcomingEvents: number; activeQuests: number; publishedGuides: number; activePrograms: number };
+// ---------------------------------------------------------------------------
+// Region Data Loader
+// ---------------------------------------------------------------------------
+
+interface DashboardRegion {
+  id: string;
+  name: string;
+  slug: string;
 }
 
-const quickLinks = [
-  { name: 'Dashboard', href: '/portal/dashboard', desc: 'Your personal dashboard & activity', color: 'text-red-400' },
-  { name: 'Events', href: '/portal/events', desc: 'Discover meetups, hackathons & workshops', color: 'text-blue-400' },
-  { name: 'Quests', href: '/portal/quests', desc: 'Complete challenges & earn XP', color: 'text-yellow-400' },
-  { name: 'Guides', href: '/portal/guides', desc: 'Learn from community guides', color: 'text-green-400' },
-  { name: 'Programs', href: '/portal/programs', desc: 'Join community programs', color: 'text-purple-400' },
-  { name: 'Members', href: '/portal/members', desc: 'Connect with community members', color: 'text-pink-400' },
-  { name: 'Membership', href: '/portal/membership', desc: 'Apply to join a region', color: 'text-cyan-400' },
-];
+interface DashboardPayload {
+  regions: DashboardRegion[];
+}
 
-import { PortalTopNav } from '@/components/portal/top-nav';
-import { DashboardLeft } from '@/components/portal/dashboard-left';
-import { DashboardRight } from '@/components/portal/dashboard-right';
+function RegionLoader() {
+  const { user } = useAuth();
+  const { setRegions } = useRegionFilter();
+  const { data } = useApi<DashboardPayload>(
+    user ? '/api/portal/dashboard' : '',
+    { immediate: !!user },
+  );
 
-export default function PortalPage() {
-  const { data: hub, loading } = useApi<HubData>('/api/portal');
+  useEffect(() => {
+    if (data?.regions) {
+      setRegions(data.regions.map((r) => ({ slug: r.slug, name: r.name })));
+    }
+  }, [data, setRegions]);
 
-  if (loading) return <PageLoader />;
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// Mobile sidebar anchor
+// ---------------------------------------------------------------------------
+
+function MobileSidebarButton() {
+  const scrollToSidebar = () => {
+    const el = document.getElementById('portal-sidebar');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 relative">
-      <PortalTopNav />
-      
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-        <div className="lg:col-span-8">
-           <DashboardLeft />
+    <button
+      onClick={scrollToSidebar}
+      aria-label="Jump to personal panel"
+      className="fixed bottom-6 right-6 z-30 flex h-12 w-12 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-900 shadow-lg transition-all hover:bg-[#FF394A] hover:text-white hover:border-[#FF394A] active:scale-95 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50 dark:hover:bg-[#FF394A] dark:hover:text-white dark:hover:border-[#FF394A] lg:hidden"
+    >
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg>
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main Portal Page
+// ---------------------------------------------------------------------------
+
+export default function PortalPage() {
+  return (
+    <>
+      <RegionLoader />
+      <div className="mx-auto max-w-7xl px-4 pb-6 pt-20 sm:px-6 lg:px-8">
+        {/* Membership CTA */}
+        <div className="mb-6">
+          <MembershipCTA />
         </div>
-        <div className="lg:col-span-4">
-           <DashboardRight />
+
+        {/* Two-column bento grid */}
+        <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
+          {/* Left Column */}
+          <div className="space-y-5">
+            <EventsCarousel />
+            <ResourceTabs />
+            <MemberVerification />
+            <ContactBrandKit />
+          </div>
+
+          {/* Right Column */}
+          <div id="portal-sidebar" className="space-y-5">
+            <PersonalCard />
+            <QuestsPanel />
+            <LeaderboardPanel />
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Mobile FAB */}
+      <MobileSidebarButton />
+    </>
   );
 }

@@ -12,14 +12,14 @@ export function Input({ label, error, className = '', id, ...props }: InputProps
   return (
     <div className="w-full">
       {label && (
-        <label htmlFor={inputId} className="mb-1 block text-sm font-medium text-zinc-300">
+        <label htmlFor={inputId} className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
           {label}
         </label>
       )}
       <input
         id={inputId}
-        className={`w-full rounded-lg border bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 ${
-          error ? 'border-red-500' : 'border-zinc-700'
+        className={`w-full rounded-lg border bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-colors focus:outline-none focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-500 ${
+          error ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-700'
         } ${className}`}
         {...props}
       />
@@ -38,14 +38,14 @@ export function Textarea({ label, error, className = '', id, ...props }: Textare
   return (
     <div className="w-full">
       {label && (
-        <label htmlFor={inputId} className="mb-1 block text-sm font-medium text-zinc-300">
+        <label htmlFor={inputId} className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
           {label}
         </label>
       )}
       <textarea
         id={inputId}
-        className={`w-full rounded-lg border bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 ${
-          error ? 'border-red-500' : 'border-zinc-700'
+        className={`w-full rounded-lg border bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-colors focus:outline-none focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-500 ${
+          error ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-700'
         } ${className}`}
         rows={4}
         {...props}
@@ -66,14 +66,14 @@ export function Select({ label, error, options, className = '', id, ...props }: 
   return (
     <div className="w-full">
       {label && (
-        <label htmlFor={inputId} className="mb-1 block text-sm font-medium text-zinc-300">
+        <label htmlFor={inputId} className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
           {label}
         </label>
       )}
       <select
         id={inputId}
-        className={`w-full rounded-lg border bg-zinc-900 px-3 py-2 text-sm text-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 ${
-          error ? 'border-red-500' : 'border-zinc-700'
+        className={`w-full rounded-lg border bg-white px-3 py-2 text-sm text-zinc-900 transition-colors focus:outline-none focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 ${
+          error ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-700'
         } ${className}`}
         {...props}
       >

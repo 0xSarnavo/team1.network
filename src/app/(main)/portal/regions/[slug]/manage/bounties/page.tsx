@@ -4,9 +4,6 @@ import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useApi } from '@/lib/hooks/use-api';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { PageLoader } from '@/components/ui/spinner';
 import { EmptyState } from '@/components/ui/empty-state';
 
@@ -26,13 +23,6 @@ interface BountyItem {
 interface RegionInfo {
   region: { id: string; name: string; slug: string };
 }
-
-const STATUS_BADGE: Record<string, 'success' | 'warning' | 'danger' | 'default' | 'info'> = {
-  draft: 'default',
-  active: 'success',
-  completed: 'info',
-  archived: 'danger',
-};
 
 const TYPE_LABELS: Record<string, string> = {
   one_time: 'One-time',
@@ -58,18 +48,22 @@ export default function RegionManageBountiesPage() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <div>
-          <p className="text-zinc-400">Manage bounties for {regionInfo.region.name}.</p>
-        </div>
+        <p className="text-sm text-zinc-500">Manage bounties for {regionInfo.region.name}.</p>
         <div className="flex gap-2">
           <Link href={`/portal/regions/${slug}/bounties/submissions`}>
-            <Button variant="outline" size="sm">Review Submissions</Button>
+            <button className="rounded-full border border-zinc-300 px-4 py-1.5 text-xs font-bold text-zinc-600 transition-all hover:bg-zinc-900 hover:text-white hover:border-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-white dark:hover:text-zinc-900 dark:hover:border-white active:scale-95">
+              Review Submissions
+            </button>
           </Link>
           <Link href={`/portal/regions/${slug}/bounties/reviewers`}>
-            <Button variant="outline" size="sm">Reviewers</Button>
+            <button className="rounded-full border border-zinc-300 px-4 py-1.5 text-xs font-bold text-zinc-600 transition-all hover:bg-zinc-900 hover:text-white hover:border-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-white dark:hover:text-zinc-900 dark:hover:border-white active:scale-95">
+              Reviewers
+            </button>
           </Link>
           <Link href={`/portal/regions/${slug}/bounties`}>
-            <Button>Manage Bounties</Button>
+            <button className="rounded-full bg-zinc-900 px-5 py-1.5 text-xs font-bold text-white transition-all hover:opacity-90 dark:bg-white dark:text-zinc-900 active:scale-95">
+              Manage Bounties
+            </button>
           </Link>
         </div>
       </div>
@@ -81,29 +75,32 @@ export default function RegionManageBountiesPage() {
           action={{ label: 'Create Bounty', onClick: () => router.push(`/portal/regions/${slug}/bounties`) }}
         />
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {bounties.map((b) => (
-            <Card key={b.id} className="hover:border-zinc-700 transition-colors">
+            <div key={b.id} className="rounded-2xl border border-zinc-200/60 p-4 transition-colors hover:border-zinc-300 dark:border-zinc-800/60 dark:hover:border-zinc-700">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <Badge variant={STATUS_BADGE[b.status] || 'default'}>{b.status}</Badge>
-                    <Badge variant="default">{b.category}</Badge>
-                    <Badge variant="default">{TYPE_LABELS[b.type] || b.type}</Badge>
-                    <span className="text-xs font-medium text-green-400">+{b.xpReward} XP</span>
+                  <div className="flex flex-wrap items-center gap-2 mb-1 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                    <span className={b.status === 'active' ? 'text-emerald-500/70' : b.status === 'archived' ? 'text-rose-500/70' : ''}>{b.status}</span>
+                    <span className="text-zinc-300 dark:text-zinc-700">·</span>
+                    <span>{b.category}</span>
+                    <span className="text-zinc-300 dark:text-zinc-700">·</span>
+                    <span>{TYPE_LABELS[b.type] || b.type}</span>
+                    <span className="text-zinc-300 dark:text-zinc-700">·</span>
+                    <span className="text-[#FF394A]">+{b.xpReward} XP</span>
                   </div>
-                  <h3 className="text-base font-semibold text-zinc-100 truncate">{b.title}</h3>
-                  <div className="flex flex-wrap gap-3 mt-1 text-xs text-zinc-600">
+                  <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 truncate">{b.title}</h3>
+                  <div className="flex flex-wrap gap-3 mt-1 text-[10px] text-zinc-400">
                     <span>{b.submissionCount} submissions</span>
                     {b.maxSubmissions && <span>Max: {b.maxSubmissions}</span>}
                     {b.endsAt && <span>Ends: {new Date(b.endsAt).toLocaleDateString()}</span>}
                   </div>
                 </div>
                 <Link href={`/portal/regions/${slug}/bounties`}>
-                  <Button variant="ghost" size="sm">Edit</Button>
+                  <button className="text-[10px] font-bold text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100">Edit</button>
                 </Link>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       )}

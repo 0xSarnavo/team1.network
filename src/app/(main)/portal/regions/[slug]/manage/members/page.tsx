@@ -5,8 +5,6 @@ import { useParams } from 'next/navigation';
 import { useToast } from '@/lib/context/toast-context';
 import { api } from '@/lib/api/client';
 import { useApi } from '@/lib/hooks/use-api';
-import { Card, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input, Select } from '@/components/ui/input';
 import { Avatar } from '@/components/ui/avatar';
@@ -45,24 +43,6 @@ const ROLE_OPTIONS = [
   { value: 'lead', label: 'Lead' },
   { value: 'co_lead', label: 'Co-Lead' },
 ];
-
-const roleBadgeVariant = (role: string): 'default' | 'success' | 'warning' | 'danger' | 'info' => {
-  switch (role) {
-    case 'lead': return 'danger';
-    case 'co_lead': return 'warning';
-    case 'ambassador': return 'info';
-    default: return 'default';
-  }
-};
-
-const statusBadgeVariant = (status: string): 'default' | 'success' | 'warning' | 'danger' | 'info' => {
-  switch (status) {
-    case 'accepted': return 'success';
-    case 'pending': return 'warning';
-    case 'rejected': return 'danger';
-    default: return 'default';
-  }
-};
 
 export default function RegionMembersPage() {
   const params = useParams();
@@ -135,113 +115,125 @@ export default function RegionMembersPage() {
   };
 
   if (loading) return <PageLoader />;
-  if (error || !data) return <p className="text-red-400">{error || 'Failed to load'}</p>;
+  if (error || !data) return <p className="text-sm text-[#FF394A]">{error || 'Failed to load'}</p>;
 
   return (
     <div>
       {/* Add Member */}
-      <Card className="mb-8">
-        <CardTitle>Add Member</CardTitle>
-        <p className="mt-1 text-sm text-zinc-500">Invite a user directly by email address.</p>
-        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+      <div className="mb-8 rounded-2xl border border-zinc-200/60 p-5 dark:border-zinc-800/60">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 mb-1">Add Member</h3>
+        <p className="text-[10px] text-zinc-500 mb-4">Invite a user directly by email address.</p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <Input label="Email" type="email" value={addEmail} onChange={(e) => setAddEmail(e.target.value)} placeholder="user@example.com" className="sm:max-w-xs" />
           <Select label="Role" value={addRole} onChange={(e) => setAddRole(e.target.value)} options={ROLE_OPTIONS} className="sm:max-w-[160px]" />
           <Button onClick={handleAddMember} loading={addLoading}>Add Member</Button>
         </div>
-      </Card>
+      </div>
 
       {/* Pending */}
       {pendingMembers.length > 0 && (
-        <Card className="mb-8">
-          <CardTitle>Pending Applications <Badge variant="warning" className="ml-2">{pendingMembers.length}</Badge></CardTitle>
-          <CardContent className="mt-4 space-y-3">
+        <div className="mb-8 rounded-2xl border border-zinc-200/60 p-5 dark:border-zinc-800/60">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 mb-4">
+            Pending Applications <span className="text-[#FF394A] ml-1">{pendingMembers.length}</span>
+          </h3>
+          <div className="space-y-2">
             {pendingMembers.map((member) => (
-              <div key={member.membershipId} className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/30 px-4 py-3">
+              <div key={member.membershipId} className="flex items-center justify-between rounded-xl border border-zinc-200/60 px-4 py-3 dark:border-zinc-800/60">
                 <div className="flex items-center gap-3">
                   <Avatar src={member.user.avatarUrl} alt={member.user.displayName || member.user.username} size="sm" />
                   <div>
-                    <p className="text-sm font-medium text-zinc-200">{member.user.displayName || member.user.username}</p>
-                    <p className="text-xs text-zinc-500">{member.user.email}</p>
+                    <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100">{member.user.displayName || member.user.username}</p>
+                    <p className="text-[10px] text-zinc-400">{member.user.email}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="mr-2 text-xs text-zinc-600">Applied {new Date(member.appliedAt).toLocaleDateString()}</span>
-                  <Button variant="primary" size="sm" loading={acceptLoading === member.membershipId} onClick={() => handleAcceptMember(member)}>Accept</Button>
-                  <Button variant="ghost" size="sm" loading={rejectLoading === member.membershipId} onClick={() => handleRejectMember(member)}>Reject</Button>
+                  <span className="mr-2 text-[10px] text-zinc-400">Applied {new Date(member.appliedAt).toLocaleDateString()}</span>
+                  <button
+                    onClick={() => handleAcceptMember(member)}
+                    disabled={acceptLoading === member.membershipId}
+                    className="rounded-full bg-zinc-900 px-4 py-1.5 text-[10px] font-bold text-white transition-all hover:opacity-90 dark:bg-white dark:text-zinc-900 disabled:opacity-50 active:scale-95"
+                  >
+                    Accept
+                  </button>
+                  <button
+                    onClick={() => handleRejectMember(member)}
+                    disabled={rejectLoading === member.membershipId}
+                    className="rounded-full px-4 py-1.5 text-[10px] font-bold text-zinc-500 transition-all hover:text-zinc-900 dark:hover:text-zinc-100 disabled:opacity-50"
+                  >
+                    Reject
+                  </button>
                 </div>
               </div>
             ))}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Active Members Table */}
-      <Card>
-        <CardTitle>Members ({activeMembers.length})</CardTitle>
-        <CardContent className="mt-4">
-          {activeMembers.length === 0 ? (
-            <p className="py-8 text-center text-sm text-zinc-600">No active members yet.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-zinc-800 text-xs uppercase text-zinc-500">
-                    <th className="pb-3 pr-4 font-medium">Member</th>
-                    <th className="pb-3 pr-4 font-medium">Role</th>
-                    <th className="pb-3 pr-4 font-medium">Status</th>
-                    <th className="pb-3 pr-4 font-medium">Joined</th>
-                    <th className="pb-3 font-medium text-right">Actions</th>
+      <div className="rounded-2xl border border-zinc-200/60 p-5 dark:border-zinc-800/60">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 mb-4">Members ({activeMembers.length})</h3>
+        {activeMembers.length === 0 ? (
+          <p className="py-8 text-center text-sm text-zinc-400">No active members yet.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-zinc-200/60 dark:border-zinc-800/60 text-[10px] uppercase tracking-wider text-zinc-400">
+                  <th className="pb-3 pr-4 font-bold">Member</th>
+                  <th className="pb-3 pr-4 font-bold">Role</th>
+                  <th className="pb-3 pr-4 font-bold">Status</th>
+                  <th className="pb-3 pr-4 font-bold">Joined</th>
+                  <th className="pb-3 font-bold text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-200/40 dark:divide-zinc-800/40">
+                {activeMembers.map((member) => (
+                  <tr key={member.membershipId}>
+                    <td className="py-3 pr-4">
+                      <div className="flex items-center gap-3">
+                        <Avatar src={member.user.avatarUrl} alt={member.user.displayName || member.user.username} size="sm" />
+                        <div>
+                          <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100">{member.user.displayName || member.user.username}</p>
+                          <p className="text-[10px] text-zinc-400">{member.user.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 pr-4">
+                      {editingRoleId === member.membershipId ? (
+                        <div className="flex items-center gap-2">
+                          <select value={editingRoleValue} onChange={(e) => setEditingRoleValue(e.target.value)} className="rounded-full border border-zinc-200 bg-transparent px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-600 outline-none dark:border-zinc-800 dark:text-zinc-400">
+                            {ROLE_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                          </select>
+                          <button onClick={() => handleChangeRole(member.membershipId)} disabled={roleLoading} className="rounded-full bg-zinc-900 px-3 py-1 text-[10px] font-bold text-white dark:bg-white dark:text-zinc-900 disabled:opacity-50">Save</button>
+                          <button onClick={() => setEditingRoleId(null)} className="text-[10px] font-bold text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100">Cancel</button>
+                        </div>
+                      ) : (
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                          {member.role === 'co_lead' ? 'Co-Lead' : member.role.charAt(0).toUpperCase() + member.role.slice(1)}
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3 pr-4">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-500/70">
+                        {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
+                      </span>
+                    </td>
+                    <td className="py-3 pr-4 text-[10px] text-zinc-400">
+                      {member.acceptedAt ? new Date(member.acceptedAt).toLocaleDateString() : new Date(member.appliedAt).toLocaleDateString()}
+                    </td>
+                    <td className="py-3 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button onClick={() => { setEditingRoleId(member.membershipId); setEditingRoleValue(member.role); }} className="text-[10px] font-bold text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100">Change Role</button>
+                        <button onClick={() => setRemoveMemberId(member.membershipId)} className="text-[10px] font-bold text-[#FF394A]/70 hover:text-[#FF394A]">Remove</button>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-800/50">
-                  {activeMembers.map((member) => (
-                    <tr key={member.membershipId}>
-                      <td className="py-3 pr-4">
-                        <div className="flex items-center gap-3">
-                          <Avatar src={member.user.avatarUrl} alt={member.user.displayName || member.user.username} size="sm" />
-                          <div>
-                            <p className="font-medium text-zinc-200">{member.user.displayName || member.user.username}</p>
-                            <p className="text-xs text-zinc-500">{member.user.email}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-3 pr-4">
-                        {editingRoleId === member.membershipId ? (
-                          <div className="flex items-center gap-2">
-                            <select value={editingRoleValue} onChange={(e) => setEditingRoleValue(e.target.value)} className="rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs text-zinc-300 focus:outline-none focus:ring-2 focus:ring-red-500">
-                              {ROLE_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                            </select>
-                            <Button variant="primary" size="sm" loading={roleLoading} onClick={() => handleChangeRole(member.membershipId)}>Save</Button>
-                            <Button variant="ghost" size="sm" onClick={() => setEditingRoleId(null)}>Cancel</Button>
-                          </div>
-                        ) : (
-                          <Badge variant={roleBadgeVariant(member.role)}>
-                            {member.role === 'co_lead' ? 'Co-Lead' : member.role.charAt(0).toUpperCase() + member.role.slice(1)}
-                          </Badge>
-                        )}
-                      </td>
-                      <td className="py-3 pr-4">
-                        <Badge variant={statusBadgeVariant(member.status)}>
-                          {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
-                        </Badge>
-                      </td>
-                      <td className="py-3 pr-4 text-zinc-500">
-                        {member.acceptedAt ? new Date(member.acceptedAt).toLocaleDateString() : new Date(member.appliedAt).toLocaleDateString()}
-                      </td>
-                      <td className="py-3 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => { setEditingRoleId(member.membershipId); setEditingRoleValue(member.role); }}>Change Role</Button>
-                          <Button variant="ghost" size="sm" onClick={() => setRemoveMemberId(member.membershipId)} className="text-red-400 hover:text-red-300">Remove</Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       <ConfirmDialog open={!!removeMemberId} onClose={() => setRemoveMemberId(null)} onConfirm={handleRemoveMember} title="Remove Member?" message="This member will be removed from the region. They can re-apply later." confirmLabel="Remove" confirmVariant="danger" loading={removeLoading} />
     </div>

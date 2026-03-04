@@ -4,8 +4,6 @@ import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useToast } from '@/lib/context/toast-context';
 import { useApi, useMutation } from '@/lib/hooks/use-api';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input, Textarea, Select } from '@/components/ui/input';
 import { PageLoader } from '@/components/ui/spinner';
@@ -43,11 +41,6 @@ const STATUS_OPTIONS = [
   { value: 'published', label: 'Published' },
 ];
 
-const STATUS_BADGE: Record<string, 'success' | 'warning' | 'danger' | 'default' | 'info'> = {
-  draft: 'default',
-  published: 'success',
-};
-
 function toSlug(text: string) {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
@@ -78,12 +71,8 @@ export default function RegionGuidesPage() {
     }
     const guideSlug = toSlug(form.title) + '-' + Date.now().toString(36);
     const res = await createGuide('/api/portal/admin/guides', {
-      title: form.title,
-      slug: guideSlug,
-      category: form.category,
-      content: form.content,
-      status: form.status,
-      coverImageUrl: form.coverImageUrl || undefined,
+      title: form.title, slug: guideSlug, category: form.category, content: form.content,
+      status: form.status, coverImageUrl: form.coverImageUrl || undefined,
       readTime: form.readTime ? parseInt(form.readTime) : undefined,
     });
     if (res.success) {
@@ -101,10 +90,10 @@ export default function RegionGuidesPage() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <div>
-          <p className="text-zinc-400">Create and manage guides and playbooks for {regionInfo.region.name}.</p>
-        </div>
-        <Button onClick={() => setShowCreate(true)}>Create Guide</Button>
+        <p className="text-sm text-zinc-500">Create and manage guides and playbooks for {regionInfo.region.name}.</p>
+        <button onClick={() => setShowCreate(true)} className="inline-flex items-center rounded-full bg-zinc-900 px-5 py-2 text-xs font-bold text-white transition-all hover:opacity-90 dark:bg-white dark:text-zinc-900 active:scale-95">
+          Create Guide
+        </button>
       </div>
 
       {!guides || guides.length === 0 ? (
@@ -114,24 +103,28 @@ export default function RegionGuidesPage() {
           action={{ label: 'Create Guide', onClick: () => setShowCreate(true) }}
         />
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {guides.map((g) => (
-            <Card key={g.id} className="hover:border-zinc-700 transition-colors">
+            <div key={g.id} className="rounded-2xl border border-zinc-200/60 p-4 transition-colors hover:border-zinc-300 dark:border-zinc-800/60 dark:hover:border-zinc-700">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <Badge variant={STATUS_BADGE[g.status] || 'default'}>{g.status}</Badge>
-                    <Badge variant="default">{g.category}</Badge>
-                    {g.readTime && <span className="text-xs text-zinc-500">{g.readTime} min read</span>}
+                  <div className="flex flex-wrap items-center gap-2 mb-1 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                    <span className={g.status === 'published' ? 'text-emerald-500/70' : ''}>{g.status}</span>
+                    <span className="text-zinc-300 dark:text-zinc-700">·</span>
+                    <span>{g.category}</span>
+                    {g.readTime && (
+                      <>
+                        <span className="text-zinc-300 dark:text-zinc-700">·</span>
+                        <span>{g.readTime} min read</span>
+                      </>
+                    )}
                   </div>
-                  <h3 className="text-base font-semibold text-zinc-100 truncate">{g.title}</h3>
-                  <p className="text-sm text-zinc-500 line-clamp-1 mt-0.5">{g.content}</p>
-                  <div className="flex flex-wrap gap-3 mt-1 text-xs text-zinc-600">
-                    <span>Created: {new Date(g.createdAt).toLocaleDateString()}</span>
-                  </div>
+                  <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 truncate">{g.title}</h3>
+                  <p className="text-xs text-zinc-500 line-clamp-1 mt-0.5">{g.content}</p>
+                  <span className="text-[10px] text-zinc-400 mt-1 block">Created: {new Date(g.createdAt).toLocaleDateString()}</span>
                 </div>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       )}
@@ -150,7 +143,7 @@ export default function RegionGuidesPage() {
             <Input label="Read Time (minutes, optional)" type="number" value={form.readTime} onChange={(e) => setForm({ ...form, readTime: e.target.value })} />
           </div>
           <div className="flex justify-end gap-3 pt-2">
-            <Button variant="ghost" onClick={() => setShowCreate(false)}>Cancel</Button>
+            <button onClick={() => setShowCreate(false)} className="text-xs font-bold text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100">Cancel</button>
             <Button loading={creating} onClick={handleCreate}>Create Guide</Button>
           </div>
         </div>

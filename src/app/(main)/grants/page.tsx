@@ -2,109 +2,127 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { mainGrant, otherGrants } from './grant-data';
 
-const grantTracks = [
-  {
-    title: 'Builder Grants',
-    description: 'Funding for developers building on Avalanche. Get support for your dApp, protocol, or tooling project.',
-    amount: 'Up to $50,000',
-    color: 'text-green-400',
-    bgColor: 'bg-green-900/20',
-  },
-  {
-    title: 'Community Grants',
-    description: 'Support for community initiatives, education programs, and regional growth efforts.',
-    amount: 'Up to $10,000',
-    color: 'text-blue-400',
-    bgColor: 'bg-blue-900/20',
-  },
-  {
-    title: 'Research Grants',
-    description: 'Funding for academic research, security audits, and technical analysis of Avalanche technology.',
-    amount: 'Up to $25,000',
-    color: 'text-purple-400',
-    bgColor: 'bg-purple-900/20',
-  },
-  {
-    title: 'Creator Grants',
-    description: 'Support for content creators, designers, and artists contributing to the ecosystem.',
-    amount: 'Up to $5,000',
-    color: 'text-yellow-400',
-    bgColor: 'bg-yellow-900/20',
-  },
-];
+// ---------------------------------------------------------------------------
+// Shared Card Parts
+// ---------------------------------------------------------------------------
+
+function GrantThumbnail({ image, title, tall }: { image: string | null; title: string; tall?: boolean }) {
+  const h = tall ? 'h-56' : 'h-40';
+  if (image) {
+    return <img src={image} alt={title} className={`${h} w-full object-cover`} />;
+  }
+  return (
+    <div className={`${h} flex items-center justify-center bg-zinc-100 dark:bg-zinc-900`}>
+      <svg className="h-10 w-10 text-zinc-300 dark:text-zinc-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    </div>
+  );
+}
+
+function AmountBadge({ amount }: { amount: string }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500/15">
+        <svg className="h-2.5 w-2.5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+        </svg>
+      </span>
+      <span className="text-xs text-zinc-500 dark:text-zinc-400">{amount}</span>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 export default function GrantsPage() {
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12">
+    <div className="mx-auto max-w-7xl px-4 pb-16 pt-28 sm:px-6 lg:px-8">
       {/* Hero */}
       <div className="mb-12 text-center">
-        <Badge variant="success" className="mb-4">Grants Program</Badge>
-        <h1 className="text-4xl font-bold text-zinc-100 md:text-5xl">Fund Your Vision</h1>
-        <p className="mx-auto mt-4 max-w-2xl text-lg text-zinc-400">
-          Get funding to build on Avalanche. Our grants program supports builders, researchers,
-          community leaders, and creators at every stage.
+        <span className="mb-4 inline-block rounded-full border border-zinc-200 px-4 py-1 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-zinc-800">
+          Grants Program
+        </span>
+        <h1 className="text-3xl font-black tracking-tight text-zinc-900 dark:text-zinc-100 md:text-5xl leading-tight">
+          Need funds to build out
+          <br />
+          your idea?
+        </h1>
+        <p className="mx-auto mt-5 max-w-xl text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+          Discover the complete list of crypto grants available to support your project.
+          <br />
+          Fast, equity-free funding without the hassle.
+        </p>
+        <p className="mt-4 text-xs text-zinc-400 dark:text-zinc-500 tracking-wide">
+          Equity-Free
+          <span className="mx-2 text-zinc-300 dark:text-zinc-700">·</span>
+          Transparent
+          <span className="mx-2 text-zinc-300 dark:text-zinc-700">·</span>
+          Fast AF
         </p>
       </div>
 
-      {/* Grant Tracks */}
-      <div className="mb-16 grid gap-6 md:grid-cols-2">
-        {grantTracks.map((track) => (
-          <Card key={track.title} className="relative overflow-hidden">
-            <div className={`absolute inset-0 ${track.bgColor} opacity-30`} />
-            <div className="relative">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className={`text-xl font-bold ${track.color}`}>{track.title}</h3>
-                <Badge variant="default">{track.amount}</Badge>
-              </div>
-              <p className="text-sm text-zinc-400">{track.description}</p>
+      {/* Featured / Main Grant */}
+      <Link href="/grants/minigrants" className="block mb-5 group rounded-2xl border border-zinc-200 bg-white transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700 overflow-hidden">
+        <div className="grid md:grid-cols-2">
+          <div className="relative overflow-hidden">
+            <GrantThumbnail image={mainGrant.image} title={mainGrant.title} tall />
+          </div>
+          <div className="flex flex-col justify-center p-6 md:p-8">
+            <span className="mb-2 text-[10px] font-bold uppercase tracking-widest text-[#FF394A]">Featured</span>
+            <h2 className="text-xl font-black tracking-tight text-zinc-900 dark:text-zinc-100 md:text-2xl">
+              {mainGrant.title}
+            </h2>
+            <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+              {mainGrant.description}
+            </p>
+            <div className="mt-4">
+              <AmountBadge amount={mainGrant.amount} />
             </div>
-          </Card>
+            <div className="mt-5 max-w-[200px]">
+              <span className="block w-full rounded-lg border border-zinc-200 py-2 text-center text-xs font-bold text-zinc-600 transition-all group-hover:border-[#FF394A] group-hover:bg-[#FF394A] group-hover:text-white dark:group-hover:border-[#FF394A] dark:group-hover:bg-[#FF394A] dark:group-hover:text-white">
+                Apply Now
+              </span>
+            </div>
+          </div>
+        </div>
+      </Link>
+
+      {/* Other Grants — Section label */}
+      <div className="mb-4 mt-10">
+        <h2 className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">More Grants</h2>
+      </div>
+
+      {/* Other Grants Grid */}
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {otherGrants.map((grant) => (
+          <Link
+            key={grant.slug}
+            href="/grants/minigrants"
+            className="group rounded-2xl border border-zinc-200 bg-white transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700"
+          >
+            <div className="relative overflow-hidden rounded-t-2xl">
+              <GrantThumbnail image={grant.image} title={grant.title} />
+            </div>
+            <div className="p-4">
+              <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 truncate">
+                {grant.title}
+              </h3>
+              <div className="mt-1.5">
+                <AmountBadge amount={grant.amount} />
+              </div>
+              <div className="mt-4">
+                <span className="block w-full rounded-lg border border-zinc-200 py-2 text-center text-xs font-bold text-zinc-600 transition-all group-hover:border-[#FF394A] group-hover:bg-[#FF394A] group-hover:text-white dark:group-hover:border-[#FF394A] dark:group-hover:bg-[#FF394A] dark:group-hover:text-white">
+                  Apply Now
+                </span>
+              </div>
+            </div>
+          </Link>
         ))}
-      </div>
-
-      {/* How it works */}
-      <div className="mb-16">
-        <h2 className="mb-8 text-center text-3xl font-bold text-zinc-100">How It Works</h2>
-        <div className="grid gap-6 md:grid-cols-3">
-          {[
-            { step: '1', title: 'Apply', desc: 'Submit your proposal with project details, milestones, and funding requirements.' },
-            { step: '2', title: 'Review', desc: 'Our team reviews applications and may schedule a call to discuss your project.' },
-            { step: '3', title: 'Build', desc: 'Receive funding in milestone-based tranches as you hit your development targets.' },
-          ].map((item) => (
-            <div key={item.step} className="text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-900/30 text-green-400 text-lg font-bold mb-4">
-                {item.step}
-              </div>
-              <h3 className="text-lg font-semibold text-zinc-200">{item.title}</h3>
-              <p className="mt-2 text-sm text-zinc-500">{item.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Coming Soon CTA */}
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-8 text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-900/30 mb-4">
-          <svg className="h-8 w-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <h3 className="text-2xl font-bold text-zinc-100 mb-2">Applications Opening Soon</h3>
-        <p className="text-zinc-500 mb-6 max-w-lg mx-auto">
-          The grants program is being finalized. Join the community to be notified when applications open.
-        </p>
-        <div className="flex justify-center gap-4">
-          <Link href="/portal">
-            <Button variant="primary">Explore Portal</Button>
-          </Link>
-          <Link href="/auth/signup">
-            <Button variant="outline">Join Community</Button>
-          </Link>
-        </div>
       </div>
     </div>
   );

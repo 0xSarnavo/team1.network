@@ -5,18 +5,12 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useToast } from '@/lib/context/toast-context';
 import { useApi, useMutation } from '@/lib/hooks/use-api';
-import { Card, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar } from '@/components/ui/avatar';
 import { PageLoader } from '@/components/ui/spinner';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
 
 interface Reviewer {
   id: string;
@@ -31,10 +25,6 @@ interface RegionInfo {
   region: { id: string; name: string; slug: string };
 }
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
 export default function BountyReviewersPage() {
   const params = useParams();
   const slug = params.slug as string;
@@ -48,143 +38,89 @@ export default function BountyReviewersPage() {
     { immediate: !!regionId }
   );
 
-  // Add reviewer
   const [addEmail, setAddEmail] = useState('');
   const [canCreate, setCanCreate] = useState(false);
   const { mutate: addReviewer, loading: adding } = useMutation('post');
 
-  // Remove reviewer
   const [removingId, setRemovingId] = useState<string | null>(null);
   const { mutate: removeReviewer, loading: removing } = useMutation('delete');
 
   const handleAdd = async () => {
     const email = addEmail.trim();
-    if (!email || !regionId) {
-      addToast('error', 'Please enter an email address');
-      return;
-    }
-    const res = await addReviewer('/api/bounty/admin/reviewers', {
-      regionId,
-      email,
-      canCreate,
-    });
-    if (res.success) {
-      addToast('success', 'Reviewer added');
-      setAddEmail('');
-      setCanCreate(false);
-      refetch();
-    } else {
-      addToast('error', res.error?.message || 'Failed to add reviewer');
-    }
+    if (!email || !regionId) { addToast('error', 'Please enter an email address'); return; }
+    const res = await addReviewer('/api/bounty/admin/reviewers', { regionId, email, canCreate });
+    if (res.success) { addToast('success', 'Reviewer added'); setAddEmail(''); setCanCreate(false); refetch(); }
+    else addToast('error', res.error?.message || 'Failed to add reviewer');
   };
 
   const handleRemove = async () => {
     if (!removingId) return;
     const res = await removeReviewer(`/api/bounty/admin/reviewers?id=${removingId}`);
-    if (res.success) {
-      addToast('success', 'Reviewer removed');
-      setRemovingId(null);
-      refetch();
-    } else {
-      addToast('error', res.error?.message || 'Failed to remove reviewer');
-    }
+    if (res.success) { addToast('success', 'Reviewer removed'); setRemovingId(null); refetch(); }
+    else addToast('error', res.error?.message || 'Failed to remove reviewer');
   };
 
   if (loading || !regionInfo) return <PageLoader />;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
+    <div className="mx-auto max-w-5xl px-4 pb-8 pt-24">
       {/* Header */}
       <div className="mb-6">
-        <Link href={`/portal/regions/${slug}/bounties`} className="mb-3 inline-flex items-center text-sm text-zinc-500 hover:text-zinc-300">
-          &larr; Back to Bounty Management
+        <Link href={`/portal/regions/${slug}/bounties`} className="mb-3 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-zinc-400 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100">
+          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
+          Back
         </Link>
-        <h1 className="text-3xl font-bold text-zinc-100">Manage Reviewers</h1>
-        <p className="mt-1 text-zinc-500">
+        <h1 className="text-2xl font-black tracking-tight text-zinc-900 dark:text-zinc-100">Manage Reviewers</h1>
+        <p className="mt-1 text-sm text-zinc-500">
           Delegate bounty review access to trusted members of {regionInfo.region.name}.
-          Reviewers can approve or reject bounty submissions. Optionally give them create access too.
         </p>
       </div>
 
       {/* Add Reviewer */}
-      <Card className="mb-8">
-        <CardTitle>Add Reviewer</CardTitle>
-        <p className="mt-1 text-sm text-zinc-500">Enter the email of a platform user to grant them reviewer access.</p>
-        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
-          <Input
-            label="Email"
-            type="email"
-            value={addEmail}
-            onChange={(e) => setAddEmail(e.target.value)}
-            placeholder="user@example.com"
-            className="sm:max-w-xs"
-          />
-          <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={canCreate}
-              onChange={(e) => setCanCreate(e.target.checked)}
-              className="rounded border-zinc-600 bg-zinc-900 text-red-500 focus:ring-red-500"
-            />
+      <div className="mb-8 rounded-2xl border border-zinc-200/60 p-5 dark:border-zinc-800/60">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 mb-1">Add Reviewer</h3>
+        <p className="text-[10px] text-zinc-500 mb-4">Enter the email of a platform user to grant them reviewer access.</p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <Input label="Email" type="email" value={addEmail} onChange={(e) => setAddEmail(e.target.value)} placeholder="user@example.com" className="sm:max-w-xs" />
+          <label className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400 cursor-pointer">
+            <input type="checkbox" checked={canCreate} onChange={(e) => setCanCreate(e.target.checked)} className="rounded border-zinc-300 bg-transparent text-[#FF394A] focus:ring-[#FF394A] dark:border-zinc-700" />
             Can also create bounties
           </label>
-          <Button loading={adding} onClick={handleAdd}>
-            Add Reviewer
-          </Button>
+          <Button loading={adding} onClick={handleAdd}>Add Reviewer</Button>
         </div>
-      </Card>
+      </div>
 
       {/* Reviewer list */}
       {!reviewers || reviewers.length === 0 ? (
-        <EmptyState
-          title="No reviewers yet"
-          description="Region leads automatically have reviewer access. Add more reviewers to delegate submission review."
-        />
+        <EmptyState title="No reviewers yet" description="Region leads automatically have reviewer access. Add more reviewers to delegate submission review." />
       ) : (
-        <Card>
-          <CardTitle>Current Reviewers ({reviewers.length})</CardTitle>
-          <div className="mt-4 space-y-3">
+        <div className="rounded-2xl border border-zinc-200/60 p-5 dark:border-zinc-800/60">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 mb-4">Current Reviewers ({reviewers.length})</h3>
+          <div className="space-y-2">
             {reviewers.map((r) => (
-              <div key={r.id} className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/30 px-4 py-3">
+              <div key={r.id} className="flex items-center justify-between rounded-xl border border-zinc-200/60 px-4 py-3 dark:border-zinc-800/60">
                 <div className="flex items-center gap-3">
                   <Avatar src={r.user.avatarUrl} alt={r.user.displayName} size="sm" />
                   <div>
-                    <p className="text-sm font-medium text-zinc-200">{r.user.displayName}</p>
-                    <p className="text-xs text-zinc-500">{r.user.email}</p>
+                    <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100">{r.user.displayName}</p>
+                    <p className="text-[10px] text-zinc-400">{r.user.email}</p>
                   </div>
-                  <div className="flex gap-2 ml-3">
-                    <Badge variant="info">Reviewer</Badge>
-                    {r.canCreate && <Badge variant="success">Can Create</Badge>}
+                  <div className="flex gap-2 ml-3 text-[10px] font-bold uppercase tracking-wider">
+                    <span className="text-zinc-400">Reviewer</span>
+                    {r.canCreate && <span className="text-emerald-500/70">Can Create</span>}
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-zinc-600">Added {new Date(r.createdAt).toLocaleDateString()}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-400 hover:text-red-300"
-                    onClick={() => setRemovingId(r.id)}
-                  >
-                    Remove
-                  </Button>
+                  <span className="text-[10px] text-zinc-400">Added {new Date(r.createdAt).toLocaleDateString()}</span>
+                  <button onClick={() => setRemovingId(r.id)} className="text-[10px] font-bold text-[#FF394A]/70 hover:text-[#FF394A]">Remove</button>
                 </div>
               </div>
             ))}
           </div>
-        </Card>
+        </div>
       )}
 
-      {/* Remove Confirm */}
-      <ConfirmDialog
-        open={!!removingId}
-        onClose={() => setRemovingId(null)}
-        onConfirm={handleRemove}
-        title="Remove Reviewer?"
-        message="This person will no longer be able to review or create bounty submissions for this region."
-        confirmLabel="Remove"
-        confirmVariant="danger"
-        loading={removing}
-      />
+      <ConfirmDialog open={!!removingId} onClose={() => setRemovingId(null)} onConfirm={handleRemove} title="Remove Reviewer?" message="This person will no longer be able to review or create bounty submissions for this region." confirmLabel="Remove" confirmVariant="danger" loading={removing} />
     </div>
   );
 }

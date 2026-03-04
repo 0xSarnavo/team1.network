@@ -3,9 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useApi } from '@/lib/hooks/use-api';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { PageLoader } from '@/components/ui/spinner';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -37,24 +34,6 @@ const CATEGORIES = [
   { value: 'community', label: 'Community' },
 ];
 
-const CATEGORY_COLORS: Record<string, string> = {
-  development: 'text-blue-400 bg-blue-900/30 border-blue-800',
-  security: 'text-red-400 bg-red-900/30 border-red-800',
-  content: 'text-green-400 bg-green-900/30 border-green-800',
-  translation: 'text-purple-400 bg-purple-900/30 border-purple-800',
-  design: 'text-yellow-400 bg-yellow-900/30 border-yellow-800',
-  community: 'text-cyan-400 bg-cyan-900/30 border-cyan-800',
-};
-
-const CATEGORY_ICONS: Record<string, string> = {
-  development: '{ }',
-  security: '\u{1F6E1}',
-  content: '\u{270D}',
-  translation: '\u{1F310}',
-  design: '\u{1F3A8}',
-  community: '\u{1F465}',
-};
-
 const TYPE_LABELS: Record<string, string> = {
   one_time: 'One-time',
   recurring_weekly: 'Weekly',
@@ -79,59 +58,40 @@ export default function BountyPage() {
   const { data: bounties, loading } = useApi<BountyItem[]>(`/api/bounty${qs ? `?${qs}` : ''}`);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12">
-      {/* Hero */}
+    <div className="mx-auto max-w-7xl px-4 pb-12 pt-24 sm:px-6 lg:px-8">
+      {/* Hero — simplified */}
       <div className="mb-10 text-center">
-        <Badge variant="warning" className="mb-4">Bounty Board</Badge>
-        <h1 className="text-4xl font-bold text-zinc-100 md:text-5xl">Earn While You Build</h1>
-        <p className="mx-auto mt-4 max-w-2xl text-lg text-zinc-400">
+        <span className="mb-4 inline-block rounded-full border border-zinc-200 px-4 py-1 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-zinc-800">
+          Bounty Board
+        </span>
+        <h1 className="text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-100 md:text-5xl">
+          Earn While You Build
+        </h1>
+        <p className="mx-auto mt-4 max-w-2xl text-base text-zinc-500 dark:text-zinc-400">
           Complete bounties to earn XP and climb the leaderboard. From development to design,
           there are opportunities for every skill set.
         </p>
       </div>
 
-      {/* How it works (compact) */}
-      <div className="mb-10 grid gap-4 md:grid-cols-4">
-        {[
-          { step: '1', title: 'Browse', desc: 'Find a bounty that matches your skills.' },
-          { step: '2', title: 'Submit', desc: 'Complete the task and submit proof.' },
-          { step: '3', title: 'Review', desc: 'A reviewer verifies your submission.' },
-          { step: '4', title: 'Earn XP', desc: 'Get rewarded with XP upon approval.' },
-        ].map((item) => (
-          <div key={item.step} className="text-center">
-            <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-red-900/30 text-red-400 font-bold text-sm mb-2">
-              {item.step}
-            </div>
-            <h3 className="font-semibold text-zinc-200 text-sm">{item.title}</h3>
-            <p className="mt-0.5 text-xs text-zinc-500">{item.desc}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Filters */}
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap gap-2">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat.value}
-              onClick={() => setCategory(cat.value)}
-              className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                category === cat.value
-                  ? 'bg-red-600 text-white'
-                  : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
-        <div className="w-full sm:w-64">
+      {/* Filters — search + dropdown */}
+      <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="w-full sm:w-56">
           <Input
             placeholder="Search bounties..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            className="rounded-xl border-zinc-200 bg-transparent text-sm dark:border-zinc-800"
           />
         </div>
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-600 outline-none focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400 dark:focus:border-zinc-600 sm:w-48"
+        >
+          {CATEGORIES.map((cat) => (
+            <option key={cat.value} value={cat.value}>{cat.label}</option>
+          ))}
+        </select>
       </div>
 
       {/* Bounty list */}
@@ -143,31 +103,51 @@ export default function BountyPage() {
           description={category || searchDebounced ? 'Try adjusting your filters.' : 'Check back soon for new bounties.'}
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {bounties.map((bounty) => (
             <Link key={bounty.id} href={`/bounty/${bounty.id}`}>
-              <Card className="h-full hover:border-zinc-600 transition-colors cursor-pointer">
-                <div className="flex items-start justify-between gap-2 mb-3">
-                  <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium ${CATEGORY_COLORS[bounty.category] || 'text-zinc-400 bg-zinc-800'}`}>
-                    <span>{CATEGORY_ICONS[bounty.category] || ''}</span>
-                    {bounty.category}
-                  </span>
-                  <span className="rounded-full bg-green-900/40 px-2 py-0.5 text-xs font-bold text-green-400">
-                    +{bounty.xpReward} XP
-                  </span>
+              <div className="group h-full rounded-2xl border border-zinc-200 bg-white transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700 overflow-hidden">
+                {/* Image placeholder */}
+                <div className="flex h-36 items-center justify-center bg-zinc-50 dark:bg-zinc-900">
+                  <svg className="h-8 w-8 text-zinc-300 dark:text-zinc-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
                 </div>
 
-                <h3 className="text-base font-semibold text-zinc-100 mb-2 line-clamp-2">{bounty.title}</h3>
-                <p className="text-sm text-zinc-500 line-clamp-2 mb-4">{bounty.description}</p>
+                {/* Content */}
+                <div className="p-5">
+                  {/* Category + XP row */}
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                      {bounty.category}
+                    </span>
+                    <span className="rounded-full bg-[#FF394A]/10 px-2.5 py-0.5 text-[10px] font-bold text-[#FF394A]">
+                      +{bounty.xpReward} XP
+                    </span>
+                  </div>
 
-                <div className="mt-auto flex flex-wrap items-center gap-2 text-xs text-zinc-500">
-                  <Badge variant="default">{TYPE_LABELS[bounty.type] || bounty.type}</Badge>
-                  <span>{bounty.submissionCount} submission{bounty.submissionCount !== 1 ? 's' : ''}</span>
-                  {bounty.endsAt && (
-                    <span>Ends {new Date(bounty.endsAt).toLocaleDateString()}</span>
-                  )}
+                  <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mb-1.5 line-clamp-2">{bounty.title}</h3>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 mb-4">{bounty.description}</p>
+
+                  {/* Meta row */}
+                  <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-4">
+                    <span>{TYPE_LABELS[bounty.type] || bounty.type}</span>
+                    <span className="text-zinc-300 dark:text-zinc-700">·</span>
+                    <span>{bounty.submissionCount} submission{bounty.submissionCount !== 1 ? 's' : ''}</span>
+                    {bounty.endsAt && (
+                      <>
+                        <span className="text-zinc-300 dark:text-zinc-700">·</span>
+                        <span>Ends {new Date(bounty.endsAt).toLocaleDateString()}</span>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Apply button */}
+                  <span className="block w-full rounded-lg border border-zinc-200 py-2 text-center text-xs font-bold text-zinc-600 transition-all group-hover:border-[#FF394A] group-hover:bg-[#FF394A] group-hover:text-white dark:border-zinc-700 dark:text-zinc-400 dark:group-hover:border-[#FF394A] dark:group-hover:bg-[#FF394A] dark:group-hover:text-white">
+                    View & Apply
+                  </span>
                 </div>
-              </Card>
+              </div>
             </Link>
           ))}
         </div>
