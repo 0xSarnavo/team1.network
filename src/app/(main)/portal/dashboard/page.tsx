@@ -1,577 +1,330 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/context/auth-context';
 import { useApi } from '@/lib/hooks/use-api';
-import { Card, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
-import { StatCard } from '@/components/ui/stat-card';
 import { PageLoader } from '@/components/ui/spinner';
-import { EmptyState } from '@/components/ui/empty-state';
+import { Input } from '@/components/ui/input';
+import { Settings, LogOut, ArrowRight, Search, ChevronDown, Calendar, Users, FileText } from 'lucide-react';
+import { BentoCard } from '@/components/portal/bento-card';
+import { HorizontalCarousel } from '@/components/portal/horizontal-carousel';
 
 // ---------------------------------------------------------------------------
-// Types
+// Types & Interfaces
 // ---------------------------------------------------------------------------
-
-interface DashboardRegion {
-  id: string;
-  name: string;
-  slug: string;
-  logoUrl: string | null;
-  role: string;
-  isPrimary: boolean;
-}
-
-interface QuestSubmission {
-  submissionId: string;
-  quest: {
-    id: string;
-    title: string;
-    xpReward: number;
-    difficulty: string;
-  };
-  status: 'pending' | 'approved' | 'rejected';
-  submittedAt: string;
-}
-
-interface UpcomingEvent {
-  id: string;
-  title: string;
-  startDate: string;
-  endDate: string;
-  location: string;
-  isVirtual: boolean;
-  type: string;
-}
 
 interface DashboardData {
   user: {
     totalXp: number;
     level: number;
     displayName: string;
+    avatarUrl?: string;
   };
-  regions: DashboardRegion[];
-  questProgress: QuestSubmission[];
-  upcomingEvents: UpcomingEvent[];
 }
 
-interface BountyItem {
+interface EventItem {
   id: string;
   title: string;
-  category: string;
-  xpReward: number;
   type: string;
-  status: string;
-  submissionCount: number;
-  maxSubmissions: number | null;
-  endsAt: string | null;
+  description: string;
+  image?: string;
+  badge?: string;
 }
 
-interface BountySubmission {
-  id: string;
-  bountyId: string;
-  status: string;
-  createdAt: string;
-  bounty: {
-    id: string;
-    title: string;
-    xpReward: number;
-    category: string;
-  };
-}
-
-interface XpTransaction {
-  id: string;
-  amount: number;
-  sourceType: string;
-  description: string | null;
-  createdAt: string;
-}
-
-interface LeaderboardUser {
-  rank: number;
-  id: string;
-  displayName: string;
-  username: string | null;
-  avatarUrl: string | null;
-  totalXp: number;
-  level: number;
-}
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-}
-
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  });
-}
-
-function questStatusVariant(status: QuestSubmission['status']) {
-  switch (status) {
-    case 'approved':
-      return 'success' as const;
-    case 'rejected':
-      return 'danger' as const;
-    default:
-      return 'warning' as const;
-  }
-}
-
-function difficultyVariant(difficulty: string) {
-  switch (difficulty) {
-    case 'easy':
-      return 'success' as const;
-    case 'hard':
-      return 'danger' as const;
-    default:
-      return 'warning' as const;
-  }
-}
-
-function submissionStatusVariant(status: string) {
-  switch (status) {
-    case 'approved':
-      return 'success' as const;
-    case 'rejected':
-      return 'danger' as const;
-    default:
-      return 'warning' as const;
-  }
-}
-
-const XP_SOURCE_LABELS: Record<string, string> = {
-  bounty_base: 'Bounty Reward',
-  bounty_winner: 'Bounty Winner Bonus',
-  quest_complete: 'Quest Completed',
-  event_attend: 'Event Attendance',
-  event_host: 'Event Hosted',
-  grant_milestone: 'Grant Milestone',
-  profile_complete: 'Profile Completed',
-  badge_bonus: 'Badge Bonus',
-  community: 'Community Contribution',
-  manual: 'Manual Award',
-};
-
-const RANK_STYLES: Record<number, string> = {
-  1: 'text-yellow-400 bg-yellow-900/30 border-yellow-700',
-  2: 'text-zinc-300 bg-zinc-700/30 border-zinc-600',
-  3: 'text-orange-400 bg-orange-900/30 border-orange-700',
-};
-
-// ---------------------------------------------------------------------------
-// Quick‑links config
-// ---------------------------------------------------------------------------
-
-const quickLinks = [
-  { label: 'Browse Bounties', href: '/bounty', color: 'text-red-400', desc: 'Find bounties to earn XP' },
-  { label: 'All Quests', href: '/portal/quests', color: 'text-yellow-400', desc: 'Complete quests for rewards' },
-  { label: 'All Events', href: '/portal/events', color: 'text-blue-400', desc: 'Discover upcoming events' },
-  { label: 'Leaderboard', href: '/portal/leaderboard', color: 'text-green-400', desc: 'See top members' },
-  { label: 'Browse Regions', href: '/portal', color: 'text-cyan-400', desc: 'Explore regional communities' },
-  { label: 'Membership', href: '/portal/membership', color: 'text-purple-400', desc: 'Manage your membership' },
+// Dummy data for the new layout format
+const DUMMY_EVENTS: EventItem[] = [
+  {
+    id: '1',
+    title: 'Team1 India Workshop Guide',
+    type: 'PUBLIC',
+    description: 'Build on Avalanche \u2014 from wallet setup to deploying your own L1 chain.',
+    badge: 'PUBLIC',
+    image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80',
+  },
+  {
+    id: '2',
+    title: '[Apply] City Connect',
+    type: 'MEMBER',
+    description: 'City Connect events bring together independent builders, founders, creators, and ecosystem...',
+    badge: 'MEMBER',
+    image: 'https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=800&q=80',
+  },
+  {
+    id: '3',
+    title: '[Apply] Campus Connect',
+    type: 'MEMBER',
+    description: 'Campus Connect events are structured entry-point engagements designed to introduce Avalanche and...',
+    badge: 'MEMBER',
+    image: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=800&q=80',
+  },
 ];
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
+const TABS = [
+  { id: 'events', label: 'EVENTS' },
+  { id: 'programs', label: 'PROGRAMS' },
+  { id: 'content', label: 'CONTENT' },
+];
 
 export default function DashboardPage() {
-  const { user: authUser } = useAuth();
+  const { user: authUser, logout } = useAuth();
+  const [activeTab, setActiveTab] = useState('events');
+  const [resourceSearch, setResourceSearch] = useState('');
+  const [playbookSearch, setPlaybookSearch] = useState('');
+
   const { data, loading, error } = useApi<DashboardData>(
     authUser ? '/api/portal/dashboard' : '',
     { immediate: !!authUser },
   );
 
-  // Additional data fetches for new sections
-  const { data: activeBounties } = useApi<BountyItem[]>(
-    authUser ? '/api/bounty?limit=5' : '',
-    { immediate: !!authUser },
-  );
+  if (loading) return <PageLoader />;
 
-  const { data: mySubmissions } = useApi<BountySubmission[]>(
-    authUser ? '/api/bounty/my-submissions?limit=5' : '',
-    { immediate: !!authUser },
-  );
-
-  const { data: xpHistory } = useApi<XpTransaction[]>(
-    authUser ? '/api/portal/xp-history?limit=8' : '',
-    { immediate: !!authUser },
-  );
-
-  const { data: leaderboard } = useApi<LeaderboardUser[]>(
-    authUser ? '/api/leaderboard/members?limit=5' : '',
-    { immediate: !!authUser },
-  );
-
-  // ---- Loading / error states ----
-  if (loading || !data) return <PageLoader />;
-
-  if (error) {
-    return (
-      <div className="mx-auto max-w-7xl px-4 py-8">
-        <p className="text-red-400">Failed to load dashboard. Please try again later.</p>
-      </div>
-    );
-  }
-
-  const { user, regions, questProgress, upcomingEvents } = data;
-
-  // ---- Derived values ----
-  const pendingQuests = questProgress.filter((q) => q.status === 'pending').length;
-  const approvedQuests = questProgress.filter((q) => q.status === 'approved').length;
+  // Display placeholders if auth fails gracefully
+  const user = data?.user || {
+    displayName: authUser?.displayName || 'Builder',
+    totalXp: 0,
+    level: 1,
+    avatarUrl: authUser?.avatarUrl || null,
+  };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8">
+    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       {/* ---------------------------------------------------------------- */}
-      {/* Welcome Header                                                    */}
+      {/* 1. Header Row                                                     */}
       {/* ---------------------------------------------------------------- */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-zinc-100">
-          Welcome back, <span className="text-red-500">{user.displayName}</span>
-        </h1>
-        <div className="mt-2 flex items-center gap-3">
-          <Badge variant="info">Level {user.level}</Badge>
-          <Badge variant="success">{user.totalXp.toLocaleString()} XP</Badge>
-        </div>
-      </div>
-
-      {/* ---------------------------------------------------------------- */}
-      {/* Stat Cards                                                        */}
-      {/* ---------------------------------------------------------------- */}
-      <div className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Level" value={user.level} />
-        <StatCard label="Total XP" value={user.totalXp.toLocaleString()} />
-        <StatCard label="Regions" value={regions.length} />
-        <StatCard label="Quests Completed" value={approvedQuests} />
-      </div>
-
-      {/* ---------------------------------------------------------------- */}
-      {/* Two-column layout: Bounties + Leaderboard                        */}
-      {/* ---------------------------------------------------------------- */}
-      <div className="mb-10 grid gap-6 lg:grid-cols-3">
-        {/* Active Bounties — 2 cols */}
-        <div className="lg:col-span-2">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-zinc-100">Active Bounties</h2>
-            <Link href="/bounty" className="text-sm text-red-400 hover:text-red-300">
-              View all &rarr;
-            </Link>
-          </div>
-
-          {!activeBounties || activeBounties.length === 0 ? (
-            <EmptyState
-              title="No active bounties"
-              description="Check back later for new bounties to earn XP."
-            />
-          ) : (
-            <div className="space-y-2">
-              {activeBounties.slice(0, 5).map((b) => (
-                <Link key={b.id} href={`/bounty/${b.id}`}>
-                  <Card className="hover:border-zinc-700 transition-colors cursor-pointer">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <Badge variant="default">{b.category}</Badge>
-                          <span className="text-xs font-medium text-green-400">+{b.xpReward} XP</span>
-                        </div>
-                        <p className="text-sm font-medium text-zinc-200 truncate">{b.title}</p>
-                      </div>
-                      <div className="text-xs text-zinc-500 shrink-0">
-                        {b.submissionCount} submissions
-                      </div>
-                    </div>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          )}
-
-          {/* My Bounty Submissions */}
-          {mySubmissions && mySubmissions.length > 0 && (
-            <div className="mt-6">
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-zinc-200">My Submissions</h3>
-                <Link href="/bounty" className="text-sm text-zinc-500 hover:text-zinc-300">
-                  View all &rarr;
-                </Link>
-              </div>
-              <Card>
-                <CardContent className="divide-y divide-zinc-800">
-                  {mySubmissions.slice(0, 5).map((s) => (
-                    <Link
-                      key={s.id}
-                      href={`/bounty/${s.bountyId}`}
-                      className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0 hover:bg-zinc-800/30 -mx-2 px-2 rounded-lg transition-colors"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-zinc-200 truncate">{s.bounty.title}</p>
-                        <p className="text-xs text-zinc-500 mt-0.5">Submitted {formatDate(s.createdAt)}</p>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-xs text-green-400">+{s.bounty.xpReward} XP</span>
-                        <Badge variant={submissionStatusVariant(s.status)}>{s.status}</Badge>
-                      </div>
-                    </Link>
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </div>
-
-        {/* Leaderboard Preview — 1 col */}
+      <div className="mb-10 flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
         <div>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-zinc-100">Top Members</h2>
-            <Link href="/portal/leaderboard" className="text-sm text-red-400 hover:text-red-300">
-              Full board &rarr;
-            </Link>
-          </div>
-
-          {!leaderboard || leaderboard.length === 0 ? (
-            <Card>
-              <p className="py-6 text-center text-sm text-zinc-500">No rankings yet.</p>
-            </Card>
-          ) : (
-            <Card>
-              <CardContent className="space-y-3">
-                {leaderboard.slice(0, 5).map((u) => (
-                  <div key={u.id} className="flex items-center gap-3">
-                    <span
-                      className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold shrink-0 ${
-                        RANK_STYLES[u.rank] ? `border ${RANK_STYLES[u.rank]}` : 'text-zinc-500'
-                      }`}
-                    >
-                      {u.rank}
-                    </span>
-                    <Avatar src={u.avatarUrl} alt={u.displayName} size="sm" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-zinc-200 truncate">{u.displayName}</p>
-                      {u.username && (
-                        <p className="text-xs text-zinc-500 truncate">@{u.username}</p>
-                      )}
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-sm font-bold text-green-400">{u.totalXp.toLocaleString()}</p>
-                      <p className="text-xs text-zinc-500">Lv.{u.level}</p>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          )}
+          <h1 className="text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50">
+            Member Portal
+          </h1>
+          <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+            Welcome back, <span className="font-semibold text-zinc-900 dark:text-zinc-200">{user.displayName}</span>.
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <Link
+            href="/portal/contribute"
+            className="rounded-xl border border-zinc-200 bg-white px-5 py-2.5 text-sm font-bold text-zinc-900 transition-all hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-50 dark:text-black dark:hover:bg-white"
+          >
+            submit your contributions
+          </Link>
+          
+          <Link href="/profile" className="shrink-0 transition-transform hover:scale-105">
+            <Avatar src={user.avatarUrl} alt={user.displayName} size="md" className="h-10 w-10 ring-2 ring-zinc-200 dark:ring-zinc-800" />
+          </Link>
+          
+          <Link
+            href="/profile/settings/general"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+          >
+            <Settings className="h-4 w-4" />
+          </Link>
+          
+          <button
+            onClick={logout}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-600 transition-colors hover:bg-red-100 dark:border-red-900/30 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-900/50"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
         </div>
       </div>
 
       {/* ---------------------------------------------------------------- */}
-      {/* XP History                                                        */}
+      {/* 2. Profile Completion Banner                                      */}
       {/* ---------------------------------------------------------------- */}
-      <section className="mb-10">
-        <h2 className="mb-4 text-2xl font-bold text-zinc-100">XP History</h2>
-
-        {!xpHistory || xpHistory.length === 0 ? (
-          <EmptyState
-            title="No XP earned yet"
-            description="Complete quests, bounties, and attend events to earn XP."
-          />
-        ) : (
-          <Card>
-            <CardContent className="divide-y divide-zinc-800">
-              {xpHistory.map((tx) => (
-                <div
-                  key={tx.id}
-                  className="flex items-center justify-between gap-4 py-2.5 first:pt-0 last:pb-0"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-zinc-200">
-                      {XP_SOURCE_LABELS[tx.sourceType] || tx.sourceType}
-                    </p>
-                    {tx.description && (
-                      <p className="text-xs text-zinc-500 truncate mt-0.5">{tx.description}</p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <span className={`text-sm font-bold ${tx.amount >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {tx.amount >= 0 ? '+' : ''}{tx.amount} XP
-                    </span>
-                    <span className="text-xs text-zinc-600">{formatDate(tx.createdAt)}</span>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
-      </section>
+      <Link href="/profile/edit" className="mb-12 block group">
+        <div className="flex items-center justify-between rounded-2xl border border-amber-500/30 bg-amber-500/5 px-6 py-5 transition-all group-hover:bg-amber-500/10 dark:border-amber-500/20 dark:bg-amber-950/20 dark:group-hover:bg-amber-950/40">
+          <div className="flex items-center gap-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-500">
+              <Users className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Complete Your Profile</h2>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                Please fill in your name, X handle, telegram, and wallet address to complete your profile.
+              </p>
+            </div>
+          </div>
+          <div className="shrink-0 text-amber-600 transition-transform group-hover:translate-x-1 dark:text-amber-500">
+            <ArrowRight className="h-5 w-5" />
+          </div>
+        </div>
+      </Link>
 
       {/* ---------------------------------------------------------------- */}
-      {/* My Regions                                                        */}
+      {/* 3. Resource Tabs & Carousel                                       */}
       {/* ---------------------------------------------------------------- */}
-      <section className="mb-10">
-        <h2 className="mb-4 text-2xl font-bold text-zinc-100">My Regions</h2>
-
-        {regions.length === 0 ? (
-          <EmptyState
-            title="You haven't joined a region yet"
-            description="Regions are local communities where you can attend events, earn XP, and connect with others."
-            action={{
-              label: 'Join a Region',
-              onClick: () => {
-                window.location.href = '/portal/membership';
-              },
-            }}
-          />
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {regions.map((region) => (
-              <Link key={region.id} href={`/portal/regions/${region.slug}`}>
-                <Card className="hover:border-red-900/50 transition-colors cursor-pointer h-full">
-                  <div className="flex items-center gap-3">
-                    {region.logoUrl ? (
-                      <img
-                        src={region.logoUrl}
-                        alt={region.name}
-                        className="h-10 w-10 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-900/30 text-red-400 font-bold">
-                        {region.name[0]}
-                      </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-semibold text-zinc-200 truncate">{region.name}</h3>
-                      <div className="mt-1 flex items-center gap-2">
-                        <Badge variant="default">{region.role}</Badge>
-                        {region.isPrimary && <Badge variant="info">Primary</Badge>}
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              </Link>
+      <div className="mb-12">
+        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          {/* Tabs */}
+          <div className="flex items-center gap-1 rounded-full border border-zinc-200 bg-card p-1 text-card-foreground dark:border-zinc-800">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`rounded-full px-5 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+                  activeTab === tab.id
+                    ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100'
+                    : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200'
+                }`}
+              >
+                {tab.label}
+              </button>
             ))}
           </div>
-        )}
-      </section>
-
-      {/* ---------------------------------------------------------------- */}
-      {/* Upcoming Events                                                   */}
-      {/* ---------------------------------------------------------------- */}
-      <section className="mb-10">
-        <h2 className="mb-4 text-2xl font-bold text-zinc-100">Upcoming Events</h2>
-
-        {upcomingEvents.length === 0 ? (
-          <EmptyState
-            title="No upcoming events"
-            description="RSVP to events to see them here."
-          />
-        ) : (
-          <Card>
-            <CardContent className="divide-y divide-zinc-800">
-              {upcomingEvents.map((event) => (
-                <Link
-                  key={event.id}
-                  href={`/portal/events/${event.id}`}
-                  className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0 hover:bg-zinc-800/30 -mx-2 px-2 rounded-lg transition-colors"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-zinc-200 truncate">{event.title}</p>
-                    <p className="mt-0.5 text-sm text-zinc-500">
-                      {formatDateTime(event.startDate)}
-                      {event.location && ` \u00B7 ${event.location}`}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <Badge variant={event.isVirtual ? 'info' : 'default'}>
-                      {event.isVirtual ? 'Virtual' : 'In-Person'}
-                    </Badge>
-                    <Badge variant="default">{event.type}</Badge>
-                  </div>
-                </Link>
-              ))}
-            </CardContent>
-          </Card>
-        )}
-      </section>
-
-      {/* ---------------------------------------------------------------- */}
-      {/* Quest Progress                                                    */}
-      {/* ---------------------------------------------------------------- */}
-      <section className="mb-10">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-zinc-100">Quest Progress</h2>
-          {pendingQuests > 0 && (
-            <Badge variant="warning">{pendingQuests} pending</Badge>
-          )}
-        </div>
-
-        {questProgress.length === 0 ? (
-          <EmptyState
-            title="No quest submissions yet"
-            description="Complete quests to earn XP and track your progress here."
-          />
-        ) : (
-          <Card>
-            <CardContent className="divide-y divide-zinc-800">
-              {questProgress.map((submission) => (
-                <Link
-                  key={submission.submissionId}
-                  href={`/portal/quests/${submission.quest.id}`}
-                  className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0 hover:bg-zinc-800/30 -mx-2 px-2 rounded-lg transition-colors"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-zinc-200 truncate">
-                      {submission.quest.title}
-                    </p>
-                    <p className="mt-0.5 text-sm text-zinc-500">
-                      Submitted {formatDate(submission.submittedAt)}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <Badge variant={difficultyVariant(submission.quest.difficulty)}>
-                      {submission.quest.difficulty}
-                    </Badge>
-                    <Badge variant="success">+{submission.quest.xpReward} XP</Badge>
-                    <Badge variant={questStatusVariant(submission.status)}>
-                      {submission.status}
-                    </Badge>
-                  </div>
-                </Link>
-              ))}
-            </CardContent>
-          </Card>
-        )}
-      </section>
-
-      {/* ---------------------------------------------------------------- */}
-      {/* Quick Actions                                                     */}
-      {/* ---------------------------------------------------------------- */}
-      <section>
-        <h2 className="mb-4 text-2xl font-bold text-zinc-100">Quick Actions</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {quickLinks.map((link) => (
-            <Link key={link.href} href={link.href}>
-              <Card className="hover:border-zinc-700 transition-colors cursor-pointer">
-                <p className={`text-base font-semibold ${link.color}`}>{link.label}</p>
-                <p className="text-xs text-zinc-500 mt-1">{link.desc}</p>
-              </Card>
+          
+          {/* Filters & Actions */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+              <Input
+                placeholder="Search..."
+                value={resourceSearch}
+                onChange={(e) => setResourceSearch(e.target.value)}
+                className="w-full bg-card min-w-[200px] rounded-xl border-zinc-200 pl-9 text-sm focus:border-zinc-400 dark:border-zinc-800 dark:focus:border-zinc-600 sm:w-64"
+              />
+            </div>
+            
+            <button className="flex h-10 items-center gap-2 rounded-xl border border-zinc-200 bg-card px-4 text-xs font-bold text-zinc-600 hover:bg-zinc-50 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-900">
+              <Search className="h-3.5 w-3.5" />
+              ALL VIEW
+              <ChevronDown className="h-3.5 w-3.5" />
+            </button>
+            
+            <Link
+              href="/portal/events"
+              className="flex h-10 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-card px-5 text-xs font-bold uppercase tracking-wider text-zinc-600 hover:bg-zinc-50 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-900"
+            >
+              SEE ALL <ArrowRight className="h-3.5 w-3.5" />
             </Link>
-          ))}
+          </div>
         </div>
-      </section>
+
+        {/* Horizontal Carousel for Events */}
+        {activeTab === 'events' && (
+          <HorizontalCarousel>
+            {DUMMY_EVENTS.map((event) => (
+              <div key={event.id} className="w-[340px] shrink-0 sm:w-[400px]">
+                <div className="group flex h-full flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-card text-card-foreground transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:hover:border-zinc-700">
+                  <div className="relative h-48 w-full overflow-hidden bg-zinc-100 dark:bg-zinc-900">
+                    {event.image ? (
+                      <img src={event.image} alt={event.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center opacity-20">
+                        <Calendar className="h-12 w-12" />
+                      </div>
+                    )}
+                    {/* Badge Overlay */}
+                    {event.badge && (
+                      <div className="absolute right-3 top-3 rounded bg-zinc-900/80 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-md">
+                        {event.badge}
+                      </div>
+                    )}
+                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent" />
+                  </div>
+                  <div className="flex flex-1 flex-col p-5">
+                    <h3 className="mb-2 text-lg font-bold text-zinc-900 dark:text-zinc-100">{event.title}</h3>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400 line-clamp-2">{event.description}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </HorizontalCarousel>
+        )}
+        {activeTab !== 'events' && (
+          <div className="flex h-48 items-center justify-center rounded-2xl border border-dashed border-zinc-200 bg-card text-card-foreground dark:border-zinc-800">
+            <p className="text-sm text-zinc-500">No {activeTab} available.</p>
+          </div>
+        )}
+      </div>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* 4. Playbooks Section                                              */}
+      {/* ---------------------------------------------------------------- */}
+      <div className="mb-12">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">Playbooks</h2>
+          
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+              <Input
+                placeholder="Search playbooks..."
+                value={playbookSearch}
+                onChange={(e) => setPlaybookSearch(e.target.value)}
+                className="w-full min-w-[200px] bg-card rounded-xl border-zinc-200 pl-9 text-sm focus:border-zinc-400 dark:border-zinc-800 dark:focus:border-zinc-600 sm:w-64"
+              />
+            </div>
+            <Link
+              href="/portal/playbooks"
+              className="flex h-10 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-card px-5 text-xs font-bold uppercase tracking-wider text-zinc-600 hover:bg-zinc-50 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-900"
+            >
+              VIEW ALL <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </div>
+
+        <div className="flex h-48 items-center justify-center rounded-2xl bg-card border border-zinc-200 text-card-foreground dark:border-zinc-800">
+          <p className="text-sm text-zinc-500">No playbooks available.</p>
+        </div>
+      </div>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* 5. 2-Column Community Links                                       */}
+      {/* ---------------------------------------------------------------- */}
+      <div className="grid gap-6 md:grid-cols-2 mb-16">
+        <Link href="/portal/proposals" className="group block">
+          <BentoCard className="h-full transition-all hover:bg-zinc-50 dark:hover:bg-zinc-900/50 hover:border-zinc-300 dark:hover:border-zinc-700">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">New Proposals</h3>
+                  <p className="text-xs text-zinc-500">Vote on upcoming ideas</p>
+                </div>
+              </div>
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 transition-colors group-hover:bg-[#FF394A] group-hover:text-white dark:bg-zinc-800/50">
+                <ArrowRight className="h-4 w-4" />
+              </div>
+            </div>
+            <div className="mt-4 rounded-xl border border-zinc-200/50 bg-zinc-50/50 p-6 dark:border-zinc-800/50 dark:bg-zinc-900/30">
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                No active proposals at the moment. Check back later or start a new discussion.
+              </p>
+            </div>
+          </BentoCard>
+        </Link>
+        
+        <Link href="/portal/members" className="group block">
+          <BentoCard className="h-full transition-all hover:bg-zinc-50 dark:hover:bg-zinc-900/50 hover:border-zinc-300 dark:hover:border-zinc-700">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400">
+                  <Users className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Member Directory</h3>
+                  <p className="text-xs text-zinc-500">Connect with the community</p>
+                </div>
+              </div>
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 transition-colors group-hover:bg-[#FF394A] group-hover:text-white dark:bg-zinc-800/50">
+                <ArrowRight className="h-4 w-4" />
+              </div>
+            </div>
+            <div className="mt-4 rounded-xl border border-zinc-200/50 bg-zinc-50/50 p-6 dark:border-zinc-800/50 dark:bg-zinc-900/30">
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                Connect with other builders, mentors, and contributors. Find peers and collaborate on new ideas.
+              </p>
+            </div>
+          </BentoCard>
+        </Link>
+      </div>
+
     </div>
   );
 }
