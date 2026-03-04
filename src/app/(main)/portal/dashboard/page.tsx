@@ -34,6 +34,16 @@ interface EventItem {
   badge?: string;
 }
 
+interface LeaderboardUser {
+  rank: number;
+  id: string;
+  displayName: string;
+  username: string | null;
+  avatarUrl: string | null;
+  totalXp: number;
+  level: number;
+}
+
 // Dummy data for the new layout format
 const DUMMY_EVENTS: EventItem[] = [
   {
@@ -63,19 +73,27 @@ const DUMMY_EVENTS: EventItem[] = [
 ];
 
 const TABS = [
-  { id: 'events', label: 'EVENTS' },
-  { id: 'programs', label: 'PROGRAMS' },
-  { id: 'content', label: 'CONTENT' },
+  { id: 'guild', label: 'GUILD' },
+  { id: 'program', label: 'PROGRAM' },
+  { id: 'host', label: 'HOST' },
 ];
 
 export default function DashboardPage() {
   const { user: authUser, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState('events');
+  const [activeTab, setActiveTab] = useState('guild');
+  const [questTab, setQuestTab] = useState('MEMBER');
+  const [visibilityMode, setVisibilityMode] = useState<'public' | 'member'>('member');
   const [resourceSearch, setResourceSearch] = useState('');
-  const [playbookSearch, setPlaybookSearch] = useState('');
+
+  const QUEST_TABS = ['MEMBER', 'DAILY', 'WEEKLY', 'MONTHLY'];
 
   const { data, loading, error } = useApi<DashboardData>(
     authUser ? '/api/portal/dashboard' : '',
+    { immediate: !!authUser },
+  );
+
+  const { data: leaderboard } = useApi<LeaderboardUser[]>(
+    authUser ? '/api/leaderboard/members?limit=3' : '',
     { immediate: !!authUser },
   );
 
@@ -133,14 +151,20 @@ export default function DashboardPage() {
       </div>
 
       {/* ---------------------------------------------------------------- */}
-      {/* 2. Profile Completion Banner                                      */}
+      {/* 2. Main Layout Split                                              */}
       {/* ---------------------------------------------------------------- */}
-      <Link href="/profile/edit" className="mb-12 block group">
-        <div className="flex items-center justify-between rounded-2xl border border-amber-500/30 bg-amber-500/5 px-6 py-5 transition-all group-hover:bg-amber-500/10 dark:border-amber-500/20 dark:bg-amber-950/20 dark:group-hover:bg-amber-950/40">
-          <div className="flex items-center gap-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-500">
-              <Users className="h-5 w-5" />
-            </div>
+      <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex-1 min-w-0">
+          
+          {/* ---------------------------------------------------------------- */}
+          {/* Profile Completion Banner                                        */}
+          {/* ---------------------------------------------------------------- */}
+          <Link href="/profile/edit" className="mb-12 block group">
+            <div className="flex items-center justify-between rounded-2xl border border-amber-500/30 bg-amber-500/5 px-6 py-5 transition-all group-hover:bg-amber-500/10 dark:border-amber-500/20 dark:bg-amber-950/20 dark:group-hover:bg-amber-950/40">
+              <div className="flex items-center gap-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-500">
+                  <Users className="h-5 w-5" />
+                </div>
             <div>
               <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Complete Your Profile</h2>
               <p className="text-sm text-zinc-600 dark:text-zinc-400">
@@ -158,9 +182,34 @@ export default function DashboardPage() {
       {/* 3. Resource Tabs & Carousel                                       */}
       {/* ---------------------------------------------------------------- */}
       <div className="mb-12">
-        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          {/* Tabs */}
-          <div className="flex items-center gap-1 rounded-full border border-zinc-200 bg-card p-1 text-card-foreground dark:border-zinc-800">
+        <div className="mb-6 flex flex-col gap-4 2xl:flex-row 2xl:items-center 2xl:justify-between">
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Visibility Toggle */}
+            <div className="flex items-center gap-1 rounded-full border border-zinc-200 bg-card p-1 text-card-foreground dark:border-zinc-800">
+              <button
+                onClick={() => setVisibilityMode('public')}
+                className={`rounded-full px-5 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+                  visibilityMode === 'public'
+                    ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100'
+                    : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200'
+                }`}
+              >
+                PUBLIC
+              </button>
+              <button
+                onClick={() => setVisibilityMode('member')}
+                className={`rounded-full px-5 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+                  visibilityMode === 'member'
+                    ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100'
+                    : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200'
+                }`}
+              >
+                MEMBER
+              </button>
+            </div>
+
+            {/* Content Tabs */}
+            <div className="flex items-center gap-1 rounded-full border border-zinc-200 bg-card p-1 text-card-foreground dark:border-zinc-800">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
@@ -174,6 +223,7 @@ export default function DashboardPage() {
                 {tab.label}
               </button>
             ))}
+          </div>
           </div>
           
           {/* Filters & Actions */}
@@ -242,37 +292,6 @@ export default function DashboardPage() {
       </div>
 
       {/* ---------------------------------------------------------------- */}
-      {/* 4. Playbooks Section                                              */}
-      {/* ---------------------------------------------------------------- */}
-      <div className="mb-12">
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">Playbooks</h2>
-          
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
-              <Input
-                placeholder="Search playbooks..."
-                value={playbookSearch}
-                onChange={(e) => setPlaybookSearch(e.target.value)}
-                className="w-full min-w-[200px] bg-card rounded-xl border-zinc-200 pl-9 text-sm focus:border-zinc-400 dark:border-zinc-800 dark:focus:border-zinc-600 sm:w-64"
-              />
-            </div>
-            <Link
-              href="/portal/playbooks"
-              className="flex h-10 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-card px-5 text-xs font-bold uppercase tracking-wider text-zinc-600 hover:bg-zinc-50 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-900"
-            >
-              VIEW ALL <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
-        </div>
-
-        <div className="flex h-48 items-center justify-center rounded-2xl bg-card border border-zinc-200 text-card-foreground dark:border-zinc-800">
-          <p className="text-sm text-zinc-500">No playbooks available.</p>
-        </div>
-      </div>
-
-      {/* ---------------------------------------------------------------- */}
       {/* 5. 2-Column Community Links                                       */}
       {/* ---------------------------------------------------------------- */}
       <div className="grid gap-6 md:grid-cols-2 mb-16">
@@ -325,6 +344,87 @@ export default function DashboardPage() {
         </Link>
       </div>
 
+      </div> {/* End left column */}
+
+      {/* ---------------------------------------------------------------- */}
+      {/* Right Sidebar                                                     */}
+      {/* ---------------------------------------------------------------- */}
+      <aside className="w-full lg:w-[360px] shrink-0 space-y-6">
+        
+        {/* Profile Stats Widget */}
+        <BentoCard className="flex flex-col items-center p-8 text-center bg-[#09090b] text-white">
+          <div className="relative mb-4">
+            <Avatar src={user.avatarUrl} alt={user.displayName} size="xl" className="h-[72px] w-[72px] bg-[#FF394A] text-white ring-2 ring-zinc-800" />
+          </div>
+          <h3 className="text-xl font-bold text-zinc-100">{user.displayName}</h3>
+          <p className="text-sm text-zinc-500 mb-8 font-medium">@{authUser?.username || 'user'}</p>
+          
+          <div className="w-full flex items-center justify-between text-xs font-bold text-zinc-400 mb-2">
+            <span className="tracking-widest uppercase">LEVEL {user.level}</span>
+            <span className="text-[#FF394A]">{user.totalXp} XP</span>
+          </div>
+          <div className="w-full relative">
+            <div className="flex justify-between text-[10px] text-zinc-500 mb-2 font-bold tracking-wider">
+              <span>Lv.{user.level}</span>
+              <span>Lv.{user.level + 1}</span>
+            </div>
+            <div className="h-2.5 w-full bg-zinc-800/50 rounded-full overflow-hidden">
+              <div className="h-full bg-zinc-600 rounded-full transition-all duration-1000" style={{ width: '0%' }} />
+            </div>
+            <p className="text-[10px] text-zinc-500 mt-2 text-center font-bold tracking-wider uppercase">0 / 500 XP</p>
+          </div>
+        </BentoCard>
+
+        {/* Quests Widget */}
+        <BentoCard className="p-7 bg-[#09090b] text-white">
+          <h3 className="text-[13px] font-black tracking-[0.15em] text-zinc-100 mb-6 uppercase">QUESTS</h3>
+          <div className="flex rounded-full border border-zinc-800/50 bg-black p-1 mb-8 overflow-x-auto scrollbar-hide">
+            {QUEST_TABS.map(t => (
+              <button 
+                key={t}
+                onClick={() => setQuestTab(t)}
+                className={`flex-1 rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-widest transition-colors min-w-max ${questTab === t ? 'bg-white text-black' : 'text-zinc-500 hover:text-zinc-300'}`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+          <div className="py-8 text-center">
+            <p className="text-[10px] font-bold tracking-[0.15em] text-zinc-600 uppercase">NO {questTab} QUESTS</p>
+          </div>
+        </BentoCard>
+
+        {/* Leaderboard Widget */}
+        <BentoCard className="p-7 bg-[#09090b] text-white">
+          <h3 className="text-[13px] font-black tracking-[0.15em] text-zinc-100 mb-6 uppercase">LEADERBOARD</h3>
+          <div className="space-y-3 mb-6">
+            {leaderboard?.map((u, i) => (
+              <Link href={`/profile/${u.id}`} key={u.id} className="flex items-center gap-4 rounded-2xl border border-zinc-800/30 bg-black/40 p-4 hover:bg-zinc-900/50 transition-colors">
+                <div className={`text-sm font-black w-4 text-center ${i === 0 ? 'text-[#FF394A]' : 'text-zinc-500'}`}>
+                  {i + 1}
+                </div>
+                <Avatar src={u.avatarUrl} alt={u.displayName} size="md" className="h-10 w-10 bg-[#FF394A] text-white" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm text-zinc-100 truncate">{u.displayName}</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-sm font-black text-[#FF394A]">{u.totalXp}</p>
+                  <p className="text-[10px] font-bold tracking-wider text-zinc-500 mt-1">Lv.{u.level}</p>
+                </div>
+              </Link>
+            ))}
+            {(!leaderboard || leaderboard.length === 0) && (
+              <p className="text-center text-xs text-zinc-600 py-6 font-medium">No rankings yet.</p>
+            )}
+          </div>
+          <Link href="/portal/leaderboard" className="flex justify-center items-center gap-2 text-[10px] font-black tracking-widest text-zinc-500 hover:text-white transition-colors">
+            VIEW ALL <ArrowRight className="h-3 w-3" />
+          </Link>
+        </BentoCard>
+
+      </aside>
+
+      </div>
     </div>
   );
 }
