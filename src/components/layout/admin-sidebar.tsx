@@ -116,10 +116,10 @@ export function AdminSidebar() {
   };
 
   return (
-    <aside className={`relative flex flex-col h-full border-r border-zinc-800 bg-zinc-950 transition-all duration-300 ease-in-out ${isMinimized ? 'w-[72px]' : 'w-64'}`}>
+    <aside className={`relative flex flex-col h-full border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 transition-all duration-300 ease-in-out ${isMinimized ? 'w-[72px]' : 'w-64'}`}>
       
       {/* Header / Logo Area */}
-      <div className="flex h-16 shrink-0 items-center justify-between border-b border-zinc-800 px-4">
+      <div className="flex h-16 shrink-0 items-center justify-between border-b border-zinc-200 dark:border-zinc-800 px-4">
         {!isMinimized && (
           <Link href="/" className="text-xl font-bold text-red-500 truncate">
             team1 admin
@@ -127,7 +127,7 @@ export function AdminSidebar() {
         )}
         <button 
           onClick={() => setIsMinimized(!isMinimized)}
-          className={`rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors ${isMinimized ? 'mx-auto' : ''}`}
+          className={`rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white transition-colors ${isMinimized ? 'mx-auto' : ''}`}
           title={isMinimized ? "Expand sidebar" : "Collapse sidebar"}
         >
           {isMinimized ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
@@ -151,7 +151,7 @@ export function AdminSidebar() {
                 onClick={() => toggleSection(section.title)}
                 className={`flex w-full items-center justify-between rounded-lg p-2 text-sm font-medium transition-colors ${
                   isMinimized ? 'justify-center' : ''
-                } hover:bg-zinc-800/50 ${hasActiveLink && !isExpanded && !isMinimized ? 'text-white' : 'text-zinc-400'}`}
+                } hover:bg-zinc-100 dark:hover:bg-zinc-800/50 ${hasActiveLink && !isExpanded && !isMinimized ? 'text-zinc-900 dark:text-white' : 'text-zinc-600 dark:text-zinc-400'}`}
                 title={section.title}
               >
                 <div className="flex items-center gap-3">
@@ -178,7 +178,7 @@ export function AdminSidebar() {
                           className={`flex items-center gap-3 rounded-md px-2 py-2 text-xs transition-colors ${
                             isActive
                               ? 'bg-red-500/10 text-red-500 font-semibold'
-                              : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200'
+                              : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-200'
                           }`}
                         >
                           {/* Optional: if you want icons on child links too, uncomment below */}
@@ -196,10 +196,10 @@ export function AdminSidebar() {
       </nav>
       
       {/* Footer Area */}
-      <div className="border-t border-zinc-800 p-4 shrink-0">
+      <div className="border-t border-zinc-200 dark:border-zinc-800 p-4 shrink-0">
         <Link 
           href="/" 
-          className={`flex items-center rounded-lg p-2 text-sm font-medium text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors ${isMinimized ? 'justify-center' : 'gap-3'}`}
+          className={`flex items-center rounded-lg p-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white transition-colors ${isMinimized ? 'justify-center' : 'gap-3'}`}
           title="Exit Admin"
         >
           <LogOut className="h-5 w-5" />

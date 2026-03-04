@@ -343,7 +343,7 @@ export default function AdminHubPage() {
       {/* Welcome Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-zinc-100">
+          <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">
             Welcome back, {user?.displayName}
           </h1>
           <p className="mt-1 text-zinc-500">
@@ -360,7 +360,7 @@ export default function AdminHubPage() {
       {/* Stats Grid */}
       {stats && (
         <div>
-          <h2 className="mb-4 text-lg font-semibold text-zinc-200">
+          <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
             Platform Overview
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -480,13 +480,13 @@ export default function AdminHubPage() {
       {/* Quick Actions */}
       {isSuperAdmin && (
         <div>
-          <h2 className="mb-4 text-lg font-semibold text-zinc-200">
+          <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
             Quick Actions
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {quickActions.map((action) => (
               <Link key={action.name} href={action.href}>
-                <Card className="group h-full cursor-pointer transition-all hover:border-red-500/50 hover:bg-zinc-900/80">
+                <Card className="group h-full cursor-pointer transition-all hover:border-red-500/50 hover:bg-zinc-50 dark:hover:bg-zinc-900/80">
                   <div className="flex flex-col items-center gap-3 text-center">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-500/10 text-red-500 transition-colors group-hover:bg-red-500/20">
                       {action.icon}
@@ -507,7 +507,7 @@ export default function AdminHubPage() {
       {isSuperAdmin && (
         <div>
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-zinc-200">Announcements</h2>
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Announcements</h2>
             <Button
               variant={showAnnForm ? 'ghost' : 'primary'}
               size="sm"
@@ -583,11 +583,11 @@ export default function AdminHubPage() {
                 {announcements.map((a) => (
                   <div
                     key={a.id}
-                    className="flex items-start justify-between gap-4 rounded-lg border border-zinc-800 bg-zinc-800/30 px-4 py-3"
+                    className="flex items-start justify-between gap-4 rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-800/30 px-4 py-3"
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="font-medium text-zinc-200 truncate">{a.title}</p>
+                        <p className="font-medium text-zinc-900 dark:text-zinc-100 truncate">{a.title}</p>
                         <Badge variant={a.status === 'published' ? 'success' : 'default'}>
                           {a.status}
                         </Badge>
@@ -614,7 +614,7 @@ export default function AdminHubPage() {
       {isSuperAdmin && (
         <div>
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-zinc-200">Regions</h2>
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Regions</h2>
             <Button
               variant={showRegForm ? 'ghost' : 'primary'}
               size="sm"
@@ -688,7 +688,7 @@ export default function AdminHubPage() {
                 {adminRegions.map((region) => (
                   <div
                     key={region.id}
-                    className="rounded-lg border border-zinc-800 bg-zinc-800/30 px-4 py-3"
+                    className="rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-800/30 px-4 py-3"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-center gap-3 min-w-0">
@@ -697,7 +697,7 @@ export default function AdminHubPage() {
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <p className="font-medium text-zinc-200 truncate">{region.name}</p>
+                            <p className="font-medium text-zinc-900 dark:text-zinc-100 truncate">{region.name}</p>
                             <Badge variant={region.isActive ? 'success' : 'danger'}>
                               {region.isActive ? 'Active' : 'Inactive'}
                             </Badge>
@@ -729,7 +729,7 @@ export default function AdminHubPage() {
 
                     {/* Assign Lead inline form */}
                     {assigningLeadRegion === region.id && (
-                      <div className="mt-3 flex items-end gap-3 border-t border-zinc-800 pt-3">
+                      <div className="mt-3 flex items-end gap-3 border-t border-zinc-200 dark:border-zinc-800 pt-3">
                         <div className="flex-1">
                           <Input
                             label="User email"
@@ -757,7 +757,7 @@ export default function AdminHubPage() {
 
       {/* Module Cards */}
       <div>
-        <h2 className="mb-4 text-lg font-semibold text-zinc-200">Modules</h2>
+        <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-100">Modules</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {modules
             .filter((m) => hasModuleLead(m.module))
@@ -771,7 +771,7 @@ export default function AdminHubPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div
-                        className={`flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-800 ${m.color} transition-colors group-hover:bg-zinc-700`}
+                        className={`flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800 ${m.color} transition-colors group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700`}
                       >
                         <svg
                           className="h-5 w-5"
@@ -806,7 +806,7 @@ export default function AdminHubPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Regions Overview */}
         <div>
-          <h2 className="mb-4 text-lg font-semibold text-zinc-200">
+          <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
             Regions Overview
           </h2>
           <Card className="h-full">
@@ -817,7 +817,7 @@ export default function AdminHubPage() {
                 {regions.map((region) => (
                   <div
                     key={region.id}
-                    className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-800/30 px-4 py-3 transition-colors hover:border-zinc-700"
+                    className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-800/30 px-4 py-3 transition-colors hover:border-zinc-300 dark:hover:border-zinc-700"
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-md bg-blue-500/10 text-blue-400">
@@ -841,7 +841,7 @@ export default function AdminHubPage() {
                         </svg>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-zinc-200">
+                        <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
                           {region.name}
                         </p>
                         <p className="text-xs text-zinc-500">/{region.slug}</p>
@@ -860,7 +860,7 @@ export default function AdminHubPage() {
         {/* Recent Users */}
         <div>
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-zinc-200">
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
               Recent Users
             </h2>
             <Link href="/admin/users">
@@ -877,7 +877,7 @@ export default function AdminHubPage() {
                 {recentUsers.map((u) => (
                   <div
                     key={u.id}
-                    className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-800/30 px-4 py-3 transition-colors hover:border-zinc-700"
+                    className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-800/30 px-4 py-3 transition-colors hover:border-zinc-300 dark:hover:border-zinc-700"
                   >
                     <div className="flex items-center gap-3">
                       <Avatar
@@ -886,7 +886,7 @@ export default function AdminHubPage() {
                         size="sm"
                       />
                       <div>
-                        <p className="text-sm font-medium text-zinc-200">
+                        <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
                           {u.displayName}
                         </p>
                         <p className="text-xs text-zinc-500">{u.email}</p>

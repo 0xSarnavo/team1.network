@@ -217,8 +217,8 @@ export default function AdminBountiesPage() {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-zinc-100">Bounty Management</h1>
-          <p className="mt-1 text-zinc-500">Create and manage global bounties across the platform.</p>
+          <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">Bounty Management</h1>
+          <p className="mt-1 text-zinc-500 dark:text-zinc-400">Create and manage global bounties across the platform.</p>
         </div>
         <div className="flex gap-2">
           <Link href="/admin/bounties/submissions">
@@ -261,7 +261,7 @@ export default function AdminBountiesPage() {
       ) : (
         <div className="space-y-3">
           {bounties.map((b) => (
-            <Card key={b.id} className="hover:border-zinc-700 transition-colors">
+            <Card key={b.id} className="hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -275,9 +275,9 @@ export default function AdminBountiesPage() {
                       <Badge variant="warning">Global</Badge>
                     )}
                   </div>
-                  <h3 className="text-base font-semibold text-zinc-100 truncate">{b.title}</h3>
-                  <p className="text-sm text-zinc-500 line-clamp-1 mt-0.5">{b.description}</p>
-                  <div className="flex flex-wrap gap-3 mt-2 text-xs text-zinc-600">
+                  <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 truncate">{b.title}</h3>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400 line-clamp-1 mt-0.5">{b.description}</p>
+                  <div className="flex flex-wrap gap-3 mt-2 text-xs text-zinc-600 dark:text-zinc-400">
                     <span>{b.submissionCount} submissions</span>
                     {b.maxSubmissions && <span>Max: {b.maxSubmissions}</span>}
                     {b.endsAt && <span>Ends: {new Date(b.endsAt).toLocaleDateString()}</span>}

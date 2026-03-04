@@ -44,7 +44,7 @@ export default function LeadsPage() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-zinc-100">Module Leads</h1>
+        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Module Leads</h1>
         <Button onClick={() => setShowModal(true)}>Assign Lead</Button>
       </div>
 
@@ -58,8 +58,8 @@ export default function LeadsPage() {
                   <CardTitle className="capitalize">{mod}</CardTitle>
                   {moduleLead ? (
                     <div className="mt-2">
-                      <p className="text-sm text-zinc-300">{moduleLead.userName}</p>
-                      <p className="text-xs text-zinc-500">{moduleLead.userEmail}</p>
+                      <p className="text-sm text-zinc-700 dark:text-zinc-300">{moduleLead.userName}</p>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">{moduleLead.userEmail}</p>
                     </div>
                   ) : (
                     <Badge variant="warning" className="mt-2">No Lead Assigned</Badge>
@@ -75,8 +75,8 @@ export default function LeadsPage() {
       <Modal open={showModal} onClose={() => setShowModal(false)} title="Assign Module Lead">
         <div className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm text-zinc-300">Module</label>
-            <select value={selectedModule} onChange={(e) => setSelectedModule(e.target.value)} className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-300">
+            <label className="mb-1 block text-sm text-zinc-700 dark:text-zinc-300">Module</label>
+            <select value={selectedModule} onChange={(e) => setSelectedModule(e.target.value)} className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
               <option value="">Select module</option>
               {modules.map((m) => <option key={m} value={m} className="capitalize">{m}</option>)}
             </select>

@@ -47,7 +47,7 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-zinc-100">Platform Settings</h1>
+      <h1 className="mb-6 text-2xl font-bold text-zinc-900 dark:text-zinc-100">Platform Settings</h1>
       <Tabs tabs={[
         {
           key: 'general', label: 'General',
@@ -70,8 +70,8 @@ export default function SettingsPage() {
               <CardTitle>Module Configuration</CardTitle>
               <div className="mt-4 space-y-3">
                 {['portal', 'grants', 'bounty', 'ecosystem', 'home'].map((mod) => (
-                  <div key={mod} className="flex items-center justify-between rounded-lg border border-zinc-800 px-4 py-3">
-                    <span className="text-sm font-medium capitalize text-zinc-300">{mod}</span>
+                  <div key={mod} className="flex items-center justify-between rounded-lg border border-zinc-200 dark:border-zinc-800 px-4 py-3">
+                    <span className="text-sm font-medium capitalize text-zinc-700 dark:text-zinc-300">{mod}</span>
                     <button
                       onClick={() => setModules((m) => ({ ...m, [mod]: !m[mod] }))}
                       className={`h-5 w-9 rounded-full transition-colors ${modules[mod] !== false ? 'bg-red-600' : 'bg-zinc-700'}`}
@@ -91,11 +91,11 @@ export default function SettingsPage() {
             <Card>
               <CardTitle>Registration Settings</CardTitle>
               <div className="mt-4 space-y-4">
-                <label className="flex items-center gap-2 text-sm text-zinc-300">
+                <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
                   <input type="checkbox" checked={registration.open} onChange={(e) => setRegistration((r) => ({ ...r, open: e.target.checked }))} />
                   Open Registration
                 </label>
-                <label className="flex items-center gap-2 text-sm text-zinc-300">
+                <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
                   <input type="checkbox" checked={registration.emailVerificationRequired} onChange={(e) => setRegistration((r) => ({ ...r, emailVerificationRequired: e.target.checked }))} />
                   Require Email Verification
                 </label>
@@ -111,7 +111,7 @@ export default function SettingsPage() {
               <CardTitle>Security Settings</CardTitle>
               <div className="mt-4 space-y-4">
                 <Input label="Session Duration (days)" type="number" value={security.sessionDuration} onChange={(e) => setSecurity((s) => ({ ...s, sessionDuration: parseInt(e.target.value) || 30 }))} />
-                <label className="flex items-center gap-2 text-sm text-zinc-300">
+                <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
                   <input type="checkbox" checked={security.enforce2FA} onChange={(e) => setSecurity((s) => ({ ...s, enforce2FA: e.target.checked }))} />
                   Enforce 2FA for All Users
                 </label>
@@ -127,8 +127,8 @@ export default function SettingsPage() {
               <CardTitle>XP Configuration</CardTitle>
               <div className="mt-4 space-y-4">
                 <div>
-                  <label className="mb-1 block text-sm text-zinc-300">Level Curve</label>
-                  <select value={xp.levelCurve} onChange={(e) => setXp({ levelCurve: e.target.value })} className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-300">
+                  <label className="mb-1 block text-sm text-zinc-700 dark:text-zinc-300">Level Curve</label>
+                  <select value={xp.levelCurve} onChange={(e) => setXp({ levelCurve: e.target.value })} className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
                     <option value="linear">Linear</option>
                     <option value="quadratic">Quadratic</option>
                     <option value="exponential">Exponential</option>
