@@ -85,44 +85,67 @@ export function Navbar() {
           {loading ? (
             <div className="h-10 w-10 animate-pulse rounded-full bg-zinc-200 shadow-lg dark:bg-zinc-800" />
           ) : user ? (
-            <div className="relative">
-              <button onClick={() => setProfileOpen(!profileOpen)} className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-lg border border-zinc-200 dark:border-zinc-800 dark:bg-zinc-950 p-[2px] transition-transform hover:scale-105">
-                <Avatar src={user.avatarUrl} alt={user.displayName} size="sm" className="h-full w-full" />
-              </button>
-
+            <div className="relative z-50 flex justify-end items-start shrink-0 h-12 w-12">
               {profileOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
-                  <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-lg border border-zinc-200 bg-white py-2 shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
-                    <div className="border-b border-zinc-200 px-4 py-2 dark:border-zinc-800">
-                      <p className="font-medium text-zinc-900 dark:text-zinc-200">{user.displayName}</p>
-                      <p className="text-xs text-zinc-500">Level {user.level} &middot; {user.totalXp} XP</p>
+                <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setProfileOpen(false)} />
+              )}
+              
+              <AnimatePresence>
+                <motion.div 
+                  layout
+                  initial={false}
+                  animate={{ 
+                    width: profileOpen ? 224 : 48,
+                    height: profileOpen ? (isAdmin ? 298 : 262) : 48,
+                    borderRadius: profileOpen ? 16 : 24
+                  }}
+                  transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                  className={`absolute right-0 top-0 overflow-hidden flex flex-col justify-start bg-white border border-zinc-200 origin-top-right shadow-lg dark:bg-zinc-950 dark:border-zinc-800 z-50 ${profileOpen ? 'cursor-default' : 'hover:scale-105 cursor-pointer transition-transform duration-300'}`}
+                  onClick={() => !profileOpen && setProfileOpen(true)}
+                >
+                  {/* Collapsed State Base Avatar */}
+                  <div className={`absolute top-0 right-0 w-[48px] h-[48px] p-[2px] transition-opacity duration-200 flex items-center justify-center ${profileOpen ? 'opacity-0 pointer-events-none' : 'opacity-100 delay-100'}`}>
+                    <Avatar src={user.avatarUrl} alt={user.displayName} size="sm" className="h-full w-full pointer-events-none" />
+                  </div>
+                  
+                  {/* Expanded State Items */}
+                  <div className={`flex flex-col w-[224px] h-full text-zinc-900 dark:text-white transition-opacity duration-300 ${profileOpen ? 'opacity-100 delay-150' : 'opacity-0 pointer-events-none'}`}>
+                    <div className="border-b border-zinc-200 px-4 py-3 dark:border-zinc-800 flex items-center gap-3 shrink-0">
+                      <Avatar src={user.avatarUrl} alt={user.displayName} size="sm" className="h-10 w-10 shrink-0" />
+                      <div className="flex flex-col min-w-0">
+                        <p className="font-medium text-sm text-zinc-900 dark:text-zinc-200 truncate">{user.displayName}</p>
+                        <p className="text-xs text-zinc-500 truncate">Level {user.level} &middot; {user.totalXp} XP</p>
+                      </div>
                     </div>
-                    <Link href="/portal/dashboard" className="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200" onClick={() => setProfileOpen(false)}>
-                      Dashboard
-                    </Link>
-                    <Link href={`/profile/${user.username || user.id}`} className="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200" onClick={() => setProfileOpen(false)}>
-                      My Profile
-                    </Link>
-                    <Link href="/profile/settings/general" className="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200" onClick={() => setProfileOpen(false)}>
-                      Settings
-                    </Link>
-                    <Link href="/profile/claims" className="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200" onClick={() => setProfileOpen(false)}>
-                      Claim Center
-                    </Link>
-                    {isAdmin && (
-                      <Link href="/admin" className="block px-4 py-2 text-sm text-red-600 hover:bg-zinc-100 dark:text-red-400 dark:hover:bg-zinc-800" onClick={() => setProfileOpen(false)}>
-                        Admin Hub
+                    
+                    <div className="flex flex-col py-1 shrink-0">
+                      <Link href="/portal/dashboard" className="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200" onClick={(e) => { e.stopPropagation(); setProfileOpen(false); }}>
+                        Dashboard
                       </Link>
-                    )}
-                    <div className="mt-1 border-t border-zinc-200 pt-1 dark:border-zinc-800">
-                      <button onClick={() => { logout(); setProfileOpen(false); }} className="w-full px-4 py-2 text-left text-sm text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200">
+                      <Link href={`/profile/${user.username || user.id}`} className="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200" onClick={(e) => { e.stopPropagation(); setProfileOpen(false); }}>
+                        My Profile
+                      </Link>
+                      <Link href="/profile/settings/general" className="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200" onClick={(e) => { e.stopPropagation(); setProfileOpen(false); }}>
+                        Settings
+                      </Link>
+                      <Link href="/profile/claims" className="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200" onClick={(e) => { e.stopPropagation(); setProfileOpen(false); }}>
+                        Claim Center
+                      </Link>
+                      {isAdmin && (
+                        <Link href="/admin" className="block px-4 py-2 text-sm text-red-600 hover:bg-zinc-100 dark:text-red-400 dark:hover:bg-zinc-800" onClick={(e) => { e.stopPropagation(); setProfileOpen(false); }}>
+                          Admin Hub
+                        </Link>
+                      )}
+                    </div>
+
+                    <div className="mt-auto border-t border-zinc-200 py-1 dark:border-zinc-800 shrink-0">
+                      <button onClick={(e) => { e.stopPropagation(); logout(); setProfileOpen(false); }} className="w-full px-4 py-2 text-left text-sm text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200">
                         Sign Out
                       </button>
                     </div>
                   </div>
-                </>
-              )}
+                </motion.div>
+              </AnimatePresence>
             </div>
           ) : (
             <div className="relative z-50 h-[40px] w-[110px] flex justify-end items-start shrink-0">

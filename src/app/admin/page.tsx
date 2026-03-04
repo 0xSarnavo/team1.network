@@ -583,7 +583,7 @@ export default function AdminHubPage() {
                 {announcements.map((a) => (
                   <div
                     key={a.id}
-                    className="flex items-start justify-between gap-4 rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-800/30 px-4 py-3"
+                    className="flex items-start justify-between gap-4 rounded-lg border border-zinc-200 dark:border-zinc-800 px-4 py-3"
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
@@ -688,7 +688,7 @@ export default function AdminHubPage() {
                 {adminRegions.map((region) => (
                   <div
                     key={region.id}
-                    className="rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-800/30 px-4 py-3"
+                    className="rounded-lg border border-zinc-200 dark:border-zinc-800 px-4 py-3"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-center gap-3 min-w-0">

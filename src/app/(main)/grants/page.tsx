@@ -67,7 +67,7 @@ export default function GrantsPage() {
       </div>
 
       {/* Featured / Main Grant */}
-      <Link href="/grants/minigrants" className="block mb-5 group rounded-2xl border border-zinc-200 bg-white transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700 overflow-hidden">
+      <Link href="/grants/minigrants" className="block mb-5 group rounded-2xl border border-zinc-200 bg-card text-card-foreground transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:hover:border-zinc-700 overflow-hidden">
         <div className="grid md:grid-cols-2">
           <div className="relative overflow-hidden">
             <GrantThumbnail image={mainGrant.image} title={mainGrant.title} tall />
@@ -103,7 +103,7 @@ export default function GrantsPage() {
           <Link
             key={grant.slug}
             href="/grants/minigrants"
-            className="group rounded-2xl border border-zinc-200 bg-white transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700"
+            className="group rounded-2xl border border-zinc-200 bg-card text-card-foreground transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:hover:border-zinc-700"
           >
             <div className="relative overflow-hidden rounded-t-2xl">
               <GrantThumbnail image={grant.image} title={grant.title} />

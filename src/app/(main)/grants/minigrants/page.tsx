@@ -394,7 +394,7 @@ function ProjectCard({ project }: { project: DiscoverProject }) {
       : 'bg-zinc-500/90 text-white';
 
   return (
-    <div className="group rounded-2xl border border-zinc-200 bg-white transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700">
+    <div className="group rounded-2xl border border-zinc-200 bg-card text-card-foreground transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:hover:border-zinc-700">
       {/* Image */}
       <div className="relative overflow-hidden rounded-t-2xl">
         {project.image ? (

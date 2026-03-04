@@ -7,9 +7,9 @@ import { AuthGuard } from '@/components/layout/auth-guard';
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard requireAdmin>
-      <div className="flex h-screen overflow-hidden bg-white dark:bg-zinc-950">
+      <div className="flex h-screen overflow-hidden">
         <AdminSidebar />
-        <main className="flex-1 overflow-y-auto p-4 lg:p-8 bg-white bg-noise dark:bg-zinc-950/50">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 lg:p-8">{children}</main>
       </div>
     </AuthGuard>
   );

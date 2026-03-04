@@ -106,7 +106,7 @@ export default function BountyPage() {
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {bounties.map((bounty) => (
             <Link key={bounty.id} href={`/bounty/${bounty.id}`}>
-              <div className="group h-full rounded-2xl border border-zinc-200 bg-white transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700 overflow-hidden">
+              <div className="group h-full rounded-2xl border border-zinc-200 bg-card text-card-foreground transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:hover:border-zinc-700 overflow-hidden">
                 {/* Image placeholder */}
                 <div className="flex h-36 items-center justify-center bg-zinc-50 dark:bg-zinc-900">
                   <svg className="h-8 w-8 text-zinc-300 dark:text-zinc-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>

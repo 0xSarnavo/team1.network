@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTheme } from 'next-themes';
 import { useAuth } from '@/lib/context/auth-context';
 import { 
   BarChart, 
@@ -28,7 +29,9 @@ import {
   ChevronRight,
   PanelLeftClose,
   PanelLeftOpen,
-  LogOut
+  LogOut,
+  Moon,
+  Sun
 } from 'lucide-react';
 
 interface SidebarLink {
@@ -97,7 +100,9 @@ const sections: SidebarSection[] = [
 export function AdminSidebar() {
   const pathname = usePathname();
   const { hasModuleLead, isSuperAdmin } = useAuth();
+  const { theme, setTheme, resolvedTheme } = useTheme();
   
+  const [mounted, setMounted] = React.useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     'Admin Hub': true,
@@ -115,8 +120,16 @@ export function AdminSidebar() {
     }
   };
 
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const toggleTheme = () => {
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+  };
+
   return (
-    <aside className={`relative flex flex-col h-full border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 transition-all duration-300 ease-in-out ${isMinimized ? 'w-[72px]' : 'w-64'}`}>
+    <aside className={`relative flex flex-col h-full border-r border-zinc-200 bg-card text-card-foreground dark:border-zinc-800 transition-all duration-300 ease-in-out ${isMinimized ? 'w-[72px]' : 'w-64'}`}>
       
       {/* Header / Logo Area */}
       <div className="flex h-16 shrink-0 items-center justify-between border-b border-zinc-200 dark:border-zinc-800 px-4">
@@ -196,13 +209,23 @@ export function AdminSidebar() {
       </nav>
       
       {/* Footer Area */}
-      <div className="border-t border-zinc-200 dark:border-zinc-800 p-4 shrink-0">
+      <div className="border-t border-zinc-200 dark:border-zinc-800 p-4 shrink-0 flex flex-col gap-2">
+        {mounted && (
+          <button
+            onClick={toggleTheme}
+            className={`flex w-full items-center rounded-lg p-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white transition-colors ${isMinimized ? 'justify-center' : 'gap-3'}`}
+            title="Toggle Theme"
+          >
+            {resolvedTheme === 'dark' ? <Sun className="h-5 w-5 shrink-0" /> : <Moon className="h-5 w-5 shrink-0" />}
+            {!isMinimized && <span>{resolvedTheme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>}
+          </button>
+        )}
         <Link 
           href="/" 
           className={`flex items-center rounded-lg p-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white transition-colors ${isMinimized ? 'justify-center' : 'gap-3'}`}
           title="Exit Admin"
         >
-          <LogOut className="h-5 w-5" />
+          <LogOut className="h-5 w-5 shrink-0" />
           {!isMinimized && <span>Exit Admin</span>}
         </Link>
       </div>
