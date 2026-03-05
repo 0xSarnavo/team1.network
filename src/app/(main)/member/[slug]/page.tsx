@@ -11,6 +11,7 @@ import { PageLoader } from '@/components/ui/spinner';
 import { Input } from '@/components/ui/input';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ArrowRight, Search, ChevronDown, Calendar, Users, FileText } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { BentoCard } from '@/components/portal/bento-card';
 
 // ---------------------------------------------------------------------------
@@ -66,6 +67,35 @@ interface MembershipStatus {
   isActive: boolean;
 }
 
+interface GuideData {
+  id: string;
+  title: string;
+  slug: string;
+  category: string | null;
+  readTime: number | null;
+  coverImageUrl: string | null;
+}
+
+interface ProgramData {
+  id: string;
+  title: string;
+  description: string | null;
+  status: string;
+  startsAt: string | null;
+  endsAt: string | null;
+}
+
+interface EventData {
+  id: string;
+  title: string;
+  slug: string;
+  type: string;
+  status: string;
+  startDate: string;
+  rsvpCount: number;
+  coverImageUrl: string | null;
+}
+
 const XP_SOURCE_LABELS: Record<string, string> = {
   quest: 'Quest Completed',
   bounty: 'Bounty Approved',
@@ -79,9 +109,9 @@ function formatDate(dateStr: string): string {
 }
 
 const TABS = [
-  { id: 'guild', label: 'GUILD' },
+  { id: 'guide', label: 'GUIDE' },
   { id: 'program', label: 'PROGRAM' },
-  { id: 'host', label: 'HOST' },
+  { id: 'events', label: 'EVENTS' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -162,7 +192,7 @@ export default function MemberDashboardPage({ params }: { params: Promise<{ slug
   const { slug } = use(params);
   const { user: authUser, loading: authLoading } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('guild');
+  const [activeTab, setActiveTab] = useState('guide');
   const [questTab, setQuestTab] = useState('MEMBER');
   const [visibilityMode, setVisibilityMode] = useState<'public' | 'member'>('member');
   const [resourceSearch, setResourceSearch] = useState('');
@@ -200,6 +230,16 @@ export default function MemberDashboardPage({ params }: { params: Promise<{ slug
     authUser ? '/api/portal/xp-history' : '',
     { immediate: !!authUser },
   );
+
+  // Fetch region-scoped content for tabs
+  const guidesUrl = authUser ? `/api/portal/guides?region=${slug}&visibility=${visibilityMode}&search=${resourceSearch}` : '';
+  const { data: guidesResp, loading: guidesLoading } = useApi<GuideData[]>(guidesUrl, { immediate: !!authUser });
+
+  const programsUrl = authUser ? `/api/portal/programs?region=${slug}&visibility=${visibilityMode}` : '';
+  const { data: programsResp, loading: programsLoading } = useApi<ProgramData[]>(programsUrl, { immediate: !!authUser });
+
+  const eventsUrl = authUser ? `/api/portal/events?region=${slug}&visibility=${visibilityMode}&search=${resourceSearch}` : '';
+  const { data: eventsResp, loading: eventsLoading } = useApi<EventData[]>(eventsUrl, { immediate: !!authUser });
 
   const regions: RegionItem[] = (data as any)?.regions || [];
 
@@ -345,6 +385,90 @@ export default function MemberDashboardPage({ params }: { params: Promise<{ slug
             </Link>
           </div>
         </div>
+
+        {/* Tab Content */}
+        <div className="min-h-[120px]">
+          {activeTab === 'guide' && (
+            guidesLoading ? (
+              <div className="flex justify-center py-10"><Spinner size="sm" /></div>
+            ) : !guidesResp || guidesResp.length === 0 ? (
+              <EmptyState title="No guides yet" description="No guides available for this region." />
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {guidesResp.map((g) => (
+                  <Link key={g.id} href={`/portal/guides/${g.slug}`}>
+                    <Card className="h-full hover:border-zinc-600 transition-colors">
+                      <CardContent className="p-4">
+                        {g.category && (
+                          <span className="mb-2 block text-[10px] font-bold uppercase tracking-wider text-zinc-500">{g.category}</span>
+                        )}
+                        <h3 className="text-sm font-bold text-zinc-100 line-clamp-2">{g.title}</h3>
+                        {g.readTime && <p className="mt-2 text-[10px] text-zinc-500">{g.readTime} min read</p>}
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            )
+          )}
+
+          {activeTab === 'program' && (
+            programsLoading ? (
+              <div className="flex justify-center py-10"><Spinner size="sm" /></div>
+            ) : !programsResp || programsResp.length === 0 ? (
+              <EmptyState title="No programs yet" description="No programs available for this region." />
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {programsResp.map((p) => (
+                  <Card key={p.id} className="h-full hover:border-zinc-600 transition-colors">
+                    <CardContent className="p-4">
+                      <div className="mb-2 flex items-center gap-1.5">
+                        <span className={`inline-block h-1.5 w-1.5 rounded-full ${p.status === 'active' ? 'bg-emerald-500' : 'bg-zinc-500'}`} />
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">{p.status}</span>
+                      </div>
+                      <h3 className="text-sm font-bold text-zinc-100 line-clamp-2">{p.title}</h3>
+                      {p.description && <p className="mt-1 text-xs text-zinc-500 line-clamp-2">{p.description}</p>}
+                      {(p.startsAt || p.endsAt) && (
+                        <p className="mt-2 text-[10px] text-zinc-500">
+                          {p.startsAt && new Date(p.startsAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          {p.endsAt && ` — ${new Date(p.endsAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )
+          )}
+
+          {activeTab === 'events' && (
+            eventsLoading ? (
+              <div className="flex justify-center py-10"><Spinner size="sm" /></div>
+            ) : !eventsResp || eventsResp.length === 0 ? (
+              <EmptyState title="No events yet" description="No events available for this region." />
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {eventsResp.map((e) => (
+                  <Card key={e.id} className="h-full hover:border-zinc-600 transition-colors">
+                    <CardContent className="p-4">
+                      <div className="mb-2 flex items-center gap-2">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">{e.type}</span>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                          e.status === 'published' ? 'bg-green-900/30 text-green-400' : 'bg-zinc-800 text-zinc-400'
+                        }`}>{e.status}</span>
+                      </div>
+                      <h3 className="text-sm font-bold text-zinc-100 line-clamp-2">{e.title}</h3>
+                      <div className="mt-2 flex items-center gap-3 text-[10px] text-zinc-500">
+                        <span>{new Date(e.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                        <span>{e.rsvpCount} RSVPs</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )
+          )}
+        </div>
       </div>
 
       {/* ---------------------------------------------------------------- */}
@@ -410,27 +534,29 @@ export default function MemberDashboardPage({ params }: { params: Promise<{ slug
               const canManage = region.role === 'lead' || region.role === 'co_lead';
               return (
                 <Card key={region.id} className="hover:border-red-900/50 transition-colors h-full">
-                  <Link href={`/portal/regions/${region.slug}`} className="flex items-center gap-3">
-                    {region.logoUrl ? (
-                      <img
-                        src={region.logoUrl}
-                        alt={region.name}
-                        className="h-10 w-10 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center opacity-20">
-                        <Calendar className="h-12 w-12" />
+                  <CardContent className="p-5">
+                    <Link href={`/portal/regions/${region.slug}`} className="flex items-center gap-3 mb-3">
+                      {region.logoUrl ? (
+                        <img src={region.logoUrl} alt={region.name} className="h-10 w-10 rounded-full object-cover" />
+                      ) : (
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800">
+                          <Calendar className="h-5 w-5 text-zinc-500" />
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-sm font-bold text-zinc-100">{region.name}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">{region.role}</p>
                       </div>
-                    )}
-                  </Link>
-                  {canManage && (
-                    <Link
-                      href={`/portal/regions/${region.slug}/manage`}
-                      className="mt-3 inline-flex items-center text-xs font-medium text-red-400 hover:text-red-300 transition-colors"
-                    >
-                      Manage Region &rarr;
                     </Link>
-                  )}
+                    {canManage && (
+                      <Link
+                        href={`/admin/portal-${region.slug}`}
+                        className="mt-2 inline-flex items-center gap-1 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-1.5 text-xs font-semibold text-red-400 hover:bg-red-500/10 transition-colors"
+                      >
+                        Admin Dashboard <ArrowRight className="h-3 w-3" />
+                      </Link>
+                    )}
+                  </CardContent>
                 </Card>
               );
             })}

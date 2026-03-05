@@ -30,6 +30,9 @@ model Region {
   memberships     UserRegionMembership[]
   bounties        Bounty[]
   bountyReviewers BountyReviewer[]
+  guides          PortalGuide[]
+  programs        PortalProgram[]
+  regionForms     RegionForm[]
 
   @@map("regions")
 }
@@ -98,6 +101,7 @@ model User {
   bountyReviews        BountySubmission[]   @relation("BountyReviewer")
   bountyReviewerRoles  BountyReviewer[]     @relation("BountyReviewerUser")
   bountyReviewerAdded  BountyReviewer[]     @relation("BountyReviewerAddedBy")
+  formSubmissions      FormSubmission[]
 
   @@index([email], map: "idx_users_email")
   @@index([username], map: "idx_users_username")
@@ -731,6 +735,7 @@ model PortalEvent {
   type          EventType
   status        EventStatus @default(draft)
   regionId      String?     @map("region_id") @db.Uuid
+  visibility    String      @default("member") @db.VarChar(20)
   coverImageUrl String?     @map("cover_image_url") @db.Text
   location      String?     @db.VarChar(500)
   locationUrl   String?     @map("location_url") @db.Text
@@ -742,6 +747,7 @@ model PortalEvent {
   capacity      Int?
   speakers      Json?
   organizedBy   String?     @map("organized_by") @db.Uuid
+  formFields    Json?       @map("form_fields")
   createdBy     String      @map("created_by") @db.Uuid
   createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt     DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
@@ -841,11 +847,17 @@ model PortalGuide {
   coverImageUrl String?  @map("cover_image_url") @db.Text
   readTime      Int?     @map("read_time")
   status        String   @default("draft") @db.VarChar(20)
+  visibility    String   @default("member") @db.VarChar(20)
+  regionId      String?  @map("region_id") @db.Uuid
   authorId      String   @map("author_id") @db.Uuid
+  formFields    Json?    @map("form_fields")
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
+  region Region? @relation(fields: [regionId], references: [id])
+
   @@index([status, createdAt(sort: Desc)])
+  @@index([regionId])
   @@map("portal_guides")
 }
 
@@ -856,12 +868,18 @@ model PortalProgram {
   eligibility String?   @db.Text
   benefits    String?   @db.Text
   status      String    @default("draft") @db.VarChar(20)
+  visibility  String    @default("member") @db.VarChar(20)
+  regionId    String?   @map("region_id") @db.Uuid
   startsAt    DateTime? @map("starts_at") @db.Timestamptz()
   endsAt      DateTime? @map("ends_at") @db.Timestamptz()
   createdBy   String    @map("created_by") @db.Uuid
+  formFields  Json?     @map("form_fields")
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
+  region Region? @relation(fields: [regionId], references: [id])
+
+  @@index([regionId])
   @@map("portal_programs")
 }
 
@@ -1077,4 +1095,41 @@ model BountyReviewer {
 
   @@unique([regionId, userId])
   @@map("bounty_reviewers")
+}
+
+// ============================================================
+// REGION FORMS (Regional Lead Form Builder)
+// ============================================================
+
+model RegionForm {
+  id          String   @id @default(uuid()) @db.Uuid
+  regionId    String   @map("region_id") @db.Uuid
+  title       String   @db.VarChar(300)
+  description String?  @db.Text
+  fields      Json
+  visibility  String   @default("member") @db.VarChar(20)
+  status      String   @default("draft") @db.VarChar(20)
+  createdBy   String   @map("created_by") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  region      Region           @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  submissions FormSubmission[]
+
+  @@index([regionId, status])
+  @@map("region_forms")
+}
+
+model FormSubmission {
+  id        String   @id @default(uuid()) @db.Uuid
+  formId    String   @map("form_id") @db.Uuid
+  userId    String?  @map("user_id") @db.Uuid
+  data      Json
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  form RegionForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+  user User?      @relation(fields: [userId], references: [id])
+
+  @@index([formId, createdAt(sort: Desc)])
+  @@map("form_submissions")
 }

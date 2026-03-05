@@ -318,6 +318,7 @@ class PortalService {
     regionId?: string;
     type?: string;
     status?: string;
+    visibility?: 'public' | 'member';
   }) {
     const where: Record<string, unknown> = {};
     if (filters.regionId) where.regionId = filters.regionId;
@@ -326,6 +327,11 @@ class PortalService {
       where.status = filters.status;
     } else {
       where.status = { not: 'draft' };
+    }
+    if (filters.visibility === 'public') {
+      where.visibility = 'public';
+    } else if (filters.visibility === 'member') {
+      where.visibility = { in: ['public', 'member'] };
     }
 
     const [events, total] = await Promise.all([
@@ -588,9 +594,17 @@ class PortalService {
     limit: number;
     category?: string;
     search?: string;
+    regionId?: string;
+    visibility?: 'public' | 'member';
   }) {
     const where: Record<string, unknown> = { status: 'published' };
     if (filters.category) where.category = filters.category;
+    if (filters.regionId) where.regionId = filters.regionId;
+    if (filters.visibility === 'public') {
+      where.visibility = 'public';
+    } else if (filters.visibility === 'member') {
+      where.visibility = { in: ['public', 'member'] };
+    }
     if (filters.search) {
       where.OR = [
         { title: { contains: filters.search, mode: 'insensitive' } },
@@ -637,9 +651,20 @@ class PortalService {
   // Programs: Public
   // ----------------------------------------------------------
 
-  async listPrograms() {
+  async listPrograms(filters?: {
+    regionId?: string;
+    visibility?: 'public' | 'member';
+  }) {
+    const where: Record<string, unknown> = { status: 'active' };
+    if (filters?.regionId) where.regionId = filters.regionId;
+    if (filters?.visibility === 'public') {
+      where.visibility = 'public';
+    } else if (filters?.visibility === 'member') {
+      where.visibility = { in: ['public', 'member'] };
+    }
+
     const programs = await db.portalProgram.findMany({
-      where: { status: 'active' },
+      where,
       orderBy: { createdAt: 'desc' },
     });
 
@@ -1510,6 +1535,403 @@ class PortalService {
     });
 
     return { message: 'Guide deleted' };
+  }
+
+  // ----------------------------------------------------------
+  // Region Admin: Overview
+  // ----------------------------------------------------------
+
+  async regionAdminOverview(regionId: string) {
+    const [totalMembers, pendingMembers, totalEvents, totalGuides, totalPrograms, totalForms] = await Promise.all([
+      db.userRegionMembership.count({ where: { regionId, status: 'accepted', isActive: true } }),
+      db.userRegionMembership.count({ where: { regionId, status: 'pending' } }),
+      db.portalEvent.count({ where: { regionId } }),
+      db.portalGuide.count({ where: { regionId } }),
+      db.portalProgram.count({ where: { regionId } }),
+      db.regionForm.count({ where: { regionId } }),
+    ]);
+
+    return { totalMembers, pendingMembers, totalEvents, totalGuides, totalPrograms, totalForms };
+  }
+
+  // ----------------------------------------------------------
+  // Region Admin: Events
+  // ----------------------------------------------------------
+
+  async regionAdminListEvents(regionId: string, filters?: { status?: string }) {
+    const where: Record<string, unknown> = { regionId };
+    if (filters?.status) where.status = filters.status;
+
+    const events = await db.portalEvent.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      include: { _count: { select: { rsvps: true } } },
+    });
+
+    return events.map(e => ({
+      id: e.id, title: e.title, slug: e.slug, type: e.type, status: e.status,
+      visibility: e.visibility, startDate: e.startDate, endDate: e.endDate,
+      location: e.location, isVirtual: e.isVirtual, capacity: e.capacity,
+      coverImageUrl: e.coverImageUrl, rsvpCount: e._count.rsvps,
+      formFields: e.formFields, createdAt: e.createdAt,
+    }));
+  }
+
+  async regionAdminCreateEvent(regionId: string, data: {
+    title: string;
+    slug: string;
+    description: string;
+    type: string;
+    status?: string;
+    visibility?: string;
+    coverImageUrl?: string;
+    location?: string;
+    locationUrl?: string;
+    isVirtual?: boolean;
+    virtualUrl?: string;
+    startDate: string;
+    endDate?: string;
+    timezone?: string;
+    capacity?: number;
+    speakers?: unknown;
+    formFields?: unknown;
+  }, userId: string) {
+    const existing = await db.portalEvent.findUnique({ where: { slug: data.slug } });
+    if (existing) throw new AppError('CONFLICT', 'Event slug already exists');
+
+    const event = await db.portalEvent.create({
+      data: {
+        title: data.title,
+        slug: data.slug,
+        description: data.description,
+        type: data.type as any,
+        status: (data.status as any) || 'draft',
+        visibility: data.visibility || 'member',
+        regionId,
+        coverImageUrl: data.coverImageUrl,
+        location: data.location,
+        locationUrl: data.locationUrl,
+        isVirtual: data.isVirtual ?? false,
+        virtualUrl: data.virtualUrl,
+        startDate: new Date(data.startDate),
+        endDate: data.endDate ? new Date(data.endDate) : undefined,
+        timezone: data.timezone || 'UTC',
+        capacity: data.capacity,
+        speakers: data.speakers as any,
+        formFields: data.formFields as any,
+        createdBy: userId,
+      },
+    });
+
+    await auditService.log({
+      userId, module: 'portal', action: 'portal.region_admin.event_created',
+      entityType: 'event', entityId: event.id, entityName: event.title,
+      details: { regionId },
+    });
+
+    return event;
+  }
+
+  async regionAdminUpdateEvent(eventId: string, regionId: string, data: Record<string, unknown>, userId: string) {
+    const event = await db.portalEvent.findUnique({ where: { id: eventId } });
+    if (!event) throw new AppError('NOT_FOUND', 'Event not found');
+    if (event.regionId !== regionId) throw new AppError('FORBIDDEN', 'Event does not belong to this region');
+
+    if (typeof data.startDate === 'string') data.startDate = new Date(data.startDate);
+    if (typeof data.endDate === 'string') data.endDate = new Date(data.endDate);
+    delete data.regionId; // prevent region reassignment
+
+    const updated = await db.portalEvent.update({ where: { id: eventId }, data: data as any });
+
+    await auditService.log({
+      userId, module: 'portal', action: 'portal.region_admin.event_updated',
+      entityType: 'event', entityId: eventId, entityName: updated.title,
+      details: { regionId, fields: Object.keys(data) },
+    });
+
+    return updated;
+  }
+
+  async regionAdminDeleteEvent(eventId: string, regionId: string, userId: string) {
+    const event = await db.portalEvent.findUnique({ where: { id: eventId } });
+    if (!event) throw new AppError('NOT_FOUND', 'Event not found');
+    if (event.regionId !== regionId) throw new AppError('FORBIDDEN', 'Event does not belong to this region');
+
+    await db.portalEvent.delete({ where: { id: eventId } });
+
+    await auditService.log({
+      userId, module: 'portal', action: 'portal.region_admin.event_deleted',
+      entityType: 'event', entityId: eventId, entityName: event.title,
+      details: { regionId },
+    });
+
+    return { message: 'Event deleted' };
+  }
+
+  // ----------------------------------------------------------
+  // Region Admin: Guides
+  // ----------------------------------------------------------
+
+  async regionAdminListGuides(regionId: string, filters?: { status?: string }) {
+    const where: Record<string, unknown> = { regionId };
+    if (filters?.status) where.status = filters.status;
+
+    return db.portalGuide.findMany({ where, orderBy: { createdAt: 'desc' } });
+  }
+
+  async regionAdminCreateGuide(regionId: string, data: {
+    title: string;
+    slug: string;
+    category: string;
+    content: string;
+    coverImageUrl?: string;
+    readTime?: number;
+    status?: string;
+    visibility?: string;
+    formFields?: unknown;
+  }, userId: string) {
+    const existing = await db.portalGuide.findUnique({ where: { slug: data.slug } });
+    if (existing) throw new AppError('CONFLICT', 'Guide slug already exists');
+
+    const guide = await db.portalGuide.create({
+      data: {
+        title: data.title, slug: data.slug, category: data.category,
+        content: data.content, coverImageUrl: data.coverImageUrl,
+        readTime: data.readTime, status: data.status || 'draft',
+        visibility: data.visibility || 'member', regionId, authorId: userId,
+        formFields: data.formFields as any,
+      },
+    });
+
+    await auditService.log({
+      userId, module: 'portal', action: 'portal.region_admin.guide_created',
+      entityType: 'guide', entityId: guide.id, entityName: guide.title,
+      details: { regionId },
+    });
+
+    return guide;
+  }
+
+  async regionAdminUpdateGuide(guideId: string, regionId: string, data: Record<string, unknown>, userId: string) {
+    const guide = await db.portalGuide.findUnique({ where: { id: guideId } });
+    if (!guide) throw new AppError('NOT_FOUND', 'Guide not found');
+    if (guide.regionId !== regionId) throw new AppError('FORBIDDEN', 'Guide does not belong to this region');
+
+    delete data.regionId;
+    const updated = await db.portalGuide.update({ where: { id: guideId }, data: data as any });
+
+    await auditService.log({
+      userId, module: 'portal', action: 'portal.region_admin.guide_updated',
+      entityType: 'guide', entityId: guideId, entityName: updated.title,
+      details: { regionId, fields: Object.keys(data) },
+    });
+
+    return updated;
+  }
+
+  async regionAdminDeleteGuide(guideId: string, regionId: string, userId: string) {
+    const guide = await db.portalGuide.findUnique({ where: { id: guideId } });
+    if (!guide) throw new AppError('NOT_FOUND', 'Guide not found');
+    if (guide.regionId !== regionId) throw new AppError('FORBIDDEN', 'Guide does not belong to this region');
+
+    await db.portalGuide.delete({ where: { id: guideId } });
+
+    await auditService.log({
+      userId, module: 'portal', action: 'portal.region_admin.guide_deleted',
+      entityType: 'guide', entityId: guideId, entityName: guide.title,
+      details: { regionId },
+    });
+
+    return { message: 'Guide deleted' };
+  }
+
+  // ----------------------------------------------------------
+  // Region Admin: Programs
+  // ----------------------------------------------------------
+
+  async regionAdminListPrograms(regionId: string, filters?: { status?: string }) {
+    const where: Record<string, unknown> = { regionId };
+    if (filters?.status) where.status = filters.status;
+
+    return db.portalProgram.findMany({ where, orderBy: { createdAt: 'desc' } });
+  }
+
+  async regionAdminCreateProgram(regionId: string, data: {
+    title: string;
+    description: string;
+    eligibility?: string;
+    benefits?: string;
+    status?: string;
+    visibility?: string;
+    startsAt?: string;
+    endsAt?: string;
+    formFields?: unknown;
+  }, userId: string) {
+    const program = await db.portalProgram.create({
+      data: {
+        title: data.title, description: data.description,
+        eligibility: data.eligibility, benefits: data.benefits,
+        status: data.status || 'draft', visibility: data.visibility || 'member',
+        regionId, startsAt: data.startsAt ? new Date(data.startsAt) : undefined,
+        endsAt: data.endsAt ? new Date(data.endsAt) : undefined, createdBy: userId,
+        formFields: data.formFields as any,
+      },
+    });
+
+    await auditService.log({
+      userId, module: 'portal', action: 'portal.region_admin.program_created',
+      entityType: 'program', entityId: program.id, entityName: program.title,
+      details: { regionId },
+    });
+
+    return program;
+  }
+
+  async regionAdminUpdateProgram(programId: string, regionId: string, data: Record<string, unknown>, userId: string) {
+    const program = await db.portalProgram.findUnique({ where: { id: programId } });
+    if (!program) throw new AppError('NOT_FOUND', 'Program not found');
+    if (program.regionId !== regionId) throw new AppError('FORBIDDEN', 'Program does not belong to this region');
+
+    delete data.regionId;
+    if (typeof data.startsAt === 'string') data.startsAt = new Date(data.startsAt);
+    if (typeof data.endsAt === 'string') data.endsAt = new Date(data.endsAt);
+
+    const updated = await db.portalProgram.update({ where: { id: programId }, data: data as any });
+
+    await auditService.log({
+      userId, module: 'portal', action: 'portal.region_admin.program_updated',
+      entityType: 'program', entityId: programId, entityName: updated.title,
+      details: { regionId, fields: Object.keys(data) },
+    });
+
+    return updated;
+  }
+
+  async regionAdminDeleteProgram(programId: string, regionId: string, userId: string) {
+    const program = await db.portalProgram.findUnique({ where: { id: programId } });
+    if (!program) throw new AppError('NOT_FOUND', 'Program not found');
+    if (program.regionId !== regionId) throw new AppError('FORBIDDEN', 'Program does not belong to this region');
+
+    await db.portalProgram.delete({ where: { id: programId } });
+
+    await auditService.log({
+      userId, module: 'portal', action: 'portal.region_admin.program_deleted',
+      entityType: 'program', entityId: programId, entityName: program.title,
+      details: { regionId },
+    });
+
+    return { message: 'Program deleted' };
+  }
+
+  // ----------------------------------------------------------
+  // Region Admin: Forms
+  // ----------------------------------------------------------
+
+  async regionAdminListForms(regionId: string) {
+    const forms = await db.regionForm.findMany({
+      where: { regionId },
+      orderBy: { createdAt: 'desc' },
+      include: { _count: { select: { submissions: true } } },
+    });
+
+    return forms.map(f => ({
+      id: f.id, title: f.title, description: f.description,
+      status: f.status, visibility: f.visibility,
+      fieldCount: Array.isArray(f.fields) ? f.fields.length : 0,
+      submissionCount: f._count.submissions,
+      createdAt: f.createdAt, updatedAt: f.updatedAt,
+    }));
+  }
+
+  async regionAdminCreateForm(regionId: string, data: {
+    title: string;
+    description?: string;
+    fields: unknown;
+    visibility?: string;
+    status?: string;
+  }, userId: string) {
+    const form = await db.regionForm.create({
+      data: {
+        regionId, title: data.title, description: data.description,
+        fields: data.fields as any, visibility: data.visibility || 'member',
+        status: data.status || 'draft', createdBy: userId,
+      },
+    });
+
+    await auditService.log({
+      userId, module: 'portal', action: 'portal.region_admin.form_created',
+      entityType: 'form', entityId: form.id, entityName: form.title,
+      details: { regionId },
+    });
+
+    return form;
+  }
+
+  async regionAdminUpdateForm(formId: string, regionId: string, data: Record<string, unknown>, userId: string) {
+    const form = await db.regionForm.findUnique({ where: { id: formId } });
+    if (!form) throw new AppError('NOT_FOUND', 'Form not found');
+    if (form.regionId !== regionId) throw new AppError('FORBIDDEN', 'Form does not belong to this region');
+
+    delete data.regionId;
+    const updated = await db.regionForm.update({ where: { id: formId }, data: data as any });
+
+    await auditService.log({
+      userId, module: 'portal', action: 'portal.region_admin.form_updated',
+      entityType: 'form', entityId: formId, entityName: updated.title,
+      details: { regionId, fields: Object.keys(data) },
+    });
+
+    return updated;
+  }
+
+  async regionAdminDeleteForm(formId: string, regionId: string, userId: string) {
+    const form = await db.regionForm.findUnique({ where: { id: formId } });
+    if (!form) throw new AppError('NOT_FOUND', 'Form not found');
+    if (form.regionId !== regionId) throw new AppError('FORBIDDEN', 'Form does not belong to this region');
+
+    await db.regionForm.delete({ where: { id: formId } });
+
+    await auditService.log({
+      userId, module: 'portal', action: 'portal.region_admin.form_deleted',
+      entityType: 'form', entityId: formId, entityName: form.title,
+      details: { regionId },
+    });
+
+    return { message: 'Form deleted' };
+  }
+
+  async regionAdminGetFormSubmissions(formId: string, regionId: string) {
+    const form = await db.regionForm.findUnique({ where: { id: formId } });
+    if (!form) throw new AppError('NOT_FOUND', 'Form not found');
+    if (form.regionId !== regionId) throw new AppError('FORBIDDEN', 'Form does not belong to this region');
+
+    const submissions = await db.formSubmission.findMany({
+      where: { formId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: { select: { id: true, email: true, displayName: true, avatarUrl: true } },
+      },
+    });
+
+    return {
+      form: { id: form.id, title: form.title, fields: form.fields },
+      submissions: submissions.map(s => ({
+        id: s.id, data: s.data, createdAt: s.createdAt,
+        user: s.user,
+      })),
+    };
+  }
+
+  async submitForm(formId: string, userId: string | null, data: Record<string, unknown>) {
+    const form = await db.regionForm.findUnique({ where: { id: formId } });
+    if (!form) throw new AppError('NOT_FOUND', 'Form not found');
+    if (form.status !== 'active') throw new AppError('VALIDATION_ERROR', 'Form is not accepting submissions');
+
+    const submission = await db.formSubmission.create({
+      data: { formId, userId, data: data as any },
+    });
+
+    return { message: 'Form submitted', submissionId: submission.id };
   }
 
   // ----------------------------------------------------------

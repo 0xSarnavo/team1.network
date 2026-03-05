@@ -30,6 +30,9 @@ export const GET = withAuth(async (_req, { user }) => {
   const isMember = acceptedMemberships.length > 0;
   const primaryRegionSlug = acceptedMemberships[0]?.regionSlug || null;
 
+  // Check if user is a regional lead/co_lead for any region
+  const isRegionLead = acceptedMemberships.some(m => m.role === 'lead' || m.role === 'co_lead');
+
   // Map platformRole/moduleRoles to adminRoles shape the frontend expects
   const isSuperAdmin = user.platformRole === 'super_admin';
   const isSuperSuperAdmin = user.platformRole === 'super_super_admin';
@@ -46,6 +49,7 @@ export const GET = withAuth(async (_req, { user }) => {
     totalXp: user.totalXp,
     onboardingCompleted: user.onboardingCompleted,
     isMember,
+    isRegionLead,
     primaryRegionSlug,
     adminRoles: (isSuperAdmin || isSuperSuperAdmin || moduleLeads.length > 0) ? {
       isSuperAdmin,

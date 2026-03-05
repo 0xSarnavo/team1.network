@@ -8,11 +8,12 @@ import { PageLoader } from '@/components/ui/spinner';
 interface AuthGuardProps {
   children: React.ReactNode;
   requireAdmin?: boolean;
+  allowRegionLead?: boolean;
   requireModule?: string;
 }
 
-export function AuthGuard({ children, requireAdmin, requireModule }: AuthGuardProps) {
-  const { user, loading, isAdmin, hasModuleLead } = useAuth();
+export function AuthGuard({ children, requireAdmin, allowRegionLead, requireModule }: AuthGuardProps) {
+  const { user, loading, isAdmin, isRegionLead, hasModuleLead } = useAuth();
   const router = useRouter();
 
   if (loading) return <PageLoader />;
@@ -22,7 +23,7 @@ export function AuthGuard({ children, requireAdmin, requireModule }: AuthGuardPr
     return <PageLoader />;
   }
 
-  if (requireAdmin && !isAdmin) {
+  if (requireAdmin && !isAdmin && !(allowRegionLead && isRegionLead)) {
     router.push('/');
     return <PageLoader />;
   }

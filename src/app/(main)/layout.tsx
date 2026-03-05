@@ -12,7 +12,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
   const { resolvedTheme } = useTheme();
   
-  const excludedRoutes = ['/', '/portal', '/grants', '/bounty', '/ecosystem', '/member'];
+  const excludedRoutes = ['/', '/portal', '/grants', '/bounty', '/ecosystem', '/member', '/admin'];
   const isExcluded = excludedRoutes.some(route => 
     route === '/' ? pathname === '/' : pathname.startsWith(route)
   );
