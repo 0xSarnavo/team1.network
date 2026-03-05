@@ -1542,16 +1542,20 @@ class PortalService {
   // ----------------------------------------------------------
 
   async regionAdminOverview(regionId: string) {
-    const [totalMembers, pendingMembers, totalEvents, totalGuides, totalPrograms, totalForms] = await Promise.all([
+    const [totalMembers, pendingMembers, totalEvents, totalGuides, totalPrograms, totalForms, totalAnnouncements, totalPlaybooks, activeProposals, totalContributions] = await Promise.all([
       db.userRegionMembership.count({ where: { regionId, status: 'accepted', isActive: true } }),
       db.userRegionMembership.count({ where: { regionId, status: 'pending' } }),
       db.portalEvent.count({ where: { regionId } }),
       db.portalGuide.count({ where: { regionId } }),
       db.portalProgram.count({ where: { regionId } }),
       db.regionForm.count({ where: { regionId } }),
+      db.regionAnnouncement.count({ where: { regionId } }),
+      db.regionPlaybook.count({ where: { regionId } }),
+      db.regionProposal.count({ where: { regionId, stage: { in: ['proposed', 'discussion'] } } }),
+      db.contribution.count({ where: { regionId } }),
     ]);
 
-    return { totalMembers, pendingMembers, totalEvents, totalGuides, totalPrograms, totalForms };
+    return { totalMembers, pendingMembers, totalEvents, totalGuides, totalPrograms, totalForms, totalAnnouncements, totalPlaybooks, activeProposals, totalContributions };
   }
 
   // ----------------------------------------------------------
@@ -1581,6 +1585,7 @@ class PortalService {
     title: string;
     slug: string;
     description: string;
+    body?: unknown;
     type: string;
     status?: string;
     visibility?: string;
@@ -1604,6 +1609,7 @@ class PortalService {
         title: data.title,
         slug: data.slug,
         description: data.description,
+        body: data.body as any,
         type: data.type as any,
         status: (data.status as any) || 'draft',
         visibility: data.visibility || 'member',
@@ -1684,6 +1690,7 @@ class PortalService {
     slug: string;
     category: string;
     content: string;
+    body?: unknown;
     coverImageUrl?: string;
     readTime?: number;
     status?: string;
@@ -1696,7 +1703,7 @@ class PortalService {
     const guide = await db.portalGuide.create({
       data: {
         title: data.title, slug: data.slug, category: data.category,
-        content: data.content, coverImageUrl: data.coverImageUrl,
+        content: data.content, body: data.body as any, coverImageUrl: data.coverImageUrl,
         readTime: data.readTime, status: data.status || 'draft',
         visibility: data.visibility || 'member', regionId, authorId: userId,
         formFields: data.formFields as any,
@@ -1759,6 +1766,7 @@ class PortalService {
   async regionAdminCreateProgram(regionId: string, data: {
     title: string;
     description: string;
+    body?: unknown;
     eligibility?: string;
     benefits?: string;
     status?: string;
@@ -1769,7 +1777,7 @@ class PortalService {
   }, userId: string) {
     const program = await db.portalProgram.create({
       data: {
-        title: data.title, description: data.description,
+        title: data.title, description: data.description, body: data.body as any,
         eligibility: data.eligibility, benefits: data.benefits,
         status: data.status || 'draft', visibility: data.visibility || 'member',
         regionId, startsAt: data.startsAt ? new Date(data.startsAt) : undefined,
@@ -1972,6 +1980,300 @@ class PortalService {
       programs: { total: totalPrograms },
       hostApplications: { pending: pendingHostApps },
     };
+  }
+
+  // ----------------------------------------------------------
+  // Region Announcements
+  // ----------------------------------------------------------
+
+  async listRegionAnnouncements(regionId: string, audience?: string) {
+    const where: Record<string, unknown> = {
+      regionId,
+      OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+    };
+    if (audience) where.audience = audience;
+
+    return db.regionAnnouncement.findMany({
+      where: where as any,
+      orderBy: { createdAt: 'desc' },
+      include: { createdBy: { select: { id: true, displayName: true, avatarUrl: true } } },
+    });
+  }
+
+  async listRegionAnnouncementsAdmin(regionId: string) {
+    return db.regionAnnouncement.findMany({
+      where: { regionId },
+      orderBy: { createdAt: 'desc' },
+      include: { createdBy: { select: { id: true, displayName: true } } },
+    });
+  }
+
+  async createRegionAnnouncement(regionId: string, data: {
+    title: string;
+    link?: string;
+    audience?: string;
+    expiresAt?: string;
+  }, userId: string) {
+    const aud = data.audience || 'member';
+    const count = await db.regionAnnouncement.count({ where: { regionId, audience: aud } });
+    if (count >= 6) throw new AppError('VALIDATION_ERROR', `Maximum 6 announcements per audience (${aud})`);
+
+    return db.regionAnnouncement.create({
+      data: {
+        regionId,
+        title: data.title,
+        link: data.link || null,
+        audience: aud,
+        expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
+        createdById: userId,
+      },
+    });
+  }
+
+  async deleteRegionAnnouncement(id: string, regionId: string) {
+    const ann = await db.regionAnnouncement.findUnique({ where: { id } });
+    if (!ann) throw new AppError('NOT_FOUND', 'Announcement not found');
+    if (ann.regionId !== regionId) throw new AppError('FORBIDDEN', 'Announcement does not belong to this region');
+
+    await db.regionAnnouncement.delete({ where: { id } });
+    return { message: 'Announcement deleted' };
+  }
+
+  // ----------------------------------------------------------
+  // Region Playbooks
+  // ----------------------------------------------------------
+
+  async listRegionPlaybooks(regionId: string, filters?: { status?: string; visibility?: string; search?: string }) {
+    const where: Record<string, unknown> = { regionId };
+    if (filters?.status) where.status = filters.status;
+    if (filters?.visibility) where.visibility = filters.visibility;
+    if (filters?.search) where.title = { contains: filters.search, mode: 'insensitive' };
+
+    return db.regionPlaybook.findMany({
+      where: where as any,
+      orderBy: { createdAt: 'desc' },
+      include: { createdBy: { select: { id: true, displayName: true } } },
+    });
+  }
+
+  async getRegionPlaybook(id: string, regionId: string) {
+    const pb = await db.regionPlaybook.findUnique({
+      where: { id },
+      include: { createdBy: { select: { id: true, displayName: true, avatarUrl: true } } },
+    });
+    if (!pb) throw new AppError('NOT_FOUND', 'Playbook not found');
+    if (pb.regionId !== regionId) throw new AppError('FORBIDDEN', 'Playbook does not belong to this region');
+    return pb;
+  }
+
+  async createRegionPlaybook(regionId: string, data: {
+    title: string;
+    description?: string;
+    body?: unknown;
+    coverImageUrl?: string;
+    visibility?: string;
+    status?: string;
+    formFields?: unknown;
+  }, userId: string) {
+    return db.regionPlaybook.create({
+      data: {
+        regionId,
+        title: data.title,
+        description: data.description || null,
+        body: data.body as any,
+        coverImageUrl: data.coverImageUrl || null,
+        visibility: data.visibility || 'member',
+        status: data.status || 'draft',
+        formFields: data.formFields as any,
+        createdById: userId,
+      },
+    });
+  }
+
+  async updateRegionPlaybook(id: string, regionId: string, data: Record<string, unknown>) {
+    const pb = await db.regionPlaybook.findUnique({ where: { id } });
+    if (!pb) throw new AppError('NOT_FOUND', 'Playbook not found');
+    if (pb.regionId !== regionId) throw new AppError('FORBIDDEN', 'Playbook does not belong to this region');
+
+    delete data.regionId;
+    return db.regionPlaybook.update({ where: { id }, data: data as any });
+  }
+
+  async deleteRegionPlaybook(id: string, regionId: string) {
+    const pb = await db.regionPlaybook.findUnique({ where: { id } });
+    if (!pb) throw new AppError('NOT_FOUND', 'Playbook not found');
+    if (pb.regionId !== regionId) throw new AppError('FORBIDDEN', 'Playbook does not belong to this region');
+
+    await db.regionPlaybook.delete({ where: { id } });
+    return { message: 'Playbook deleted' };
+  }
+
+  // ----------------------------------------------------------
+  // Region Proposals
+  // ----------------------------------------------------------
+
+  async listRegionProposals(regionId: string) {
+    return db.regionProposal.findMany({
+      where: { regionId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        createdBy: { select: { id: true, displayName: true, avatarUrl: true } },
+        _count: { select: { comments: true } },
+      },
+    });
+  }
+
+  async getRegionProposal(id: string, regionId: string) {
+    const proposal = await db.regionProposal.findUnique({
+      where: { id },
+      include: {
+        createdBy: { select: { id: true, displayName: true, avatarUrl: true } },
+        comments: {
+          orderBy: { createdAt: 'asc' },
+          include: { author: { select: { id: true, displayName: true, avatarUrl: true } } },
+        },
+      },
+    });
+    if (!proposal) throw new AppError('NOT_FOUND', 'Proposal not found');
+    if (proposal.regionId !== regionId) throw new AppError('FORBIDDEN', 'Proposal does not belong to this region');
+    return proposal;
+  }
+
+  async createRegionProposal(regionId: string, data: { title: string; description: string }, userId: string) {
+    return db.regionProposal.create({
+      data: {
+        regionId,
+        title: data.title,
+        description: data.description,
+        stage: 'proposed',
+        createdById: userId,
+      },
+    });
+  }
+
+  async updateProposalStage(id: string, regionId: string, stage: string) {
+    const validStages = ['proposed', 'discussion', 'approved', 'rejected'];
+    if (!validStages.includes(stage)) throw new AppError('VALIDATION_ERROR', 'Invalid stage');
+
+    const proposal = await db.regionProposal.findUnique({ where: { id } });
+    if (!proposal) throw new AppError('NOT_FOUND', 'Proposal not found');
+    if (proposal.regionId !== regionId) throw new AppError('FORBIDDEN', 'Proposal does not belong to this region');
+
+    return db.regionProposal.update({ where: { id }, data: { stage } });
+  }
+
+  async addProposalComment(proposalId: string, body: string, userId: string) {
+    const proposal = await db.regionProposal.findUnique({ where: { id: proposalId } });
+    if (!proposal) throw new AppError('NOT_FOUND', 'Proposal not found');
+    if (proposal.stage !== 'discussion') throw new AppError('VALIDATION_ERROR', 'Comments only allowed during discussion stage');
+
+    return db.proposalComment.create({
+      data: { proposalId, body, authorId: userId },
+      include: { author: { select: { id: true, displayName: true, avatarUrl: true } } },
+    });
+  }
+
+  // ----------------------------------------------------------
+  // Portal Applications (generic for guides/programs/events/playbooks)
+  // ----------------------------------------------------------
+
+  async submitApplication(regionId: string, data: {
+    entityType: string;
+    entityId: string;
+    email: string;
+    formData: Record<string, unknown>;
+  }, userId: string | null) {
+    return db.portalApplication.create({
+      data: {
+        regionId,
+        entityType: data.entityType,
+        entityId: data.entityId,
+        email: data.email,
+        data: data.formData as any,
+        userId,
+      },
+    });
+  }
+
+  async listApplications(regionId: string, entityType: string, entityId: string) {
+    return db.portalApplication.findMany({
+      where: { regionId, entityType, entityId },
+      orderBy: { createdAt: 'desc' },
+      include: { user: { select: { id: true, displayName: true, avatarUrl: true, email: true } } },
+    });
+  }
+
+  async updateApplicationStatus(id: string, regionId: string, status: string) {
+    const app = await db.portalApplication.findUnique({ where: { id } });
+    if (!app) throw new AppError('NOT_FOUND', 'Application not found');
+    if (app.regionId !== regionId) throw new AppError('FORBIDDEN', 'Application does not belong to this region');
+
+    return db.portalApplication.update({ where: { id }, data: { status } });
+  }
+
+  // ----------------------------------------------------------
+  // Member Directory
+  // ----------------------------------------------------------
+
+  async listRegionMembers(regionId: string, search?: string) {
+    const where: Record<string, unknown> = {
+      regionId,
+      status: 'accepted',
+      isActive: true,
+    };
+
+    if (search) {
+      where.user = {
+        OR: [
+          { displayName: { contains: search, mode: 'insensitive' } },
+          { username: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } },
+        ],
+      };
+    }
+
+    const members = await db.userRegionMembership.findMany({
+      where: where as any,
+      orderBy: { acceptedAt: 'desc' },
+      include: {
+        user: {
+          select: {
+            id: true, displayName: true, username: true, avatarUrl: true,
+            email: true, title: true, bio: true,
+            socialLinks: { select: { platform: true, handle: true, url: true }, where: { isPublic: true } },
+          },
+        },
+      },
+    });
+
+    return members.map(m => ({
+      id: m.id,
+      role: m.role,
+      user: m.user,
+    }));
+  }
+
+  // ----------------------------------------------------------
+  // Contributions
+  // ----------------------------------------------------------
+
+  async submitContribution(regionId: string, data: { type: string; data: Record<string, unknown> }, userId: string) {
+    return db.contribution.create({
+      data: {
+        regionId,
+        userId,
+        type: data.type,
+        data: data.data as any,
+      },
+    });
+  }
+
+  async listContributions(regionId: string) {
+    return db.contribution.findMany({
+      where: { regionId },
+      orderBy: { createdAt: 'desc' },
+      include: { user: { select: { id: true, displayName: true, avatarUrl: true, email: true } } },
+    });
   }
 }
 

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useApi } from '@/lib/hooks/use-api';
 import { Card, CardContent } from '@/components/ui/card';
 import { PageLoader } from '@/components/ui/spinner';
-import { Users, CalendarDays, BookOpen, Briefcase, UserPlus } from 'lucide-react';
+import { Users, CalendarDays, BookOpen, Briefcase, UserPlus, Megaphone, FileText, Lightbulb, Gift } from 'lucide-react';
 
 interface OverviewStats {
   totalMembers: number;
@@ -14,6 +14,10 @@ interface OverviewStats {
   totalGuides: number;
   totalPrograms: number;
   totalForms: number;
+  totalAnnouncements: number;
+  totalPlaybooks: number;
+  activeProposals: number;
+  totalContributions: number;
 }
 
 const statCards = [
@@ -22,6 +26,10 @@ const statCards = [
   { key: 'totalEvents', label: 'Events', icon: CalendarDays, color: 'text-green-500' },
   { key: 'totalGuides', label: 'Guides', icon: BookOpen, color: 'text-purple-500' },
   { key: 'totalPrograms', label: 'Programs', icon: Briefcase, color: 'text-cyan-500' },
+  { key: 'totalAnnouncements', label: 'Announcements', icon: Megaphone, color: 'text-orange-500' },
+  { key: 'totalPlaybooks', label: 'Playbooks', icon: FileText, color: 'text-indigo-500' },
+  { key: 'activeProposals', label: 'Active Proposals', icon: Lightbulb, color: 'text-yellow-500' },
+  { key: 'totalContributions', label: 'Contributions', icon: Gift, color: 'text-pink-500' },
 ] as const;
 
 const quickActions = [
@@ -29,6 +37,9 @@ const quickActions = [
   { label: 'Manage Guides', href: 'guides', icon: BookOpen },
   { label: 'Manage Programs', href: 'programs', icon: Briefcase },
   { label: 'Manage Events', href: 'events', icon: CalendarDays },
+  { label: 'Announcements', href: 'announcements', icon: Megaphone },
+  { label: 'Playbooks', href: 'playbooks', icon: FileText },
+  { label: 'Proposals', href: 'proposals', icon: Lightbulb },
 ];
 
 export default function RegionAdminOverviewPage({ params }: { params: Promise<{ portalSlug: string }> }) {

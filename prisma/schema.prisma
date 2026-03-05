@@ -33,6 +33,11 @@ model Region {
   guides          PortalGuide[]
   programs        PortalProgram[]
   regionForms     RegionForm[]
+  announcements   RegionAnnouncement[]
+  playbooks       RegionPlaybook[]
+  proposals       RegionProposal[]
+  applications    PortalApplication[]
+  contributions   Contribution[]
 
   @@map("regions")
 }
@@ -102,6 +107,12 @@ model User {
   bountyReviewerRoles  BountyReviewer[]     @relation("BountyReviewerUser")
   bountyReviewerAdded  BountyReviewer[]     @relation("BountyReviewerAddedBy")
   formSubmissions      FormSubmission[]
+  createdAnnouncements RegionAnnouncement[] @relation("AnnouncementCreator")
+  createdPlaybooks     RegionPlaybook[]     @relation("PlaybookCreator")
+  createdProposals     RegionProposal[]     @relation("ProposalCreator")
+  proposalComments     ProposalComment[]    @relation("ProposalCommentAuthor")
+  portalApplications   PortalApplication[]  @relation("ApplicationSubmitter")
+  contributions        Contribution[]       @relation("ContributionSubmitter")
 
   @@index([email], map: "idx_users_email")
   @@index([username], map: "idx_users_username")
@@ -732,6 +743,7 @@ model PortalEvent {
   title         String      @db.VarChar(300)
   slug          String      @unique @db.VarChar(300)
   description   String      @db.Text
+  body          Json?
   type          EventType
   status        EventStatus @default(draft)
   regionId      String?     @map("region_id") @db.Uuid
@@ -844,6 +856,7 @@ model PortalGuide {
   slug          String   @unique @db.VarChar(300)
   category      String   @db.VarChar(100)
   content       String   @db.Text
+  body          Json?
   coverImageUrl String?  @map("cover_image_url") @db.Text
   readTime      Int?     @map("read_time")
   status        String   @default("draft") @db.VarChar(20)
@@ -865,6 +878,7 @@ model PortalProgram {
   id          String    @id @default(uuid()) @db.Uuid
   title       String    @db.VarChar(300)
   description String    @db.Text
+  body        Json?
   eligibility String?   @db.Text
   benefits    String?   @db.Text
   status      String    @default("draft") @db.VarChar(20)
@@ -1132,4 +1146,128 @@ model FormSubmission {
 
   @@index([formId, createdAt(sort: Desc)])
   @@map("form_submissions")
+}
+
+// ============================================================
+// REGION ANNOUNCEMENTS
+// ============================================================
+
+model RegionAnnouncement {
+  id          String    @id @default(uuid()) @db.Uuid
+  regionId    String    @map("region_id") @db.Uuid
+  title       String    @db.VarChar(500)
+  link        String?   @db.VarChar(1000)
+  audience    String    @default("member") @db.VarChar(20)
+  createdById String    @map("created_by_id") @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  expiresAt   DateTime? @map("expires_at") @db.Timestamptz()
+
+  region    Region @relation(fields: [regionId], references: [id])
+  createdBy User   @relation("AnnouncementCreator", fields: [createdById], references: [id])
+
+  @@index([regionId, audience])
+  @@map("region_announcements")
+}
+
+// ============================================================
+// REGION PLAYBOOKS
+// ============================================================
+
+model RegionPlaybook {
+  id            String   @id @default(uuid()) @db.Uuid
+  regionId      String   @map("region_id") @db.Uuid
+  title         String   @db.VarChar(500)
+  description   String?  @db.Text
+  body          Json?
+  coverImageUrl String?  @map("cover_image_url") @db.VarChar(1000)
+  visibility    String   @default("member") @db.VarChar(20)
+  status        String   @default("draft") @db.VarChar(20)
+  formFields    Json?    @map("form_fields")
+  createdById   String   @map("created_by_id") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  region    Region @relation(fields: [regionId], references: [id])
+  createdBy User   @relation("PlaybookCreator", fields: [createdById], references: [id])
+
+  @@index([regionId, status])
+  @@map("region_playbooks")
+}
+
+// ============================================================
+// REGION PROPOSALS
+// ============================================================
+
+model RegionProposal {
+  id          String   @id @default(uuid()) @db.Uuid
+  regionId    String   @map("region_id") @db.Uuid
+  title       String   @db.VarChar(500)
+  description String   @db.Text
+  stage       String   @default("proposed") @db.VarChar(20)
+  createdById String   @map("created_by_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  region    Region            @relation(fields: [regionId], references: [id])
+  createdBy User              @relation("ProposalCreator", fields: [createdById], references: [id])
+  comments  ProposalComment[]
+
+  @@index([regionId, stage])
+  @@map("region_proposals")
+}
+
+model ProposalComment {
+  id         String   @id @default(uuid()) @db.Uuid
+  proposalId String   @map("proposal_id") @db.Uuid
+  body       String   @db.Text
+  authorId   String   @map("author_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  proposal RegionProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  author   User           @relation("ProposalCommentAuthor", fields: [authorId], references: [id])
+
+  @@index([proposalId, createdAt(sort: Desc)])
+  @@map("proposal_comments")
+}
+
+// ============================================================
+// PORTAL APPLICATIONS (generic for guides/programs/events/playbooks)
+// ============================================================
+
+model PortalApplication {
+  id         String   @id @default(uuid()) @db.Uuid
+  regionId   String   @map("region_id") @db.Uuid
+  entityType String   @map("entity_type") @db.VarChar(20)
+  entityId   String   @map("entity_id") @db.Uuid
+  userId     String?  @map("user_id") @db.Uuid
+  email      String   @db.VarChar(500)
+  data       Json
+  status     String   @default("pending") @db.VarChar(20)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  region Region @relation(fields: [regionId], references: [id])
+  user   User?  @relation("ApplicationSubmitter", fields: [userId], references: [id])
+
+  @@index([regionId, entityType, entityId])
+  @@index([userId])
+  @@map("portal_applications")
+}
+
+// ============================================================
+// CONTRIBUTIONS
+// ============================================================
+
+model Contribution {
+  id         String   @id @default(uuid()) @db.Uuid
+  regionId   String   @map("region_id") @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  type       String   @db.VarChar(50)
+  data       Json
+  status     String   @default("pending") @db.VarChar(20)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  region Region @relation(fields: [regionId], references: [id])
+  user   User   @relation("ContributionSubmitter", fields: [userId], references: [id])
+
+  @@index([regionId, type])
+  @@map("contributions")
 }

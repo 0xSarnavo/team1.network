@@ -9,6 +9,9 @@ import {
   BookOpen,
   Briefcase,
   CalendarDays,
+  Megaphone,
+  FileText,
+  Lightbulb,
   ArrowLeft,
 } from 'lucide-react';
 
@@ -24,6 +27,9 @@ const navItems = [
   { id: 'guides', label: 'Guides', icon: BookOpen, path: '/guides' },
   { id: 'programs', label: 'Programs', icon: Briefcase, path: '/programs' },
   { id: 'events', label: 'Events', icon: CalendarDays, path: '/events' },
+  { id: 'announcements', label: 'Announcements', icon: Megaphone, path: '/announcements' },
+  { id: 'playbooks', label: 'Playbooks', icon: FileText, path: '/playbooks' },
+  { id: 'proposals', label: 'Proposals', icon: Lightbulb, path: '/proposals' },
 ];
 
 export function RegionAdminSidebar({ slug, regionName, regionLogoUrl }: RegionAdminSidebarProps) {

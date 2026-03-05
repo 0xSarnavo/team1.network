@@ -10,7 +10,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { PageLoader } from '@/components/ui/spinner';
 import { Input } from '@/components/ui/input';
 import { EmptyState } from '@/components/ui/empty-state';
-import { ArrowRight, Search, ChevronDown, Calendar, Users, FileText } from 'lucide-react';
+import { ArrowRight, Search, ChevronDown, Calendar, Users, FileText, Megaphone, BookOpen } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { BentoCard } from '@/components/portal/bento-card';
 
@@ -275,7 +275,7 @@ export default function MemberDashboardPage({ params }: { params: Promise<{ slug
 
         <div className="flex items-center gap-3">
           <Link
-            href="/portal/contribute"
+            href={`/member/${slug}/contribute`}
             className="rounded-xl border border-zinc-200 bg-white px-5 py-2.5 text-sm font-bold text-zinc-900 transition-all hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-50 dark:text-black dark:hover:bg-white"
           >
             submit your contributions
@@ -378,7 +378,7 @@ export default function MemberDashboardPage({ params }: { params: Promise<{ slug
             </button>
 
             <Link
-              href="/portal/events"
+              href={`/member/${slug}/events`}
               className="flex h-10 items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-5 text-xs font-bold uppercase tracking-wider text-zinc-600 hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-[#1f1f22]"
             >
               SEE ALL <ArrowRight className="h-3.5 w-3.5" />
@@ -396,7 +396,7 @@ export default function MemberDashboardPage({ params }: { params: Promise<{ slug
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {guidesResp.map((g) => (
-                  <Link key={g.id} href={`/portal/guides/${g.slug}`}>
+                  <Link key={g.id} href={`/member/${slug}/guides/${g.slug}`}>
                     <Card className="h-full hover:border-zinc-600 transition-colors">
                       <CardContent className="p-4">
                         {g.category && (
@@ -420,7 +420,8 @@ export default function MemberDashboardPage({ params }: { params: Promise<{ slug
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {programsResp.map((p) => (
-                  <Card key={p.id} className="h-full hover:border-zinc-600 transition-colors">
+                  <Link key={p.id} href={`/member/${slug}/programs/${p.id}`}>
+                  <Card className="h-full hover:border-zinc-600 transition-colors">
                     <CardContent className="p-4">
                       <div className="mb-2 flex items-center gap-1.5">
                         <span className={`inline-block h-1.5 w-1.5 rounded-full ${p.status === 'active' ? 'bg-emerald-500' : 'bg-zinc-500'}`} />
@@ -436,6 +437,7 @@ export default function MemberDashboardPage({ params }: { params: Promise<{ slug
                       )}
                     </CardContent>
                   </Card>
+                  </Link>
                 ))}
               </div>
             )
@@ -449,7 +451,8 @@ export default function MemberDashboardPage({ params }: { params: Promise<{ slug
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {eventsResp.map((e) => (
-                  <Card key={e.id} className="h-full hover:border-zinc-600 transition-colors">
+                  <Link key={e.id} href={`/member/${slug}/events/${e.id}`}>
+                  <Card className="h-full hover:border-zinc-600 transition-colors">
                     <CardContent className="p-4">
                       <div className="mb-2 flex items-center gap-2">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">{e.type}</span>
@@ -464,6 +467,7 @@ export default function MemberDashboardPage({ params }: { params: Promise<{ slug
                       </div>
                     </CardContent>
                   </Card>
+                  </Link>
                 ))}
               </div>
             )
@@ -568,7 +572,7 @@ export default function MemberDashboardPage({ params }: { params: Promise<{ slug
       {/* 5. 2-Column Community Links                                       */}
       {/* ---------------------------------------------------------------- */}
       <div className="grid gap-6 md:grid-cols-2 mb-16">
-        <Link href="/portal/proposals" className="group block">
+        <Link href={`/member/${slug}/proposals`} className="group block">
           <BentoCard className="h-full transition-all hover:bg-zinc-50 dark:hover:bg-zinc-900/50 hover:border-zinc-300 dark:hover:border-zinc-700">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-4 mb-4">
@@ -592,7 +596,7 @@ export default function MemberDashboardPage({ params }: { params: Promise<{ slug
           </BentoCard>
         </Link>
 
-        <Link href="/portal/members" className="group block">
+        <Link href={`/member/${slug}/directory`} className="group block">
           <BentoCard className="h-full transition-all hover:bg-zinc-50 dark:hover:bg-zinc-900/50 hover:border-zinc-300 dark:hover:border-zinc-700">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-4 mb-4">
@@ -612,6 +616,44 @@ export default function MemberDashboardPage({ params }: { params: Promise<{ slug
               <p className="text-sm text-zinc-600 dark:text-zinc-400">
                 Connect with other builders, mentors, and contributors. Find peers and collaborate on new ideas.
               </p>
+            </div>
+          </BentoCard>
+        </Link>
+
+        <Link href={`/member/${slug}/announcements`} className="group block">
+          <BentoCard className="h-full transition-all hover:bg-zinc-50 dark:hover:bg-zinc-900/50 hover:border-zinc-300 dark:hover:border-zinc-700">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400">
+                  <Megaphone className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Announcements</h3>
+                  <p className="text-xs text-zinc-500">Latest updates from your region</p>
+                </div>
+              </div>
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 transition-colors group-hover:bg-[#FF394A] group-hover:text-white dark:bg-zinc-800/50">
+                <ArrowRight className="h-4 w-4" />
+              </div>
+            </div>
+          </BentoCard>
+        </Link>
+
+        <Link href={`/member/${slug}/playbooks`} className="group block">
+          <BentoCard className="h-full transition-all hover:bg-zinc-50 dark:hover:bg-zinc-900/50 hover:border-zinc-300 dark:hover:border-zinc-700">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400">
+                  <BookOpen className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Playbooks</h3>
+                  <p className="text-xs text-zinc-500">SOPs, strategies, and guides</p>
+                </div>
+              </div>
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 transition-colors group-hover:bg-[#FF394A] group-hover:text-white dark:bg-zinc-800/50">
+                <ArrowRight className="h-4 w-4" />
+              </div>
             </div>
           </BentoCard>
         </Link>
