@@ -64,7 +64,7 @@ export function MemberVerification() {
     <BentoCard title="Verify Identity">
       <div className="space-y-2.5">
         {PLATFORMS.map((p) => (
-          <div key={p.key} className="flex items-center gap-3 rounded-xl border border-zinc-200/60 px-3 py-2.5 transition-colors hover:border-zinc-300 dark:border-zinc-800/60 dark:hover:border-zinc-700">
+          <div key={p.key} className="flex items-center gap-3 rounded-xl border border-zinc-200/50 bg-zinc-50 px-3 py-2.5 transition-colors hover:border-zinc-300 dark:border-zinc-800/80 dark:bg-[#18181b] dark:hover:border-zinc-700">
             <div className="shrink-0 text-zinc-400 dark:text-zinc-500">{p.icon}</div>
             <label htmlFor={`verify-${p.key}`} className="sr-only">{p.label}</label>
             <input
@@ -73,7 +73,7 @@ export function MemberVerification() {
               value={values[p.key] || ''}
               onChange={(e) => setValues((v) => ({ ...v, [p.key]: e.target.value }))}
               placeholder={p.placeholder}
-              className="min-w-0 flex-1 bg-transparent text-sm text-zinc-900 outline-none placeholder:text-zinc-400 dark:text-zinc-100 dark:placeholder:text-zinc-600"
+              className="min-w-0 flex-1 bg-transparent text-sm text-zinc-900 outline-none placeholder:text-zinc-400 dark:text-zinc-100 dark:placeholder:text-zinc-500"
             />
             <button
               onClick={() => handleConnect(p.key)}

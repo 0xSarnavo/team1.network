@@ -57,7 +57,7 @@ function GuidesTab() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search guides..."
-        className="mb-4 h-8 w-48 rounded-full border-zinc-200 bg-transparent px-3 text-xs dark:border-zinc-800"
+        className="mb-4 h-8 w-48 rounded-full border-zinc-200/50 bg-zinc-50 px-3 text-xs dark:border-zinc-800/80 dark:bg-[#18181b]"
       />
       {loading ? (
         <div className="flex justify-center py-6"><Spinner size="sm" /></div>
@@ -101,7 +101,7 @@ function ProgramsTab() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search programs..."
-        className="mb-4 h-8 w-48 rounded-full border-zinc-200 bg-transparent px-3 text-xs dark:border-zinc-800"
+        className="mb-4 h-8 w-48 rounded-full border-zinc-200/50 bg-zinc-50 px-3 text-xs dark:border-zinc-800/80 dark:bg-[#18181b]"
       />
       {loading ? (
         <div className="flex justify-center py-6"><Spinner size="sm" /></div>
@@ -149,7 +149,7 @@ function HostTab() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search hosted events..."
-        className="mb-4 h-8 w-48 rounded-full border-zinc-200 bg-transparent px-3 text-xs dark:border-zinc-800"
+        className="mb-4 h-8 w-48 rounded-full border-zinc-200/50 bg-zinc-50 px-3 text-xs dark:border-zinc-800/80 dark:bg-[#18181b]"
       />
       {loading ? (
         <div className="flex justify-center py-6"><Spinner size="sm" /></div>
