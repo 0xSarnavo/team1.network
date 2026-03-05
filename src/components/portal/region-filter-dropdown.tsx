@@ -40,10 +40,10 @@ export function RegionFilterDropdown() {
           initial={false}
           animate={{
             height: isOpen ? 'auto' : 40,
-            borderRadius: isOpen ? 20 : 40
+            borderRadius: 16
           }}
           transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-          className={`group absolute left-0 top-0 w-[140px] min-w-[140px] overflow-hidden flex flex-col justify-start bg-transparent text-zinc-900 border border-zinc-200 origin-top dark:text-white dark:border-zinc-800 z-50 ${isOpen ? 'shadow-xl cursor-default bg-white dark:bg-zinc-950' : 'hover:bg-zinc-900 hover:text-white dark:hover:bg-white dark:hover:text-black cursor-pointer transition-colors duration-300'}`}
+          className={`group absolute left-0 top-0 w-[140px] min-w-[140px] overflow-hidden flex flex-col justify-start bg-white text-zinc-900 border border-zinc-200 origin-top dark:bg-zinc-950 dark:text-white dark:border-zinc-800 z-50 ${isOpen ? 'shadow-xl cursor-default' : 'hover:bg-zinc-900 hover:text-white dark:hover:bg-white dark:hover:text-black cursor-pointer transition-colors duration-300'}`}
           onClick={() => !isOpen && setIsOpen(true)}
         >
           {/* Collapsed / Top Bar */}

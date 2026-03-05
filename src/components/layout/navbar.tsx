@@ -37,18 +37,20 @@ export function Navbar() {
       <nav className="flex w-full items-center justify-between pointer-events-auto">
         {/* Left side: Hamburger + Back button (conditional, right of menu) */}
         <div className="flex items-center justify-start gap-2">
-          <button 
-            className={`group flex h-10 w-10 items-center justify-center rounded-full bg-transparent text-zinc-900 transition-all duration-300 hover:bg-zinc-900 hover:text-white dark:text-zinc-50 border border-zinc-200 dark:border-zinc-800 focus:outline-none dark:hover:bg-white dark:hover:text-black ${menuOpen ? 'opacity-0 scale-50 pointer-events-none' : 'opacity-100 scale-100'}`} 
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.92 }}
+            className={`group flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white dark:bg-zinc-950 text-zinc-900 transition-colors hover:bg-zinc-900 hover:text-white dark:text-zinc-50 border border-zinc-200 dark:border-zinc-800 focus:outline-none dark:hover:bg-white dark:hover:text-black ${menuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} 
             onClick={() => setMenuOpen(!menuOpen)}
           >
             <svg className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={menuOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'} />
             </svg>
-          </button>
+          </motion.button>
           {isGrantDetail && (
             <button
               onClick={() => router.push('/grants')}
-              className="group flex h-10 w-10 items-center justify-center rounded-full bg-transparent text-zinc-900 transition-all duration-300 hover:bg-zinc-900 hover:text-white dark:text-zinc-50 border border-zinc-200 dark:border-zinc-800 focus:outline-none dark:hover:bg-white dark:hover:text-black"
+              className="group flex h-10 w-10 items-center justify-center rounded-xl bg-white dark:bg-zinc-950 text-zinc-900 transition-all duration-300 hover:bg-zinc-900 hover:text-white dark:text-zinc-50 border border-zinc-200 dark:border-zinc-800 focus:outline-none dark:hover:bg-white dark:hover:text-black"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -158,11 +160,11 @@ export function Navbar() {
                   layout
                   initial={false}
                   animate={{ 
-                    height: authDropdownOpen ? 104 : 40,
-                    borderRadius: authDropdownOpen ? 20 : 40
+                    height: authDropdownOpen ? 88 : 40,
+                    borderRadius: 16
                   }}
                   transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                  className={`group absolute right-0 top-0 overflow-hidden flex flex-col justify-start bg-transparent text-zinc-900 border border-zinc-200 origin-top dark:text-zinc-50 dark:border-zinc-800 z-50 w-[110px] ${authDropdownOpen ? 'p-2 cursor-default shadow-lg bg-white dark:bg-zinc-950' : 'hover:bg-zinc-900 hover:text-white dark:hover:bg-white dark:hover:text-black cursor-pointer transition-colors duration-300'}`}
+                  className={`group absolute right-0 top-0 overflow-hidden flex flex-col justify-start text-zinc-900 border border-zinc-200 origin-top dark:text-zinc-50 dark:border-zinc-800 z-50 w-[110px] bg-white dark:bg-zinc-950 ${authDropdownOpen ? 'cursor-default shadow-xl' : 'hover:bg-zinc-900 hover:text-white dark:hover:bg-white dark:hover:text-black cursor-pointer transition-colors duration-300'}`}
                   onClick={() => !authDropdownOpen && setAuthDropdownOpen(true)}
                 >
                   {/* Collapsed State Base Text */}
@@ -171,11 +173,11 @@ export function Navbar() {
                   </div>
                   
                   {/* Expanded State Items */}
-                  <div className={`flex flex-col w-full h-full text-zinc-900 dark:text-white transition-opacity duration-300 ${authDropdownOpen ? 'opacity-100 delay-150' : 'opacity-0 pointer-events-none'}`}>
-                    <Link href="/auth/login" className="flex-1 flex items-center justify-center px-4 text-sm font-bold hover:bg-black hover:text-white rounded-xl dark:hover:bg-white dark:hover:text-black transition-colors" onClick={(e) => { e.stopPropagation(); setAuthDropdownOpen(false); }}>
+                  <div className={`flex flex-col w-full h-full p-1.5 gap-1 text-zinc-900 dark:text-zinc-100 transition-opacity duration-300 ${authDropdownOpen ? 'opacity-100 delay-150' : 'opacity-0 pointer-events-none'}`}>
+                    <Link href="/auth/login" className="flex-1 flex items-center justify-center px-4 text-sm font-bold hover:bg-zinc-900 hover:text-white rounded-lg dark:hover:bg-white dark:hover:text-black transition-colors" onClick={(e) => { e.stopPropagation(); setAuthDropdownOpen(false); }}>
                       Login
                     </Link>
-                    <Link href="/auth/signup" className="flex-1 flex items-center justify-center px-4 text-sm font-bold hover:bg-black hover:text-white rounded-xl dark:hover:bg-white dark:hover:text-black transition-colors" onClick={(e) => { e.stopPropagation(); setAuthDropdownOpen(false); }}>
+                    <Link href="/auth/signup" className="flex-1 flex items-center justify-center px-4 text-sm font-bold hover:bg-zinc-900 hover:text-white rounded-lg dark:hover:bg-white dark:hover:text-black transition-colors" onClick={(e) => { e.stopPropagation(); setAuthDropdownOpen(false); }}>
                       Signup
                     </Link>
                   </div>
@@ -209,7 +211,7 @@ export function Navbar() {
             </div>
             <button 
               onClick={() => setMenuOpen(false)}
-              className="flex h-8 w-8 -mr-5 items-center justify-center rounded-full bg-zinc-100 text-zinc-600 transition-colors hover:bg-[#FF394A] hover:text-white dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-[#FF394A] dark:hover:text-white"
+              className="flex h-8 w-8 -mr-5 items-center justify-center rounded-lg bg-zinc-100 text-zinc-600 transition-colors hover:bg-[#FF394A] hover:text-white dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-[#FF394A] dark:hover:text-white"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

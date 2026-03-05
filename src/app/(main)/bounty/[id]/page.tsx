@@ -111,7 +111,7 @@ export default function BountyDetailPage() {
         {/* Main content */}
         <div className="space-y-6">
           {/* Image placeholder */}
-          <div className="flex h-48 items-center justify-center rounded-2xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 md:h-56">
+          <div className="flex h-48 items-center justify-center rounded-2xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-[#18181b] md:h-56">
             <svg className="h-12 w-12 text-zinc-300 dark:text-zinc-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
@@ -199,14 +199,14 @@ export default function BountyDetailPage() {
                   placeholder="https://github.com/your-repo or https://example.com/proof"
                   value={proofUrl}
                   onChange={(e) => setProofUrl(e.target.value)}
-                  className="rounded-xl border-zinc-200 bg-transparent dark:border-zinc-800"
+                  className="rounded-xl border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-[#18181b]"
                 />
                 <Textarea
                   label="Description"
                   placeholder="Describe what you did and how it meets the bounty requirements..."
                   value={proofText}
                   onChange={(e) => setProofText(e.target.value)}
-                  className="rounded-xl border-zinc-200 bg-transparent dark:border-zinc-800"
+                  className="rounded-xl border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-[#18181b]"
                 />
                 <button
                   type="submit"

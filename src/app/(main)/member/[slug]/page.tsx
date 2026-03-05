@@ -278,10 +278,10 @@ export default function MemberDashboardPage({ params }: { params: Promise<{ slug
         <div className="mb-6 flex flex-col gap-4 2xl:flex-row 2xl:items-center 2xl:justify-between">
           <div className="flex flex-wrap items-center gap-4">
             {/* Visibility Toggle */}
-            <div className="flex items-center gap-1 rounded-full border border-zinc-200 bg-card p-1 text-card-foreground dark:border-zinc-800">
+            <div className="flex items-center gap-1 rounded-xl border border-zinc-200 bg-card p-1 text-card-foreground dark:border-zinc-800">
               <button
                 onClick={() => setVisibilityMode('public')}
-                className={`rounded-full px-5 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+                className={`rounded-lg px-5 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
                   visibilityMode === 'public'
                     ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100'
                     : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200'
@@ -291,7 +291,7 @@ export default function MemberDashboardPage({ params }: { params: Promise<{ slug
               </button>
               <button
                 onClick={() => setVisibilityMode('member')}
-                className={`rounded-full px-5 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+                className={`rounded-lg px-5 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
                   visibilityMode === 'member'
                     ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100'
                     : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200'
@@ -302,12 +302,12 @@ export default function MemberDashboardPage({ params }: { params: Promise<{ slug
             </div>
 
             {/* Content Tabs */}
-            <div className="flex items-center gap-1 rounded-full border border-zinc-200 bg-card p-1 text-card-foreground dark:border-zinc-800">
+            <div className="flex items-center gap-1 rounded-xl border border-zinc-200 bg-card p-1 text-card-foreground dark:border-zinc-800">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`rounded-full px-5 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+                className={`rounded-lg px-5 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
                   activeTab === tab.id
                     ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100'
                     : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200'
@@ -327,11 +327,11 @@ export default function MemberDashboardPage({ params }: { params: Promise<{ slug
                 placeholder="Search..."
                 value={resourceSearch}
                 onChange={(e) => setResourceSearch(e.target.value)}
-                className="w-full bg-card min-w-[200px] rounded-xl border-zinc-200 pl-9 text-sm focus:border-zinc-400 dark:border-zinc-800 dark:focus:border-zinc-600 sm:w-64"
+                className="w-full min-w-[200px] rounded-lg border border-zinc-200 bg-zinc-50 pl-9 text-sm focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:focus:border-zinc-600 sm:w-64"
               />
             </div>
 
-            <button className="flex h-10 items-center gap-2 rounded-xl border border-zinc-200 bg-card px-4 text-xs font-bold text-zinc-600 hover:bg-zinc-50 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-900">
+            <button className="flex h-10 items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-4 text-xs font-bold text-zinc-600 hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-[#1f1f22]">
               <Search className="h-3.5 w-3.5" />
               ALL VIEW
               <ChevronDown className="h-3.5 w-3.5" />
@@ -339,7 +339,7 @@ export default function MemberDashboardPage({ params }: { params: Promise<{ slug
 
             <Link
               href="/portal/events"
-              className="flex h-10 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-card px-5 text-xs font-bold uppercase tracking-wider text-zinc-600 hover:bg-zinc-50 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-900"
+              className="flex h-10 items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-5 text-xs font-bold uppercase tracking-wider text-zinc-600 hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-[#1f1f22]"
             >
               SEE ALL <ArrowRight className="h-3.5 w-3.5" />
             </Link>
@@ -499,7 +499,7 @@ export default function MemberDashboardPage({ params }: { params: Promise<{ slug
       <aside className="w-full lg:w-[360px] shrink-0 space-y-6">
 
         {/* Profile Stats Widget */}
-        <BentoCard className="flex flex-col items-center p-8 text-center bg-[#09090b] text-white">
+        <BentoCard className="flex flex-col items-center p-8 text-center bg-card text-card-foreground">
           <div className="relative mb-4">
             <Avatar src={user.avatarUrl} alt={user.displayName} size="xl" className="h-[72px] w-[72px] bg-[#FF394A] text-white ring-2 ring-zinc-800" />
           </div>
@@ -523,14 +523,14 @@ export default function MemberDashboardPage({ params }: { params: Promise<{ slug
         </BentoCard>
 
         {/* Quests Widget */}
-        <BentoCard className="p-7 bg-[#09090b] text-white">
+        <BentoCard className="p-7 bg-card text-card-foreground">
           <h3 className="text-[13px] font-black tracking-[0.15em] text-zinc-100 mb-6 uppercase">QUESTS</h3>
-          <div className="flex rounded-full border border-zinc-800/50 bg-black p-1 mb-8 overflow-x-auto scrollbar-hide">
+          <div className="flex rounded-xl border border-zinc-800/50 bg-black p-1 mb-8 overflow-x-auto scrollbar-hide">
             {QUEST_TABS.map(t => (
               <button
                 key={t}
                 onClick={() => setQuestTab(t)}
-                className={`flex-1 rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-widest transition-colors min-w-max ${questTab === t ? 'bg-white text-black' : 'text-zinc-500 hover:text-zinc-300'}`}
+                className={`flex-1 rounded-lg px-3 py-2 text-[10px] font-black uppercase tracking-widest transition-colors min-w-max ${questTab === t ? 'bg-white text-black' : 'text-zinc-500 hover:text-zinc-300'}`}
               >
                 {t}
               </button>
@@ -542,7 +542,7 @@ export default function MemberDashboardPage({ params }: { params: Promise<{ slug
         </BentoCard>
 
         {/* Leaderboard Widget */}
-        <BentoCard className="p-7 bg-[#09090b] text-white">
+        <BentoCard className="p-7 bg-card text-card-foreground">
           <h3 className="text-[13px] font-black tracking-[0.15em] text-zinc-100 mb-6 uppercase">LEADERBOARD</h3>
           <div className="space-y-3 mb-6">
             {leaderboard?.map((u, i) => (

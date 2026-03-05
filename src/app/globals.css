@@ -2,6 +2,13 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Global smooth transition for theme switching */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, fill, stroke, text-decoration-color;
+  transition-duration: 300ms;
+  transition-timing-function: ease-in-out;
+}
+
 :root {
   --background: #fafafa;
   --foreground: #09090b;

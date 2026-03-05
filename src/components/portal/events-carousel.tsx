@@ -47,12 +47,12 @@ export function EventsCarousel() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search..."
-        className="h-8 w-32 rounded-full border-zinc-200/50 bg-zinc-50 px-3 text-xs dark:border-zinc-800/80 dark:bg-[#18181b]"
+        className="h-8 w-32 rounded-lg border-zinc-200/50 bg-zinc-50 px-3 text-xs dark:border-zinc-800/80 dark:bg-zinc-950"
       />
       <select
         value={eventType}
         onChange={(e) => setEventType(e.target.value)}
-        className="h-8 rounded-full border border-zinc-200/50 bg-zinc-50 px-3 text-xs text-zinc-600 outline-none dark:border-zinc-800/80 dark:bg-[#18181b] dark:text-zinc-400"
+        className="h-8 rounded-lg border border-zinc-200/50 bg-zinc-50 px-3 text-xs text-zinc-600 outline-none dark:border-zinc-800/80 dark:bg-zinc-950 dark:text-zinc-400"
       >
         <option value="">All</option>
         <option value="meetup">Meetup</option>

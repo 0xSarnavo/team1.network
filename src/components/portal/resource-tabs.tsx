@@ -57,7 +57,7 @@ function GuidesTab() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search guides..."
-        className="mb-4 h-8 w-48 rounded-full border-zinc-200/50 bg-zinc-50 px-3 text-xs dark:border-zinc-800/80 dark:bg-[#18181b]"
+        className="mb-4 h-8 w-48 rounded-lg border-zinc-200/50 bg-zinc-50 px-3 text-xs dark:border-zinc-800/80 dark:bg-zinc-950"
       />
       {loading ? (
         <div className="flex justify-center py-6"><Spinner size="sm" /></div>
@@ -101,7 +101,7 @@ function ProgramsTab() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search programs..."
-        className="mb-4 h-8 w-48 rounded-full border-zinc-200/50 bg-zinc-50 px-3 text-xs dark:border-zinc-800/80 dark:bg-[#18181b]"
+        className="mb-4 h-8 w-48 rounded-lg border-zinc-200/50 bg-zinc-50 px-3 text-xs dark:border-zinc-800/80 dark:bg-zinc-950"
       />
       {loading ? (
         <div className="flex justify-center py-6"><Spinner size="sm" /></div>
@@ -149,7 +149,7 @@ function HostTab() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search hosted events..."
-        className="mb-4 h-8 w-48 rounded-full border-zinc-200/50 bg-zinc-50 px-3 text-xs dark:border-zinc-800/80 dark:bg-[#18181b]"
+        className="mb-4 h-8 w-48 rounded-lg border-zinc-200/50 bg-zinc-50 px-3 text-xs dark:border-zinc-800/80 dark:bg-zinc-950"
       />
       {loading ? (
         <div className="flex justify-center py-6"><Spinner size="sm" /></div>
@@ -187,7 +187,7 @@ export function ResourceTabs() {
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors ${
+            className={`rounded-lg px-4 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors ${
               activeTab === tab.key
                 ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900'
                 : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100'

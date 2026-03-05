@@ -80,13 +80,13 @@ export default function BountyPage() {
             placeholder="Search bounties..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="rounded-xl border-zinc-200 bg-transparent text-sm dark:border-zinc-800"
+            className="rounded-xl border-zinc-200 bg-zinc-50 text-sm dark:border-zinc-800 dark:bg-[#18181b]"
           />
         </div>
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-600 outline-none focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400 dark:focus:border-zinc-600 sm:w-48"
+          className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm text-zinc-600 outline-none focus:border-zinc-400 dark:border-zinc-800 dark:bg-[#18181b] dark:text-zinc-400 dark:focus:border-zinc-600 sm:w-48"
         >
           {CATEGORIES.map((cat) => (
             <option key={cat.value} value={cat.value}>{cat.label}</option>
@@ -108,7 +108,7 @@ export default function BountyPage() {
             <Link key={bounty.id} href={`/bounty/${bounty.id}`}>
               <div className="group h-full rounded-2xl border border-zinc-200 bg-card text-card-foreground transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:hover:border-zinc-700 overflow-hidden">
                 {/* Image placeholder */}
-                <div className="flex h-36 items-center justify-center bg-zinc-50 dark:bg-zinc-900">
+                <div className="flex h-36 items-center justify-center bg-zinc-50 dark:bg-[#18181b]">
                   <svg className="h-8 w-8 text-zinc-300 dark:text-zinc-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>

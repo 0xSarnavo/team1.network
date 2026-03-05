@@ -38,12 +38,12 @@ export function QuestsPanel() {
   return (
     <BentoCard title="Quests">
       {/* Period tabs */}
-      <div className="mb-4 flex rounded-full border border-zinc-200 p-0.5 dark:border-zinc-800">
+      <div className="mb-4 flex rounded-xl border border-zinc-200 p-0.5 dark:border-zinc-800">
         {PERIODS.map((p) => (
           <button
             key={p.key}
             onClick={() => setPeriod(p.key)}
-            className={`flex-1 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors ${
+            className={`flex-1 rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors ${
               period === p.key
                 ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900'
                 : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'

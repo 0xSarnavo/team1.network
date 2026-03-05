@@ -64,7 +64,7 @@ function DetailsTab({ user }: { user: unknown }) {
       {/* ————— ABOUT ————— */}
       <section className="grid gap-8 md:grid-cols-2 items-center">
         <div className="flex items-center justify-center">
-          <div className="relative h-48 w-48 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex items-center justify-center overflow-hidden bg-zinc-50 dark:bg-zinc-900">
+          <div className="relative h-48 w-48 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex items-center justify-center overflow-hidden bg-zinc-50 dark:bg-[#18181b]">
             <svg className="h-24 w-24 text-[#FF394A]/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={0.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
@@ -357,13 +357,13 @@ function DiscoverTab() {
             placeholder="Search projects..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-zinc-200 bg-white py-2.5 pl-10 pr-4 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-zinc-600"
+            className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2.5 pl-10 pr-4 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-400 dark:border-zinc-800 dark:bg-[#18181b] dark:text-zinc-100 dark:focus:border-zinc-600"
           />
         </div>
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-600 outline-none focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400 dark:focus:border-zinc-600 sm:w-48"
+          className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm text-zinc-600 outline-none focus:border-zinc-400 dark:border-zinc-800 dark:bg-[#18181b] dark:text-zinc-400 dark:focus:border-zinc-600 sm:w-48"
         >
           <option value="all">Filter by category</option>
           {allTags.map((tag) => (
@@ -400,7 +400,7 @@ function ProjectCard({ project }: { project: DiscoverProject }) {
         {project.image ? (
           <img src={project.image} alt={project.title} className="h-40 w-full object-cover" />
         ) : (
-          <div className="flex h-40 items-center justify-center bg-zinc-100 dark:bg-zinc-900/80">
+          <div className="flex h-40 items-center justify-center bg-zinc-50 dark:bg-[#18181b]">
             <svg className="h-10 w-10 text-zinc-300 dark:text-zinc-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
