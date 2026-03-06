@@ -80,8 +80,12 @@ export default function RegionAdminGuidesPage({ params }: { params: Promise<{ po
 
   const handleSave = async () => {
     const validFields = formFields.filter(f => f.label.trim());
-    const payload = {
-      ...form,
+    const payload: Record<string, unknown> = {
+      title: form.title,
+      category: form.category,
+      content: form.content,
+      status: form.status,
+      visibility: form.visibility,
       readTime: form.readTime ? parseInt(form.readTime) : undefined,
       coverImageUrl: form.coverImageUrl || undefined,
       body: form.markdown ? { description: form.content, markdown: form.markdown } : undefined,
@@ -92,7 +96,8 @@ export default function RegionAdminGuidesPage({ params }: { params: Promise<{ po
       const res = await put(`${apiBase}/${editId}`, payload);
       if (res.success) { setShowModal(false); refetch(); }
     } else {
-      const res = await post(apiBase, { ...payload, slug: form.slug || slugify(form.title) });
+      payload.slug = form.slug || slugify(form.title);
+      const res = await post(apiBase, payload);
       if (res.success) { setShowModal(false); refetch(); }
     }
   };

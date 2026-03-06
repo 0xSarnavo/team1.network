@@ -1643,16 +1643,30 @@ class PortalService {
     if (!event) throw new AppError('NOT_FOUND', 'Event not found');
     if (event.regionId !== regionId) throw new AppError('FORBIDDEN', 'Event does not belong to this region');
 
-    if (typeof data.startDate === 'string') data.startDate = new Date(data.startDate);
-    if (typeof data.endDate === 'string') data.endDate = new Date(data.endDate);
-    delete data.regionId; // prevent region reassignment
+    // Build clean update payload with only valid DB columns
+    const updateData: Record<string, unknown> = {};
+    if (data.title !== undefined) updateData.title = data.title;
+    if (data.slug !== undefined) updateData.slug = data.slug;
+    if (data.description !== undefined) updateData.description = data.description;
+    if (data.body !== undefined) updateData.body = data.body;
+    if (data.type !== undefined) updateData.type = data.type;
+    if (data.status !== undefined) updateData.status = data.status;
+    if (data.visibility !== undefined) updateData.visibility = data.visibility;
+    if (data.location !== undefined) updateData.location = data.location || null;
+    if (data.isVirtual !== undefined) updateData.isVirtual = data.isVirtual;
+    if (data.virtualUrl !== undefined) updateData.virtualUrl = data.virtualUrl || null;
+    if (data.capacity !== undefined) updateData.capacity = data.capacity || null;
+    if (data.formFields !== undefined) updateData.formFields = data.formFields;
+    if (data.coverImageUrl !== undefined) updateData.coverImageUrl = data.coverImageUrl || null;
+    if (typeof data.startDate === 'string') updateData.startDate = new Date(data.startDate);
+    if (typeof data.endDate === 'string' && data.endDate) updateData.endDate = new Date(data.endDate as string);
 
-    const updated = await db.portalEvent.update({ where: { id: eventId }, data: data as any });
+    const updated = await db.portalEvent.update({ where: { id: eventId }, data: updateData as any });
 
     await auditService.log({
       userId, module: 'portal', action: 'portal.region_admin.event_updated',
       entityType: 'event', entityId: eventId, entityName: updated.title,
-      details: { regionId, fields: Object.keys(data) },
+      details: { regionId, fields: Object.keys(updateData) },
     });
 
     return updated;
@@ -1724,13 +1738,24 @@ class PortalService {
     if (!guide) throw new AppError('NOT_FOUND', 'Guide not found');
     if (guide.regionId !== regionId) throw new AppError('FORBIDDEN', 'Guide does not belong to this region');
 
-    delete data.regionId;
-    const updated = await db.portalGuide.update({ where: { id: guideId }, data: data as any });
+    const updateData: Record<string, unknown> = {};
+    if (data.title !== undefined) updateData.title = data.title;
+    if (data.slug !== undefined) updateData.slug = data.slug;
+    if (data.category !== undefined) updateData.category = data.category;
+    if (data.content !== undefined) updateData.content = data.content;
+    if (data.body !== undefined) updateData.body = data.body;
+    if (data.coverImageUrl !== undefined) updateData.coverImageUrl = data.coverImageUrl || null;
+    if (data.readTime !== undefined) updateData.readTime = data.readTime || null;
+    if (data.status !== undefined) updateData.status = data.status;
+    if (data.visibility !== undefined) updateData.visibility = data.visibility;
+    if (data.formFields !== undefined) updateData.formFields = data.formFields;
+
+    const updated = await db.portalGuide.update({ where: { id: guideId }, data: updateData as any });
 
     await auditService.log({
       userId, module: 'portal', action: 'portal.region_admin.guide_updated',
       entityType: 'guide', entityId: guideId, entityName: updated.title,
-      details: { regionId, fields: Object.keys(data) },
+      details: { regionId, fields: Object.keys(updateData) },
     });
 
     return updated;
@@ -2095,8 +2120,16 @@ class PortalService {
     if (!pb) throw new AppError('NOT_FOUND', 'Playbook not found');
     if (pb.regionId !== regionId) throw new AppError('FORBIDDEN', 'Playbook does not belong to this region');
 
-    delete data.regionId;
-    return db.regionPlaybook.update({ where: { id }, data: data as any });
+    const updateData: Record<string, unknown> = {};
+    if (data.title !== undefined) updateData.title = data.title;
+    if (data.description !== undefined) updateData.description = data.description || null;
+    if (data.body !== undefined) updateData.body = data.body;
+    if (data.coverImageUrl !== undefined) updateData.coverImageUrl = data.coverImageUrl || null;
+    if (data.visibility !== undefined) updateData.visibility = data.visibility;
+    if (data.status !== undefined) updateData.status = data.status;
+    if (data.formFields !== undefined) updateData.formFields = data.formFields;
+
+    return db.regionPlaybook.update({ where: { id }, data: updateData as any });
   }
 
   async deleteRegionPlaybook(id: string, regionId: string) {

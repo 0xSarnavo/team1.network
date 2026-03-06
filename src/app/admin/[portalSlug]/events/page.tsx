@@ -88,11 +88,18 @@ export default function RegionAdminEventsPage({ params }: { params: Promise<{ po
 
   const handleSave = async () => {
     const validFields = formFields.filter(f => f.label.trim());
-    const payload = {
-      ...form,
-      capacity: form.capacity ? parseInt(form.capacity) : undefined,
-      endDate: form.endDate || undefined,
+    const payload: Record<string, unknown> = {
+      title: form.title,
+      description: form.description,
+      type: form.type,
+      status: form.status,
+      visibility: form.visibility,
+      location: form.location || undefined,
+      isVirtual: form.isVirtual,
       virtualUrl: form.virtualUrl || undefined,
+      startDate: form.startDate,
+      endDate: form.endDate || undefined,
+      capacity: form.capacity ? parseInt(form.capacity) : undefined,
       body: form.markdown ? { description: form.description, markdown: form.markdown } : undefined,
       formFields: validFields.length > 0 ? validFields : null,
     };
@@ -101,7 +108,8 @@ export default function RegionAdminEventsPage({ params }: { params: Promise<{ po
       const res = await put(`${apiBase}/${editId}`, payload);
       if (res.success) { setShowModal(false); refetch(); }
     } else {
-      const res = await post(apiBase, { ...payload, slug: form.slug || slugify(form.title) });
+      payload.slug = form.slug || slugify(form.title);
+      const res = await post(apiBase, payload);
       if (res.success) { setShowModal(false); refetch(); }
     }
   };
