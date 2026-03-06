@@ -69,7 +69,7 @@ export default function RegionAdminGuidesPage({ params }: { params: Promise<{ po
 
   const openEdit = (g: GuideItem) => {
     setForm({
-      title: g.title, slug: g.slug, category: g.category, content: '',
+      title: g.title, slug: g.slug, category: g.category, content: g.body?.description || '',
       markdown: g.body?.markdown || '', coverImageUrl: g.coverImageUrl || '',
       readTime: g.readTime?.toString() || '', status: g.status, visibility: g.visibility,
     });

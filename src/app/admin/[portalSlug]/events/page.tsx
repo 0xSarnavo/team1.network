@@ -29,7 +29,7 @@ interface EventItem {
 }
 
 const EVENT_TYPES = ['meetup', 'workshop', 'hackathon', 'conference', 'webinar', 'ama', 'other'];
-const STATUSES = ['draft', 'published', 'ongoing', 'completed', 'cancelled'];
+const STATUSES = ['draft', 'published'];
 const VISIBILITIES = ['admin', 'member', 'public'];
 
 function slugify(text: string) {
@@ -76,7 +76,7 @@ export default function RegionAdminEventsPage({ params }: { params: Promise<{ po
 
   const openEdit = (e: EventItem) => {
     setForm({
-      title: e.title, slug: e.slug, description: '', markdown: e.body?.markdown || '',
+      title: e.title, slug: e.slug, description: e.body?.description || '', markdown: e.body?.markdown || '',
       type: e.type, status: e.status, visibility: e.visibility, location: e.location || '',
       isVirtual: e.isVirtual, virtualUrl: '', startDate: e.startDate.slice(0, 16),
       endDate: e.endDate?.slice(0, 16) || '', capacity: e.capacity?.toString() || '',
