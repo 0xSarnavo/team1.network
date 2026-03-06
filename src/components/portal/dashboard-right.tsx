@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { BentoCard } from './bento-card';
+import { useAuth } from '@/lib/context/auth-context';
 
 export function DashboardRight() {
-  const [questTab, setQuestTab] = useState('Daily');
+  const { user } = useAuth();
+  const [questTab, setQuestTab] = useState('DAILY');
 
   const mockQuests = [
     { id: 1, title: 'Read Avalanche Guide', xp: 50 },
@@ -24,6 +28,90 @@ export function DashboardRight() {
     { id: 9, name: 'James Wilson', role: 'Trader', avatar: null, rank: 9 },
     { id: 10, name: 'Olivia Martinez', role: 'Designer', avatar: null, rank: 10 },
   ];
+
+  if (!user) {
+    return (
+      <div className="flex flex-col gap-4">
+        {/* Not Signed In Profile */}
+        <BentoCard className="flex flex-col items-center justify-center p-8 text-center">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-zinc-900 border border-zinc-800 text-zinc-500">
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+          <h3 className="mb-1 text-base font-bold text-white">Not signed in</h3>
+          <p className="mb-6 text-[13px] text-zinc-500 max-w-[200px]">Sign in to view your profile and track progress.</p>
+          <Link href="/auth/login" className="flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-black transition-colors hover:bg-zinc-200">
+            Sign In &rarr;
+          </Link>
+        </BentoCard>
+
+        {/* Not Signed In Quests */}
+        <BentoCard 
+          title="Quests" 
+          headerRight={
+            <svg className="h-4 w-4 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          }
+          className="p-0 overflow-hidden"
+        >
+          <div className="flex w-full border-b border-zinc-800/60 px-4 pt-4">
+            {['DAILY', 'WEEKLY', 'MONTHLY'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setQuestTab(tab)}
+                className={`flex-1 pb-3 text-[10px] font-bold tracking-wider transition-colors relative ${
+                  questTab === tab 
+                    ? 'text-white' 
+                    : 'text-zinc-600 hover:text-zinc-400'
+                }`}
+              >
+                {tab}
+                {questTab === tab && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white" />
+                )}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-500">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <p className="mb-4 text-[12px] text-zinc-500">Sign in to view and complete quests</p>
+            <Link href="/auth/login" className="rounded-lg border border-zinc-800 bg-transparent px-6 py-2 text-[13px] font-medium text-white transition-colors hover:bg-zinc-900 hover:text-white">
+              Sign In
+            </Link>
+          </div>
+        </BentoCard>
+
+        {/* Not Signed In Leaderboard */}
+        <BentoCard 
+          title="Leaderboard" 
+          headerRight={
+            <svg className="h-4 w-4 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+            </svg>
+          }
+          className="p-0 overflow-hidden"
+        >
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-500">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <p className="mb-4 text-[12px] text-zinc-500">Sign in to view rankings</p>
+            <Link href="/auth/login" className="rounded-lg border border-zinc-800 bg-transparent px-6 py-2 text-[13px] font-medium text-white transition-colors hover:bg-zinc-900 hover:text-white">
+              Sign In
+            </Link>
+          </div>
+        </BentoCard>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">

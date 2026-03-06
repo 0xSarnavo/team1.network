@@ -52,17 +52,29 @@ function GuidesTab() {
   );
 
   return (
-    <div>
-      <Input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search guides..."
-        className="mb-4 h-8 w-48 rounded-lg border-zinc-200/50 bg-zinc-50 px-3 text-xs dark:border-zinc-800/80 dark:bg-zinc-950"
-      />
+    <div className="w-full">
+      <div className="relative mb-6">
+        <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search..."
+          className="h-9 w-full rounded-xl border-zinc-200 bg-white pl-9 text-xs transition-colors hover:border-zinc-300 dark:border-zinc-800/80 dark:bg-zinc-950 dark:hover:border-zinc-700"
+        />
+      </div>
       {loading ? (
         <div className="flex justify-center py-6"><Spinner size="sm" /></div>
       ) : !guides?.length ? (
-        <p className="py-4 text-center text-xs text-zinc-400">No guides found</p>
+        <div className="flex w-full flex-col items-center justify-center py-16 text-center">
+          <div className="mb-4 h-[1px] w-6 bg-zinc-800" />
+          <svg className="mb-3 h-5 w-5 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+          <h3 className="mb-2 text-sm font-bold text-zinc-900 dark:text-white">No guides found</h3>
+          <p className="text-xs text-zinc-500 max-w-[200px]">Community guides will appear here once published.</p>
+        </div>
       ) : (
         <HorizontalCarousel>
           {guides.map((g) => (
@@ -96,17 +108,29 @@ function ProgramsTab() {
   };
 
   return (
-    <div>
-      <Input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search programs..."
-        className="mb-4 h-8 w-48 rounded-lg border-zinc-200/50 bg-zinc-50 px-3 text-xs dark:border-zinc-800/80 dark:bg-zinc-950"
-      />
+    <div className="w-full">
+      <div className="relative mb-6">
+        <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search programs..."
+          className="h-9 w-full rounded-xl border-zinc-200 bg-white pl-9 text-xs transition-colors hover:border-zinc-300 dark:border-zinc-800/80 dark:bg-zinc-950 dark:hover:border-zinc-700"
+        />
+      </div>
       {loading ? (
         <div className="flex justify-center py-6"><Spinner size="sm" /></div>
       ) : !programs?.length ? (
-        <p className="py-4 text-center text-xs text-zinc-400">No programs found</p>
+        <div className="flex w-full flex-col items-center justify-center py-16 text-center">
+          <div className="mb-4 h-[1px] w-6 bg-zinc-800" />
+          <svg className="mb-3 h-5 w-5 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          <h3 className="mb-2 text-sm font-bold text-zinc-900 dark:text-white">No programs found</h3>
+          <p className="text-xs text-zinc-500 max-w-[200px]">Check back later for active community programs.</p>
+        </div>
       ) : (
         <HorizontalCarousel>
           {programs.map((p) => (
@@ -144,17 +168,29 @@ function HostTab() {
   );
 
   return (
-    <div>
-      <Input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search hosted events..."
-        className="mb-4 h-8 w-48 rounded-lg border-zinc-200/50 bg-zinc-50 px-3 text-xs dark:border-zinc-800/80 dark:bg-zinc-950"
-      />
+    <div className="w-full">
+      <div className="relative mb-6">
+        <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search hosted events..."
+          className="h-9 w-full rounded-xl border-zinc-200 bg-white pl-9 text-xs text-zinc-900 placeholder:text-zinc-500 transition-colors hover:border-zinc-300 dark:border-zinc-800/80 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:border-zinc-700"
+        />
+      </div>
       {loading ? (
         <div className="flex justify-center py-6"><Spinner size="sm" /></div>
       ) : !events?.length ? (
-        <p className="py-4 text-center text-xs text-zinc-400">No hosted events yet</p>
+        <div className="flex w-full flex-col items-center justify-center py-16 text-center">
+          <div className="mb-4 h-[1px] w-6 bg-zinc-800" />
+          <svg className="mb-3 h-5 w-5 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <h3 className="mb-2 text-sm font-bold text-zinc-900 dark:text-white">No hosted events</h3>
+          <p className="text-xs text-zinc-500 max-w-[200px]">You haven't hosted any events matching this search.</p>
+        </div>
       ) : (
         <HorizontalCarousel>
           {events.map((e) => (
@@ -182,18 +218,21 @@ export function ResourceTabs() {
   return (
     <BentoCard>
       {/* Tab bar */}
-      <div className="mb-5 flex gap-1">
+      <div className="flex w-full border-b border-zinc-200 dark:border-zinc-800/60 mb-6">
         {TABS.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`rounded-lg px-4 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors ${
+            className={`pb-3 text-[11px] font-bold tracking-wider uppercase transition-colors relative mr-6 ${
               activeTab === tab.key
-                ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900'
-                : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100'
+                ? 'text-zinc-900 dark:text-white'
+                : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300'
             }`}
           >
             {tab.label}
+            {activeTab === tab.key && (
+              <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-zinc-900 dark:bg-white" />
+            )}
           </button>
         ))}
       </div>

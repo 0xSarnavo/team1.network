@@ -22,7 +22,7 @@ export function PortalTopNav({ currentRegion }: TopNavProps) {
         <input 
           type="text" 
           placeholder="Search..." 
-          className="w-full rounded-full border border-zinc-200 bg-white/50 pl-10 pr-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-100 dark:placeholder:text-zinc-400"
+          className="w-full rounded-full border border-zinc-200 bg-white pl-10 pr-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-100 dark:placeholder:text-zinc-400"
         />
       </div>
 
@@ -30,7 +30,7 @@ export function PortalTopNav({ currentRegion }: TopNavProps) {
       <div className="w-full lg:col-span-4 flex justify-end">
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
-            <button className="flex w-full items-center justify-between rounded-full border border-zinc-200 bg-white/50 px-4 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-100 dark:hover:bg-zinc-800">
+            <button className="flex w-full items-center justify-between rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-100 dark:hover:bg-zinc-800">
               <span className="truncate">{currentRegion ? currentRegion.name : 'Global'}</span>
               <ChevronDown className="ml-2 h-4 w-4 text-zinc-500 flex-shrink-0" />
             </button>

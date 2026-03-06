@@ -14,7 +14,7 @@ export function BentoCard({ title, headerRight, children, className = '', id }: 
   return (
     <div
       id={id}
-      className={`rounded-2xl border border-zinc-200 bg-transparent p-5 dark:border-zinc-800/60 ${className}`}
+      className={`rounded-2xl border border-zinc-200 bg-white p-3 md:p-5 dark:border-zinc-800/60 dark:bg-black ${className}`}
     >
       {(title || headerRight) && (
         <div className="mb-4 flex items-center justify-between gap-3">

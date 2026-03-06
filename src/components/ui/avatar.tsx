@@ -19,7 +19,8 @@ export function Avatar({ src, alt = 'User', size = 'md', className = '' }: Avata
         alt={alt}
         width={sizeMap[size]}
         height={sizeMap[size]}
-        className={`rounded-full object-cover ${sizeClasses[size]} ${className}`}
+        className={`object-cover ${sizeClasses[size]} ${className}`}
+        style={{ borderRadius: '28%' }}
       />
     );
   }
@@ -32,7 +33,7 @@ export function Avatar({ src, alt = 'User', size = 'md', className = '' }: Avata
     .toUpperCase();
 
   return (
-    <div className={`flex items-center justify-center rounded-full bg-red-700 font-semibold text-white ${sizeClasses[size]} ${className}`}>
+    <div className={`flex items-center justify-center bg-red-700 font-semibold text-white ${sizeClasses[size]} ${className}`} style={{ borderRadius: '28%' }}>
       <span className={size === 'sm' ? 'text-xs' : size === 'xl' ? 'text-xl' : 'text-sm'}>
         {initials}
       </span>

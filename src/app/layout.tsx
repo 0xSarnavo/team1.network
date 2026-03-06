@@ -18,6 +18,7 @@ export const metadata: Metadata = {
   description: 'Web3 Community Platform',
 };
 
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -25,9 +26,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-zinc-900 dark:text-zinc-100 bg-noise`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-zinc-900 dark:text-zinc-100 min-h-screen`}>
         <Providers>
-          {children}
+          <div className="relative z-10 flex min-h-screen flex-col w-full">
+            {children}
+          </div>
         </Providers>
       </body>
     </html>

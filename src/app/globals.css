@@ -10,7 +10,7 @@
 }
 
 :root {
-  --background: #fafafa;
+  --background: #ffffff;
   --foreground: #09090b;
   --card: #ffffff;
   --card-foreground: #09090b;
@@ -18,7 +18,7 @@
 }
 
 .dark {
-  --background: #09090b;
+  --background: #000000;
   --foreground: #fafafa;
   --card: #000000;
   --card-foreground: #fafafa;
@@ -63,13 +63,4 @@ body {
   animation: map-pulse 2s ease-out infinite;
   transform-origin: center;
   transform-box: fill-box;
-}
-
-/* Subtle dot-grid texture mapped to the new background */
-.bg-noise {
-  background-image: radial-gradient(circle, rgba(113, 113, 122, 0.15) 1px, var(--background) 1px);
-  background-size: 24px 24px;
-}
-:where(.dark, .dark *) .bg-noise {
-  background-image: radial-gradient(circle, rgba(113, 113, 122, 0.08) 1px, var(--background) 1px);
 }

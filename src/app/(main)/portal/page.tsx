@@ -82,7 +82,7 @@ export default function PortalPage() {
         </div>
 
         {/* Two-column bento grid */}
-        <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
+        <div className="grid gap-5 md:grid-cols-[1fr_240px] lg:grid-cols-[1fr_288px]">
           {/* Left Column */}
           <div className="space-y-5">
             <EventsCarousel />

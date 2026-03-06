@@ -99,7 +99,7 @@ export function Navbar() {
                   animate={{ 
                     width: profileOpen ? 224 : 36,
                     height: profileOpen ? (isAdmin ? 298 : 262) : 36,
-                    borderRadius: profileOpen ? 16 : 18
+                    borderRadius: profileOpen ? 16 : 10
                   }}
                   transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                   className={`absolute right-0 top-0 overflow-hidden flex flex-col justify-start bg-white border border-zinc-200 origin-top-right shadow-lg dark:bg-zinc-950 dark:border-zinc-800 z-50 ${profileOpen ? 'cursor-default' : 'hover:scale-105 cursor-pointer transition-transform duration-300'}`}

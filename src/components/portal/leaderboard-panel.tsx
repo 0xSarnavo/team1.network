@@ -32,9 +32,27 @@ export function LeaderboardPanel() {
   );
 
   return (
-    <BentoCard title="Leaderboard">
+    <BentoCard 
+      title="Leaderboard"
+      headerRight={
+        <svg className="h-4 w-4 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+        </svg>
+      }
+      className={!user ? "p-0 overflow-hidden" : ""}
+    >
       {!user ? (
-        <p className="py-4 text-center text-[10px] uppercase tracking-wider text-zinc-400">Sign in to view</p>
+        <div className="flex flex-col items-center justify-center py-10 text-center">
+          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 border border-zinc-200 text-zinc-400 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-500">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <p className="mb-4 text-[12px] text-zinc-500">Sign in to view rankings</p>
+          <Link href="/auth/login" className="rounded-lg border border-zinc-200 bg-white px-6 py-2 text-[13px] font-medium text-zinc-900 transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:bg-transparent dark:text-white dark:hover:bg-zinc-900">
+            Sign In
+          </Link>
+        </div>
       ) : loading ? (
         <div className="flex justify-center py-6"><Spinner size="sm" /></div>
       ) : !leaderboard?.length ? (
@@ -42,7 +60,7 @@ export function LeaderboardPanel() {
       ) : (
         <div className="space-y-2">
           {leaderboard.map((u) => (
-            <div key={u.id} className="flex items-center gap-2.5 rounded-xl border border-zinc-200/60 px-3 py-2.5 dark:border-zinc-800/60">
+            <div key={u.id} className="flex items-center gap-2.5 rounded-xl border border-zinc-200 bg-white px-3 py-2.5 dark:border-zinc-800/60 dark:bg-transparent">
               <span className={`flex h-6 w-6 shrink-0 items-center justify-center text-xs ${RANK_ACCENT[u.rank] || 'text-zinc-400'}`}>
                 {u.rank}
               </span>

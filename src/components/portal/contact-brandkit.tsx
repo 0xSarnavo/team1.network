@@ -12,24 +12,24 @@ export function ContactBrandKit() {
     <>
       <div className="grid grid-cols-2 gap-4">
         {/* Contact */}
-        <button onClick={() => setShowContact(true)} className="text-left group">
-          <BentoCard className="h-full transition-all group-hover:border-zinc-300 dark:group-hover:border-zinc-700">
-            <div className="flex flex-col items-center gap-2 py-2">
-              <svg className="h-6 w-6 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">Contact</h3>
-              <p className="text-[10px] text-zinc-400">Get in touch</p>
-            </div>
+        <button onClick={() => setShowContact(true)} className="group relative overflow-hidden rounded-[20px] outline-none">
+          <BentoCard className="flex h-full flex-col items-center justify-center p-8 text-center transition-all group-hover:border-zinc-400 dark:group-hover:border-white/20">
+            <svg className="mb-3 h-5 w-5 text-zinc-400 dark:text-zinc-500 transition-colors group-hover:text-zinc-900 dark:group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <h3 className="mb-1 text-[11px] font-bold uppercase tracking-widest text-zinc-900 dark:text-white">Contact</h3>
+            <p className="text-[10px] text-zinc-500 dark:text-zinc-500">Get in touch</p>
           </BentoCard>
         </button>
 
         {/* Brand Kit */}
-        <button onClick={() => setShowBrandKit(true)} className="text-left group">
-          <BentoCard className="h-full transition-all group-hover:border-zinc-300 dark:group-hover:border-zinc-700">
-            <div className="flex flex-col items-center gap-2 py-2">
-              <svg className="h-6 w-6 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" /></svg>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">Brand Kit</h3>
-              <p className="text-[10px] text-zinc-400">Logos & assets</p>
-            </div>
+        <button onClick={() => setShowBrandKit(true)} className="group relative overflow-hidden rounded-[20px] outline-none">
+          <BentoCard className="flex h-full flex-col items-center justify-center p-8 text-center transition-all group-hover:border-zinc-400 dark:group-hover:border-white/20">
+            <svg className="mb-3 h-5 w-5 text-zinc-400 dark:text-zinc-500 transition-colors group-hover:text-zinc-900 dark:group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" />
+            </svg>
+            <h3 className="mb-1 text-[11px] font-bold uppercase tracking-widest text-zinc-900 dark:text-white">Brand Kit</h3>
+            <p className="text-[10px] text-zinc-500 dark:text-zinc-500">Logos & assets</p>
           </BentoCard>
         </button>
       </div>
