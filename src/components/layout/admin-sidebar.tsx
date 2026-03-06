@@ -1,232 +1,230 @@
+'use client';
+
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useTheme } from 'next-themes';
 import { useAuth } from '@/lib/context/auth-context';
-import { 
-  BarChart, 
-  Users, 
-  ShieldAlert, 
-  UserCog, 
-  Settings, 
-  Home, 
-  LayoutTemplate, 
-  Info, 
-  Megaphone, 
-  Briefcase, 
-  Globe2, 
-  PanelBottom, 
-  Award, 
-  CheckSquare, 
-  AppWindow, 
-  Navigation, 
-  UsersRound, 
-  CalendarDays, 
-  Target, 
-  BookOpen, 
-  LineChart,
-  ChevronDown,
-  ChevronRight,
-  PanelLeftClose,
-  PanelLeftOpen,
-  LogOut,
-  Moon,
-  Sun
+import {
+  BarChart2, Users, ClipboardList, Shield, UserCog, Settings,
+  BookOpen, Calendar, Layers, FileText, Settings2, FlaskConical,
+  Image, Briefcase, Handshake, Megaphone, History,
+  ChevronDown, LogOut, Sun, Moon,
 } from 'lucide-react';
 
-interface SidebarLink {
-  href: string;
-  label: string;
-  module?: string;
-  icon?: React.ReactNode;
-}
+interface NavItem { icon: React.ElementType; label: string; href: string; badge?: string }
+interface NavGroup { label: string; items: NavItem[]; defaultOpen: boolean }
 
-interface SidebarSection {
-  title: string;
-  icon?: React.ReactNode;
-  links: SidebarLink[];
-}
-
-const sections: SidebarSection[] = [
-  {
-    title: 'Admin Hub',
-    icon: <BarChart className="w-4 h-4" />,
-    links: [
-      { href: '/admin', label: 'Dashboard', icon: <BarChart className="w-4 h-4" /> },
-      { href: '/admin/users', label: 'Users', icon: <Users className="w-4 h-4" /> },
-      { href: '/admin/audit', label: 'Audit Log', icon: <ShieldAlert className="w-4 h-4" /> },
-      { href: '/admin/leads', label: 'Module Leads', icon: <UserCog className="w-4 h-4" /> },
-      { href: '/admin/super-admins', label: 'Super Admins', icon: <ShieldAlert className="w-4 h-4" /> },
-      { href: '/admin/settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
-    ],
-  },
-  {
-    title: 'Home',
-    icon: <Home className="w-4 h-4" />,
-    links: [
-      { href: '/home/admin', label: 'Overview', module: 'home', icon: <Home className="w-4 h-4" /> },
-      { href: '/home/admin/hero', label: 'Hero', module: 'home', icon: <LayoutTemplate className="w-4 h-4" /> },
-      { href: '/home/admin/about', label: 'About', module: 'home', icon: <Info className="w-4 h-4" /> },
-      { href: '/home/admin/announcements', label: 'Announcements', module: 'home', icon: <Megaphone className="w-4 h-4" /> },
-      { href: '/home/admin/stats', label: 'Stats', module: 'home', icon: <BarChart className="w-4 h-4" /> },
-      { href: '/home/admin/partners', label: 'Partners', module: 'home', icon: <Briefcase className="w-4 h-4" /> },
-      { href: '/home/admin/regions', label: 'Regions', module: 'home', icon: <Globe2 className="w-4 h-4" /> },
-      { href: '/home/admin/footer', label: 'Footer', module: 'home', icon: <PanelBottom className="w-4 h-4" /> },
-    ],
-  },
-  {
-    title: 'Bounties',
-    icon: <Award className="w-4 h-4" />,
-    links: [
-      { href: '/admin/bounties', label: 'All Bounties', module: 'bounty', icon: <Award className="w-4 h-4" /> },
-      { href: '/admin/bounties/submissions', label: 'Submissions', module: 'bounty', icon: <CheckSquare className="w-4 h-4" /> },
-    ],
-  },
-  {
-    title: 'Portal',
-    icon: <AppWindow className="w-4 h-4" />,
-    links: [
-      { href: '/portal/admin', label: 'Overview', module: 'portal', icon: <AppWindow className="w-4 h-4" /> },
-      { href: '/portal/admin/regions', label: 'Regions', module: 'portal', icon: <Navigation className="w-4 h-4" /> },
-      { href: '/portal/admin/members', label: 'Members', module: 'portal', icon: <UsersRound className="w-4 h-4" /> },
-      { href: '/portal/admin/events', label: 'Events', module: 'portal', icon: <CalendarDays className="w-4 h-4" /> },
-      { href: '/portal/admin/quests', label: 'Quests', module: 'portal', icon: <Target className="w-4 h-4" /> },
-      { href: '/portal/admin/guides', label: 'Guides', module: 'portal', icon: <BookOpen className="w-4 h-4" /> },
-      { href: '/portal/admin/analytics', label: 'Analytics', module: 'portal', icon: <LineChart className="w-4 h-4" /> },
-    ],
-  },
-];
-
-export function AdminSidebar() {
+export function AdminSidebar({ dark: darkProp, onToggleTheme: onToggleProp }: { dark?: boolean; onToggleTheme?: () => void } = {}) {
+  const [internalDark, setInternalDark] = useState(true);
+  const dark = darkProp ?? internalDark;
+  const onToggleTheme = onToggleProp ?? (() => setInternalDark((d) => !d));
   const pathname = usePathname();
   const { hasModuleLead, isSuperAdmin } = useAuth();
-  const { theme, setTheme, resolvedTheme } = useTheme();
-  
-  const [mounted, setMounted] = React.useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    'Admin Hub': true,
-    'Home': false,
-    'Bounties': false,
-    'Portal': false,
-  });
 
-  const toggleSection = (title: string) => {
-    if (isMinimized) {
-      setIsMinimized(false);
-      setExpandedSections({ [title]: true });
-    } else {
-       setExpandedSections(prev => ({ ...prev, [title]: !prev[title] }));
-    }
-  };
+  const groups: NavGroup[] = [
+    {
+      label: 'Admin Hub',
+      defaultOpen: true,
+      items: [
+        { icon: BarChart2, label: 'Dashboard', href: '/admin' },
+        { icon: Users, label: 'Users', href: '/admin/users', badge: '5' },
+        { icon: ClipboardList, label: 'Audit Log', href: '/admin/audit' },
+        { icon: Shield, label: 'Module Leads', href: '/admin/leads' },
+        { icon: UserCog, label: 'Super Admins', href: '/admin/super-admins' },
+        { icon: Settings, label: 'Settings', href: '/admin/settings' },
+      ],
+    },
+    {
+      label: 'Modules',
+      defaultOpen: true,
+      items: [
+        { icon: BookOpen, label: 'Playbooks', href: '/admin/playbooks' },
+        { icon: Calendar, label: 'Events', href: '/admin/events' },
+        { icon: Layers, label: 'Programs', href: '/admin/programs' },
+        { icon: FileText, label: 'Content', href: '/admin/content' },
+        { icon: Settings2, label: 'Operations', href: '/admin/operations' },
+        { icon: FlaskConical, label: 'Experiment', href: '/admin/experiment' },
+        { icon: Image, label: 'Media', href: '/admin/media' },
+        { icon: UserCog, label: 'Members Details', href: '/admin/members-details' },
+        { icon: Briefcase, label: 'Projects', href: '/admin/projects' },
+        { icon: Handshake, label: 'Partners', href: '/admin/partners' },
+        { icon: Megaphone, label: 'Mediakit', href: '/admin/mediakit' },
+        { icon: History, label: 'Logs', href: '/admin/logs' },
+      ],
+    },
+  ];
 
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(
+    Object.fromEntries(groups.map((g) => [g.label, g.defaultOpen])),
+  );
 
-  const toggleTheme = () => {
-    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+  const toggle = (label: string) => setOpenGroups((p) => ({ ...p, [label]: !p[label] }));
+
+  const isActive = (href: string) => {
+    if (href === '/admin') return pathname === '/admin';
+    return pathname.startsWith(href);
   };
 
   return (
-    <aside className={`relative flex flex-col h-full border-r border-zinc-200 bg-card text-card-foreground dark:border-zinc-800 transition-all duration-300 ease-in-out ${isMinimized ? 'w-[72px]' : 'w-64'}`}>
-      
-      {/* Header / Logo Area */}
-      <div className="flex h-16 shrink-0 items-center justify-between border-b border-zinc-200 dark:border-zinc-800 px-4">
-        {!isMinimized && (
-          <Link href="/" className="text-xl font-bold text-red-500 truncate">
-            team1 admin
-          </Link>
-        )}
-        <button 
-          onClick={() => setIsMinimized(!isMinimized)}
-          className={`rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white transition-colors ${isMinimized ? 'mx-auto' : ''}`}
-          title={isMinimized ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {isMinimized ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
-        </button>
+    <aside
+      className="flex flex-col shrink-0"
+      style={{
+        width: 214,
+        background: 'var(--a-s1)',
+        borderRight: '1px solid var(--a-bd)',
+        height: '100vh',
+        overflow: 'hidden',
+      }}
+    >
+      {/* ── Brand Header ──────────────────────────────────────── */}
+      <div style={{ padding: '15px 13px 11px', borderBottom: '1px solid var(--a-bd)' }}>
+        <div className="flex items-center gap-2">
+          <span style={{ fontFamily: 'var(--font-syne)', fontSize: 14, fontWeight: 800, letterSpacing: '-0.3px' }}>
+            <span style={{ color: 'var(--a-red)' }}>team1</span>
+            <span style={{ color: 'var(--a-text)' }}> admin</span>
+          </span>
+          <span
+            style={{
+              fontFamily: 'var(--font-geist-mono)', fontSize: 7, fontWeight: 500,
+              letterSpacing: '0.8px', padding: '1px 4px',
+              background: 'var(--a-s2)', border: '1px solid var(--a-bd)',
+              borderRadius: 3, color: 'var(--a-sub)',
+            }}
+          >
+            ADMIN
+          </span>
+        </div>
       </div>
 
-      {/* Navigation Links */}
-      <nav className="flex-1 space-y-2 overflow-y-auto p-4 hide-scrollbar">
-        {sections.map((section) => {
-          const visibleLinks = section.links.filter(
-             (link) => !link.module || isSuperAdmin || hasModuleLead(link.module)
-          );
-          if (visibleLinks.length === 0) return null;
-
-          const isExpanded = expandedSections[section.title];
-          const hasActiveLink = visibleLinks.some(link => pathname === link.href);
-
+      {/* ── Scrollable Nav Body ────────────────────────────────── */}
+      <nav className="flex-1 overflow-y-auto" style={{ padding: '10px 9px' }}>
+        {groups.map((group) => {
+          const isOpen = openGroups[group.label];
           return (
-            <div key={section.title} className="mb-2">
-              <button 
-                onClick={() => toggleSection(section.title)}
-                className={`flex w-full items-center justify-between rounded-lg p-2 text-sm font-medium transition-colors ${
-                  isMinimized ? 'justify-center' : ''
-                } hover:bg-zinc-100 dark:hover:bg-zinc-800/50 ${hasActiveLink && !isExpanded && !isMinimized ? 'text-zinc-900 dark:text-white' : 'text-zinc-600 dark:text-zinc-400'}`}
-                title={section.title}
+            <div key={group.label} className="mb-3">
+              {/* Group Header */}
+              <button
+                onClick={() => toggle(group.label)}
+                className="flex w-full items-center justify-between cursor-pointer select-none mb-1"
+                style={{ padding: '2px 8px' }}
+                onMouseEnter={(e) => { (e.currentTarget.querySelector('.gh') as HTMLElement).style.color = 'var(--a-sub)'; }}
+                onMouseLeave={(e) => { (e.currentTarget.querySelector('.gh') as HTMLElement).style.color = 'var(--a-dim)'; }}
               >
-                <div className="flex items-center gap-3">
-                  <div className={`${hasActiveLink ? 'text-red-500' : ''}`}>
-                    {section.icon}
-                  </div>
-                  {!isMinimized && <span>{section.title}</span>}
-                </div>
-                {!isMinimized && (
-                   <div className="text-zinc-500">
-                     {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                   </div>
-                )}
+                <span
+                  className="gh"
+                  style={{
+                    fontFamily: 'var(--font-syne)', fontSize: 8, fontWeight: 700,
+                    letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--a-dim)',
+                  }}
+                >
+                  {group.label}
+                </span>
+                <ChevronDown
+                  style={{
+                    width: 8, height: 8, color: 'var(--a-dim)',
+                    transform: isOpen ? 'rotate(0deg)' : 'rotate(-90deg)',
+                    transition: 'transform 0.16s',
+                  }}
+                />
               </button>
-              
-              {!isMinimized && isExpanded && (
-                <ul className="mt-1 space-y-1 pl-9 pr-2">
-                  {visibleLinks.map((link) => {
-                    const isActive = pathname === link.href;
+
+              {/* Items */}
+              {isOpen && (
+                <div className="flex flex-col gap-[2px]">
+                  {group.items.map((item) => {
+                    const active = isActive(item.href);
                     return (
-                      <li key={link.href}>
-                        <Link
-                          href={link.href}
-                          className={`flex items-center gap-3 rounded-md px-2 py-2 text-xs transition-colors ${
-                            isActive
-                              ? 'bg-red-500/10 text-red-500 font-semibold'
-                              : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-200'
-                          }`}
-                        >
-                          {/* Optional: if you want icons on child links too, uncomment below */}
-                          {/* <div className="opacity-70">{link.icon}</div> */}
-                          <span className="truncate">{link.label}</span>
-                        </Link>
-                      </li>
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="relative flex items-center gap-[7px] rounded-md"
+                        style={{
+                          fontFamily: 'var(--font-dm-sans)', fontSize: 11.5,
+                          fontWeight: active ? 500 : 400,
+                          color: active ? 'var(--a-text)' : 'var(--a-sub)',
+                          background: active ? 'var(--a-s2)' : 'transparent',
+                          border: active ? '1px solid var(--a-bd)' : '1px solid transparent',
+                          padding: '6px 8px', borderRadius: 6,
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!active) {
+                            e.currentTarget.style.background = 'var(--a-s2)';
+                            e.currentTarget.style.borderColor = 'var(--a-bd)';
+                            e.currentTarget.style.color = 'var(--a-text)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!active) {
+                            e.currentTarget.style.background = 'transparent';
+                            e.currentTarget.style.borderColor = 'transparent';
+                            e.currentTarget.style.color = 'var(--a-sub)';
+                          }
+                        }}
+                      >
+                        {/* Red active indicator */}
+                        {active && (
+                          <div
+                            className="absolute"
+                            style={{
+                              left: -9, top: '50%', transform: 'translateY(-50%)',
+                              width: 3, height: 13, borderRadius: 2,
+                              background: 'var(--a-red)',
+                            }}
+                          />
+                        )}
+                        <item.icon style={{ width: 12, height: 12, flexShrink: 0, color: active ? 'var(--a-sub)' : 'var(--a-dim)' }} />
+                        <span className="flex-1 truncate">{item.label}</span>
+                        {item.badge && (
+                          <span style={{
+                            fontFamily: 'var(--font-geist-mono)', fontSize: 8, fontWeight: 600,
+                            background: 'var(--a-rs)', color: 'var(--a-red)',
+                            borderRadius: 100, padding: '1px 5px',
+                          }}>
+                            {item.badge}
+                          </span>
+                        )}
+                      </Link>
                     );
                   })}
-                </ul>
+                </div>
               )}
             </div>
           );
         })}
       </nav>
-      
-      {/* Footer Area */}
-      <div className="border-t border-zinc-200 dark:border-zinc-800 p-4 shrink-0 flex flex-col gap-2">
-        {mounted && (
-          <button
-            onClick={toggleTheme}
-            className={`flex w-full items-center rounded-lg p-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white transition-colors ${isMinimized ? 'justify-center' : 'gap-3'}`}
-            title="Toggle Theme"
-          >
-            {resolvedTheme === 'dark' ? <Sun className="h-5 w-5 shrink-0" /> : <Moon className="h-5 w-5 shrink-0" />}
-            {!isMinimized && <span>{resolvedTheme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>}
-          </button>
-        )}
-        <Link 
-          href="/" 
-          className={`flex items-center rounded-lg p-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white transition-colors ${isMinimized ? 'justify-center' : 'gap-3'}`}
-          title="Exit Admin"
+
+      {/* ── Sticky Footer ─────────────────────────────────────── */}
+      <div style={{ borderTop: '1px solid var(--a-bd)', padding: '8px 9px' }} className="flex flex-col gap-[3px] shrink-0">
+        {/* Theme Toggle */}
+        <button
+          onClick={onToggleTheme}
+          className="flex items-center gap-[7px] w-full rounded-md transition-colors"
+          style={{
+            fontFamily: 'var(--font-dm-sans)', fontSize: 11.5,
+            color: 'var(--a-sub)', padding: '6px 8px',
+            border: '1px solid transparent', borderRadius: 6,
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--a-s2)'; e.currentTarget.style.borderColor = 'var(--a-bd)'; e.currentTarget.style.color = 'var(--a-text)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.color = 'var(--a-sub)'; }}
         >
-          <LogOut className="h-5 w-5 shrink-0" />
-          {!isMinimized && <span>Exit Admin</span>}
+          {dark ? <Sun style={{ width: 12, height: 12 }} /> : <Moon style={{ width: 12, height: 12 }} />}
+          <span>{dark ? 'Light Mode' : 'Dark Mode'}</span>
+        </button>
+
+        {/* Exit Admin */}
+        <Link
+          href="/"
+          className="flex items-center gap-[7px] w-full rounded-md"
+          style={{
+            fontFamily: 'var(--font-dm-sans)', fontSize: 11.5,
+            color: 'var(--a-sub)', padding: '6px 8px',
+            border: '1px solid transparent', borderRadius: 6,
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--a-rb)'; e.currentTarget.style.color = 'var(--a-red)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.color = 'var(--a-sub)'; }}
+        >
+          <LogOut style={{ width: 12, height: 12 }} />
+          <span>Exit Admin</span>
         </Link>
       </div>
     </aside>

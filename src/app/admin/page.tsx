@@ -1,907 +1,465 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/context/auth-context';
 import { useApi } from '@/lib/hooks/use-api';
-import { useToast } from '@/lib/context/toast-context';
-import { api } from '@/lib/api/client';
-import { Card, CardTitle } from '@/components/ui/card';
-import { StatCard } from '@/components/ui/stat-card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Avatar } from '@/components/ui/avatar';
-import { Input, Textarea, Select } from '@/components/ui/input';
 import { PageLoader } from '@/components/ui/spinner';
+import {
+  Bell, Sun, Moon, Plus, Search, ChevronDown, ArrowRight,
+  FileText, Megaphone, UserCheck, ClipboardList, Settings2,
+  BookOpen, Calendar, Layers, FlaskConical, Image, UserCog,
+  Briefcase, Handshake, History,
+} from 'lucide-react';
+
+/* -------------------------------------------------------------------------- */
+/* Types                                                                      */
+/* -------------------------------------------------------------------------- */
 
 interface AdminStats {
   stats: {
-    totalUsers: number;
-    activeUsers: number;
-    totalRegions: number;
-    totalMembers: number;
-    pendingMembers: number;
-    totalEvents: number;
-    totalQuests: number;
-    totalGuides: number;
-    pendingSubmissions: number;
-    totalBounties: number;
-    activeBounties: number;
-    pendingBountySubmissions: number;
+    totalUsers: number; activeUsers: number; totalRegions: number;
+    totalMembers: number; pendingMembers: number; totalEvents: number;
+    totalQuests: number; totalGuides: number; pendingSubmissions: number;
+    totalBounties: number; activeBounties: number; pendingBountySubmissions: number;
     totalXpDistributed: number;
   };
-  recentUsers: {
-    id: string;
-    displayName: string;
-    email: string;
-    avatarUrl: string | null;
-    createdAt: string;
-  }[];
-  regions: {
-    id: string;
-    name: string;
-    slug: string;
-    memberCount: number;
-  }[];
+  recentUsers: { id: string; displayName: string; email: string; avatarUrl: string | null; createdAt: string }[];
+  regions: { id: string; name: string; slug: string; memberCount: number }[];
 }
 
-interface Announcement {
-  id: string;
-  title: string;
-  summary: string | null;
-  content: string | null;
-  linkUrl: string | null;
-  status: string;
-  sortOrder: number;
-  createdAt: string;
-}
+/* -------------------------------------------------------------------------- */
+/* Timezone Strip                                                             */
+/* -------------------------------------------------------------------------- */
 
-export default function AdminHubPage() {
-  const { user, hasModuleLead, isSuperAdmin } = useAuth();
-  const { addToast } = useToast();
-  const { data, loading, error } = useApi<AdminStats>('/api/admin/stats');
-  const { data: announcements, loading: annLoading, refetch: refetchAnn } = useApi<Announcement[]>('/api/home/admin/announcements');
+const ZONES: { label: string; offset: number }[] = [
+  { label: 'IST', offset: 330 },
+  { label: 'UTC', offset: 0 },
+  { label: 'EST', offset: -300 },
+  { label: 'PST', offset: -480 },
+  { label: 'CET', offset: 60 },
+];
 
-  // Announcement form state
-  const [showAnnForm, setShowAnnForm] = useState(false);
-  const [annSaving, setAnnSaving] = useState(false);
-  const [editingAnn, setEditingAnn] = useState<Announcement | null>(null);
-  const [annForm, setAnnForm] = useState({ title: '', summary: '', content: '', linkUrl: '', status: 'published' });
+function TimezoneStrip() {
+  const [now, setNow] = useState(new Date());
 
-  const resetAnnForm = () => {
-    setAnnForm({ title: '', summary: '', content: '', linkUrl: '', status: 'published' });
-    setEditingAnn(null);
-    setShowAnnForm(false);
-  };
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 10000);
+    return () => clearInterval(id);
+  }, []);
 
-  const handleAnnSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAnnSaving(true);
-    const payload = {
-      title: annForm.title,
-      summary: annForm.summary || undefined,
-      content: annForm.content || undefined,
-      linkUrl: annForm.linkUrl || undefined,
-      status: annForm.status,
-      createdBy: user?.id,
-    };
-
-    let res;
-    if (editingAnn) {
-      res = await api.put(`/api/home/admin/announcements?id=${editingAnn.id}`, payload);
-    } else {
-      res = await api.post('/api/home/admin/announcements', payload);
-    }
-
-    if (res.success) {
-      addToast('success', editingAnn ? 'Announcement updated' : 'Announcement created');
-      resetAnnForm();
-      refetchAnn();
-    } else {
-      addToast('error', res.error?.message || 'Failed to save announcement');
-    }
-    setAnnSaving(false);
-  };
-
-  const handleAnnDelete = async (id: string) => {
-    const res = await api.delete(`/api/home/admin/announcements?id=${id}`);
-    if (res.success) {
-      addToast('success', 'Announcement deleted');
-      refetchAnn();
-    } else {
-      addToast('error', res.error?.message || 'Failed to delete');
-    }
-  };
-
-  const startEditAnn = (a: Announcement) => {
-    setEditingAnn(a);
-    setAnnForm({
-      title: a.title,
-      summary: a.summary || '',
-      content: a.content || '',
-      linkUrl: a.linkUrl || '',
-      status: a.status,
-    });
-    setShowAnnForm(true);
-  };
-
-  // ---- Region management state ----
-  interface AdminRegion {
-    id: string;
-    name: string;
-    slug: string;
-    description: string | null;
-    country: string | null;
-    city: string | null;
-    isActive: boolean;
-    memberCount: number;
-  }
-
-  const { data: adminRegions, loading: regLoading, refetch: refetchRegions } = useApi<AdminRegion[]>('/api/portal/admin/regions');
-
-  const [showRegForm, setShowRegForm] = useState(false);
-  const [regSaving, setRegSaving] = useState(false);
-  const [regForm, setRegForm] = useState({ name: '', slug: '', description: '', country: '', city: '' });
-
-  // Lead assignment
-  const [assigningLeadRegion, setAssigningLeadRegion] = useState<string | null>(null);
-  const [leadEmail, setLeadEmail] = useState('');
-  const [leadSaving, setLeadSaving] = useState(false);
-
-  const resetRegForm = () => {
-    setRegForm({ name: '', slug: '', description: '', country: '', city: '' });
-    setShowRegForm(false);
-  };
-
-  const handleRegSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setRegSaving(true);
-    const res = await api.post('/api/portal/admin/regions', {
-      name: regForm.name,
-      slug: regForm.slug,
-      description: regForm.description || undefined,
-      country: regForm.country || undefined,
-      city: regForm.city || undefined,
-    });
-    if (res.success) {
-      addToast('success', `Region "${regForm.name}" created`);
-      resetRegForm();
-      refetchRegions();
-    } else {
-      addToast('error', res.error?.message || 'Failed to create region');
-    }
-    setRegSaving(false);
-  };
-
-  const handleAssignLead = async (regionId: string) => {
-    if (!leadEmail.trim()) return;
-    setLeadSaving(true);
-
-    // First find user by email
-    const searchRes = await api.get<{ id: string; displayName: string }[]>(`/api/admin/users?search=${encodeURIComponent(leadEmail)}&limit=1`);
-    if (!searchRes.success || !searchRes.data || searchRes.data.length === 0) {
-      addToast('error', 'User not found with that email');
-      setLeadSaving(false);
-      return;
-    }
-
-    const targetUserId = searchRes.data[0].id;
-    const res = await api.put(`/api/admin/users/${targetUserId}`, {
-      action: 'assign_region',
-      regionId,
-      role: 'lead',
-    });
-
-    if (res.success) {
-      addToast('success', `${searchRes.data[0].displayName} assigned as region lead`);
-      setLeadEmail('');
-      setAssigningLeadRegion(null);
-      refetchRegions();
-    } else {
-      addToast('error', res.error?.message || 'Failed to assign lead');
-    }
-    setLeadSaving(false);
-  };
-
-  const modules = [
-    {
-      name: 'Home',
-      href: '/home/admin',
-      desc: 'Landing page management',
-      module: 'home',
-      color: 'text-blue-400',
-      borderColor: 'hover:border-blue-500/50',
-    },
-    {
-      name: 'Portal',
-      href: '/portal/admin',
-      desc: 'Events, quests, guides, membership',
-      module: 'portal',
-      color: 'text-green-400',
-      borderColor: 'hover:border-green-500/50',
-    },
-    {
-      name: 'Grants',
-      href: '#',
-      desc: 'Grant programs & applications',
-      module: 'grants',
-      color: 'text-yellow-400',
-      borderColor: 'hover:border-yellow-500/50',
-      soon: true,
-    },
-    {
-      name: 'Bounty',
-      href: '/admin/bounties',
-      desc: 'Bounties & submissions',
-      module: 'bounty',
-      color: 'text-orange-400',
-      borderColor: 'hover:border-orange-500/50',
-    },
-    {
-      name: 'Ecosystem',
-      href: '#',
-      desc: 'Project directory',
-      module: 'ecosystem',
-      color: 'text-purple-400',
-      borderColor: 'hover:border-purple-500/50',
-      soon: true,
-    },
-  ];
-
-  const quickActions = [
-    {
-      name: 'Users',
-      href: '/admin/users',
-      desc: 'User directory & management',
-      icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
-        </svg>
-      ),
-    },
-    {
-      name: 'Audit Log',
-      href: '/admin/audit',
-      desc: 'View all platform activity',
-      icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15a2.25 2.25 0 0 1 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />
-        </svg>
-      ),
-    },
-    {
-      name: 'Module Leads',
-      href: '/admin/leads',
-      desc: 'Assign module leaders',
-      icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
-        </svg>
-      ),
-    },
-    {
-      name: 'Super Admins',
-      href: '/admin/super-admins',
-      desc: 'Manage admin access',
-      icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-        </svg>
-      ),
-    },
-    {
-      name: 'Bounties',
-      href: '/admin/bounties',
-      desc: 'Manage bounties & submissions',
-      icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-        </svg>
-      ),
-    },
-    {
-      name: 'Settings',
-      href: '/admin/settings',
-      desc: 'Platform configuration',
-      icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-        </svg>
-      ),
-    },
-  ];
-
-  if (loading) {
-    return <PageLoader />;
-  }
-
-  if (error) {
-    return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4">
-        <p className="text-red-400">Failed to load dashboard data</p>
-        <p className="text-sm text-zinc-500">{error}</p>
-      </div>
-    );
-  }
-
-  const stats = data?.stats;
-  const recentUsers = data?.recentUsers ?? [];
-  const regions = data?.regions ?? [];
-
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
+  const formatTime = (offset: number) => {
+    const local = now.getTime();
+    const localOffset = now.getTimezoneOffset();
+    const utc = local + localOffset * 60000;
+    const target = new Date(utc + offset * 60000);
+    return target.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
   };
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8">
-      {/* Welcome Header */}
-      <div className="flex items-center justify-between">
+    <div className="flex items-center gap-[5px]">
+      {ZONES.map((z) => (
+        <div
+          key={z.label}
+          className="flex flex-col items-center rounded-[5px]"
+          style={{
+            minWidth: 43, padding: '3px 7px',
+            background: 'var(--a-s2)', border: '1px solid var(--a-bd)',
+          }}
+        >
+          <span style={{
+            fontFamily: 'var(--font-geist-mono)', fontSize: 7,
+            color: 'var(--a-sub)', letterSpacing: '0.4px',
+          }}>
+            {z.label}
+          </span>
+          <span style={{
+            fontFamily: 'var(--font-geist-mono)', fontSize: 11, fontWeight: 500,
+            color: 'var(--a-text)',
+          }}>
+            {formatTime(z.offset)}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Quick Actions                                                              */
+/* -------------------------------------------------------------------------- */
+
+const QUICK_ACTIONS = [
+  { icon: FileText, label: 'Applications' },
+  { icon: Megaphone, label: 'Announcements' },
+  { icon: UserCheck, label: 'Attendance' },
+  { icon: ClipboardList, label: 'Meeting Notes' },
+  { icon: FileText, label: 'Vote / Polls' },
+  { icon: Settings2, label: 'Manage Team' },
+];
+
+/* -------------------------------------------------------------------------- */
+/* Modules                                                                    */
+/* -------------------------------------------------------------------------- */
+
+const MODULES = [
+  { icon: BookOpen, name: 'Playbooks', desc: 'Structured guides and SOPs', href: '/home/admin' },
+  { icon: Calendar, name: 'Events', desc: 'Schedule and manage events', href: '/portal/admin' },
+  { icon: Layers, name: 'Programs', desc: 'Cohorts, bootcamps, tracks', href: '/portal/admin' },
+  { icon: FileText, name: 'Content', desc: 'Articles, posts, resources', href: '/admin/content' },
+  { icon: Settings2, name: 'Operations', desc: 'Internal processes & tools', href: '/admin/operations' },
+  { icon: FlaskConical, name: 'Experiment', desc: 'Feature flags & A/B tests', href: '/admin/experiment' },
+  { icon: Image, name: 'Media', desc: 'Images, videos, assets', href: '/admin/media' },
+  { icon: UserCog, name: 'Members Details', desc: 'Profiles, roles, data', href: '/admin/users' },
+  { icon: Briefcase, name: 'Projects', desc: 'Community project directory', href: '/admin/projects' },
+  { icon: Handshake, name: 'Partners', desc: 'Partnerships & sponsors', href: '/admin/partners' },
+  { icon: Megaphone, name: 'Mediakit', desc: 'Brand assets & press kit', href: '/admin/mediakit' },
+  { icon: History, name: 'Logs', desc: 'System and activity logs', href: '/admin/audit' },
+];
+
+/* -------------------------------------------------------------------------- */
+/* Mock Users (fallback)                                                      */
+/* -------------------------------------------------------------------------- */
+
+const MOCK_USERS = [
+  { name: 'Sarnavo', email: 'sarnavo@team1.io', region: 'India', role: 'Lead', online: true },
+  { name: 'Alex Chen', email: 'alex@team1.io', region: 'US East', role: 'Member', online: true },
+  { name: 'Priya Sharma', email: 'priya@team1.io', region: 'India', role: 'Lead', online: false },
+  { name: 'Marko V.', email: 'marko@team1.io', region: 'EU', role: 'Member', online: true },
+  { name: 'Jin Park', email: 'jin@team1.io', region: 'APAC', role: 'Member', online: false },
+];
+
+/* -------------------------------------------------------------------------- */
+/* Page                                                                       */
+/* -------------------------------------------------------------------------- */
+
+export default function AdminDashboardPage() {
+  const { user } = useAuth();
+  const { data, loading, error } = useApi<AdminStats>('/api/admin/stats');
+  const [userSearch, setUserSearch] = useState('');
+
+  if (loading) return <PageLoader />;
+
+  return (
+    <>
+      {/* ═══════════════ TOPBAR ═══════════════ */}
+      <div
+        className="shrink-0 flex items-center justify-between"
+        style={{
+          padding: '11px 18px',
+          borderBottom: '1px solid var(--a-bd)',
+          background: 'var(--a-s1)',
+        }}
+      >
+        {/* Left: title + subtitle */}
         <div>
-          <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">
-            Welcome back, {user?.displayName}
+          <h1 style={{
+            fontFamily: 'var(--font-syne)', fontSize: 16, fontWeight: 800,
+            letterSpacing: '-0.4px', color: 'var(--a-text)',
+          }}>
+            Core Terminal
           </h1>
-          <p className="mt-1 text-zinc-500">
-            Super Admin Dashboard
+          <p style={{
+            fontFamily: 'var(--font-dm-sans)', fontSize: 10.5,
+            color: 'var(--a-sub)',
+          }}>
+            Welcome back, <b style={{ color: 'var(--a-text)', fontWeight: 600 }}>{user?.displayName || 'Admin'}</b>.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          {isSuperAdmin && (
-            <Badge variant="danger">Super Admin</Badge>
-          )}
+
+        {/* Right: timezone + actions */}
+        <div className="flex items-center gap-[8px]">
+          <TimezoneStrip />
+
+          {/* Bell */}
+          <button
+            className="flex items-center justify-center rounded-md"
+            style={{
+              width: 27, height: 27,
+              border: '1px solid var(--a-bd)', background: 'transparent',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--a-bh)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--a-bd)'; }}
+          >
+            <Bell style={{ width: 12, height: 12, color: 'var(--a-sub)' }} />
+          </button>
+
+          {/* Create User */}
+          <Link
+            href="/admin/users"
+            className="flex items-center gap-[5px] rounded-md"
+            style={{
+              fontFamily: 'var(--font-dm-sans)', fontSize: 11, fontWeight: 600,
+              background: 'var(--a-red)', color: '#fff',
+              padding: '5px 10px', borderRadius: 8,
+            }}
+          >
+            <Plus style={{ width: 11, height: 11 }} />
+            Create User
+          </Link>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      {stats && (
-        <div>
-          <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-            Platform Overview
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard
-              label="Total Users"
-              value={stats.totalUsers.toLocaleString()}
-              icon={
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
-                </svg>
-              }
-            />
-            <StatCard
-              label="Active Users"
-              value={stats.activeUsers.toLocaleString()}
-              icon={
-                <svg className="h-5 w-5 text-green-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                </svg>
-              }
-            />
-            <StatCard
-              label="Total Regions"
-              value={stats.totalRegions.toLocaleString()}
-              icon={
-                <svg className="h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
-                </svg>
-              }
-            />
-            <StatCard
-              label="Total Members"
-              value={stats.totalMembers.toLocaleString()}
-              icon={
-                <svg className="h-5 w-5 text-purple-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
-                </svg>
-              }
-            />
-            <StatCard
-              label="Pending Members"
-              value={stats.pendingMembers.toLocaleString()}
-              icon={
-                <svg className="h-5 w-5 text-yellow-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                </svg>
-              }
-            />
-            <StatCard
-              label="Total Events"
-              value={stats.totalEvents.toLocaleString()}
-              icon={
-                <svg className="h-5 w-5 text-cyan-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
-                </svg>
-              }
-            />
-            <StatCard
-              label="Active Quests"
-              value={stats.totalQuests.toLocaleString()}
-              icon={
-                <svg className="h-5 w-5 text-orange-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z" />
-                </svg>
-              }
-            />
-            <StatCard
-              label="Pending Submissions"
-              value={stats.pendingSubmissions.toLocaleString()}
-              icon={
-                <svg className="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-                </svg>
-              }
-            />
-            <StatCard
-              label="Total Bounties"
-              value={stats.totalBounties.toLocaleString()}
-              icon={
-                <svg className="h-5 w-5 text-orange-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                </svg>
-              }
-            />
-            <StatCard
-              label="Active Bounties"
-              value={stats.activeBounties.toLocaleString()}
-              icon={
-                <svg className="h-5 w-5 text-green-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                </svg>
-              }
-            />
-            <StatCard
-              label="Pending Bounty Reviews"
-              value={stats.pendingBountySubmissions.toLocaleString()}
-              icon={
-                <svg className="h-5 w-5 text-yellow-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                </svg>
-              }
-            />
-            <StatCard
-              label="Total XP Distributed"
-              value={stats.totalXpDistributed.toLocaleString()}
-              icon={
-                <svg className="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
-                </svg>
-              }
-            />
-          </div>
-        </div>
-      )}
+      {/* ═══════════════ MAIN BODY ═══════════════ */}
+      <div className="flex-1 overflow-y-auto" style={{ padding: '16px 18px' }}>
+        <div className="flex flex-col" style={{ gap: 15 }}>
 
-      {/* Quick Actions */}
-      {isSuperAdmin && (
-        <div>
-          <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-            Quick Actions
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            {quickActions.map((action) => (
-              <Link key={action.name} href={action.href}>
-                <Card className="group h-full cursor-pointer transition-all hover:border-red-500/50 hover:bg-zinc-50 dark:hover:bg-zinc-900/80">
-                  <div className="flex flex-col items-center gap-3 text-center">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-500/10 text-red-500 transition-colors group-hover:bg-red-500/20">
-                      {action.icon}
-                    </div>
-                    <div>
-                      <CardTitle className="text-sm">{action.name}</CardTitle>
-                      <p className="mt-1 text-xs text-zinc-500">{action.desc}</p>
-                    </div>
-                  </div>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Announcements Management */}
-      {isSuperAdmin && (
-        <div>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Announcements</h2>
-            <Button
-              variant={showAnnForm ? 'ghost' : 'primary'}
-              size="sm"
-              onClick={() => { if (showAnnForm) resetAnnForm(); else setShowAnnForm(true); }}
-            >
-              {showAnnForm ? 'Cancel' : 'New Announcement'}
-            </Button>
-          </div>
-
-          {/* Create / Edit form */}
-          {showAnnForm && (
-            <Card className="mb-4">
-              <CardTitle>{editingAnn ? 'Edit Announcement' : 'Create Announcement'}</CardTitle>
-              <form onSubmit={handleAnnSubmit} className="mt-4 space-y-4">
-                <Input
-                  label="Title"
-                  value={annForm.title}
-                  onChange={(e) => setAnnForm((f) => ({ ...f, title: e.target.value }))}
-                  placeholder="Announcement title"
-                  required
-                />
-                <Input
-                  label="Summary (short description)"
-                  value={annForm.summary}
-                  onChange={(e) => setAnnForm((f) => ({ ...f, summary: e.target.value }))}
-                  placeholder="Brief summary shown on the homepage"
-                />
-                <Textarea
-                  label="Content (full body)"
-                  value={annForm.content}
-                  onChange={(e) => setAnnForm((f) => ({ ...f, content: e.target.value }))}
-                  placeholder="Full announcement content..."
-                />
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Input
-                    label="Link URL (optional)"
-                    value={annForm.linkUrl}
-                    onChange={(e) => setAnnForm((f) => ({ ...f, linkUrl: e.target.value }))}
-                    placeholder="https://..."
-                  />
-                  <Select
-                    label="Status"
-                    value={annForm.status}
-                    onChange={(e) => setAnnForm((f) => ({ ...f, status: e.target.value }))}
-                    options={[
-                      { value: 'published', label: 'Published (visible on homepage)' },
-                      { value: 'draft', label: 'Draft (hidden)' },
-                    ]}
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button type="submit" loading={annSaving}>
-                    {editingAnn ? 'Update' : 'Create'}
-                  </Button>
-                  {editingAnn && (
-                    <Button variant="ghost" type="button" onClick={resetAnnForm}>
-                      Cancel Edit
-                    </Button>
-                  )}
-                </div>
-              </form>
-            </Card>
-          )}
-
-          {/* Announcements list */}
-          <Card>
-            {annLoading ? (
-              <p className="text-sm text-zinc-500">Loading announcements...</p>
-            ) : !announcements || announcements.length === 0 ? (
-              <p className="text-sm text-zinc-500">No announcements yet. Create one to display on the homepage.</p>
-            ) : (
-              <div className="space-y-3">
-                {announcements.map((a) => (
-                  <div
-                    key={a.id}
-                    className="flex items-start justify-between gap-4 rounded-lg border border-zinc-200 dark:border-zinc-800 px-4 py-3"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-zinc-900 dark:text-zinc-100 truncate">{a.title}</p>
-                        <Badge variant={a.status === 'published' ? 'success' : 'default'}>
-                          {a.status}
-                        </Badge>
-                      </div>
-                      {a.summary && <p className="mt-1 text-sm text-zinc-500 truncate">{a.summary}</p>}
-                    </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => startEditAnn(a)}>
-                        Edit
-                      </Button>
-                      <Button variant="danger" size="sm" onClick={() => handleAnnDelete(a.id)}>
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
-        </div>
-      )}
-
-      {/* Regions Management */}
-      {isSuperAdmin && (
-        <div>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Regions</h2>
-            <Button
-              variant={showRegForm ? 'ghost' : 'primary'}
-              size="sm"
-              onClick={() => { if (showRegForm) resetRegForm(); else setShowRegForm(true); }}
-            >
-              {showRegForm ? 'Cancel' : 'Add Region'}
-            </Button>
-          </div>
-
-          {/* Create Region form */}
-          {showRegForm && (
-            <Card className="mb-4">
-              <CardTitle>Create New Region</CardTitle>
-              <form onSubmit={handleRegSubmit} className="mt-4 space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Input
-                    label="Region Name"
-                    value={regForm.name}
-                    onChange={(e) => {
-                      const name = e.target.value;
-                      setRegForm((f) => ({
-                        ...f,
-                        name,
-                        slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-                      }));
-                    }}
-                    placeholder="e.g. South Korea"
-                    required
-                  />
-                  <Input
-                    label="Slug (URL-friendly)"
-                    value={regForm.slug}
-                    onChange={(e) => setRegForm((f) => ({ ...f, slug: e.target.value }))}
-                    placeholder="e.g. south-korea"
-                    required
-                  />
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Input
-                    label="Country"
-                    value={regForm.country}
-                    onChange={(e) => setRegForm((f) => ({ ...f, country: e.target.value }))}
-                    placeholder="e.g. South Korea"
-                  />
-                  <Input
-                    label="City"
-                    value={regForm.city}
-                    onChange={(e) => setRegForm((f) => ({ ...f, city: e.target.value }))}
-                    placeholder="e.g. Seoul"
-                  />
-                </div>
-                <Textarea
-                  label="Description"
-                  value={regForm.description}
-                  onChange={(e) => setRegForm((f) => ({ ...f, description: e.target.value }))}
-                  placeholder="Brief description of this region community..."
-                />
-                <Button type="submit" loading={regSaving}>Create Region</Button>
-              </form>
-            </Card>
-          )}
-
-          {/* Regions list */}
-          <Card>
-            {regLoading ? (
-              <p className="text-sm text-zinc-500">Loading regions...</p>
-            ) : !adminRegions || adminRegions.length === 0 ? (
-              <p className="text-sm text-zinc-500">No regions yet. Add one to get started.</p>
-            ) : (
-              <div className="space-y-3">
-                {adminRegions.map((region) => (
-                  <div
-                    key={region.id}
-                    className="rounded-lg border border-zinc-200 dark:border-zinc-800 px-4 py-3"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-900/30 text-sm font-bold text-red-400">
-                          {region.name[0]}
-                        </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium text-zinc-900 dark:text-zinc-100 truncate">{region.name}</p>
-                            <Badge variant={region.isActive ? 'success' : 'danger'}>
-                              {region.isActive ? 'Active' : 'Inactive'}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-zinc-500">
-                            /{region.slug}
-                            {region.country && ` · ${region.country}`}
-                            {region.city && `, ${region.city}`}
-                            {' · '}{region.memberCount} members
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex shrink-0 items-center gap-2">
-                        <Link href={`/portal/regions/${region.slug}`}>
-                          <Button variant="ghost" size="sm">View</Button>
-                        </Link>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setAssigningLeadRegion(assigningLeadRegion === region.id ? null : region.id);
-                            setLeadEmail('');
-                          }}
-                        >
-                          {assigningLeadRegion === region.id ? 'Cancel' : 'Assign Lead'}
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Assign Lead inline form */}
-                    {assigningLeadRegion === region.id && (
-                      <div className="mt-3 flex items-end gap-3 border-t border-zinc-200 dark:border-zinc-800 pt-3">
-                        <div className="flex-1">
-                          <Input
-                            label="User email"
-                            value={leadEmail}
-                            onChange={(e) => setLeadEmail(e.target.value)}
-                            placeholder="Enter user email to assign as lead..."
-                          />
-                        </div>
-                        <Button
-                          size="sm"
-                          loading={leadSaving}
-                          onClick={() => handleAssignLead(region.id)}
-                        >
-                          Assign
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
-        </div>
-      )}
-
-      {/* Module Cards */}
-      <div>
-        <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-100">Modules</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {modules
-            .filter((m) => hasModuleLead(m.module))
-            .map((m) => (
-              <Link key={m.name} href={m.soon ? '#' : m.href}>
-                <Card
-                  className={`group h-full cursor-pointer transition-all ${m.borderColor} ${
-                    m.soon ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
+          {/* ── Quick Actions ────────────────────────────────── */}
+          <div className="a-fu">
+            <p style={{
+              fontFamily: 'var(--font-syne)', fontSize: 8.5, fontWeight: 700,
+              letterSpacing: '2px', textTransform: 'uppercase',
+              color: 'var(--a-dim)', marginBottom: 7,
+            }}>
+              ⚡ Quick Actions
+            </p>
+            <div className="grid grid-cols-6" style={{ gap: 7 }}>
+              {QUICK_ACTIONS.map((qa) => (
+                <button
+                  key={qa.label}
+                  className="flex flex-col items-center rounded-lg"
+                  style={{
+                    background: 'var(--a-s1)', border: '1px solid var(--a-bd)',
+                    padding: '11px 8px', gap: 6, borderRadius: 8,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--a-bh)';
+                    e.currentTarget.style.background = 'var(--a-s2)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--a-bd)';
+                    e.currentTarget.style.background = 'var(--a-s1)';
+                  }}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800 ${m.color} transition-colors group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700`}
-                      >
-                        <svg
-                          className="h-5 w-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={1.5}
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"
-                          />
-                        </svg>
-                      </div>
-                      <div>
-                        <CardTitle className={m.color}>{m.name}</CardTitle>
-                        <p className="mt-0.5 text-sm text-zinc-500">
-                          {m.desc}
-                        </p>
-                      </div>
-                    </div>
-                    {m.soon && <Badge variant="default">Coming Soon</Badge>}
-                  </div>
-                </Card>
-              </Link>
-            ))}
-        </div>
-      </div>
+                  <qa.icon style={{ width: 13, height: 13, color: 'var(--a-sub)' }} />
+                  <span style={{
+                    fontFamily: 'var(--font-dm-sans)', fontSize: 9, fontWeight: 500,
+                    color: 'var(--a-sub)', textAlign: 'center',
+                  }}>
+                    {qa.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
 
-      {/* Bottom Grid: Regions + Recent Users */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Regions Overview */}
-        <div>
-          <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-            Regions Overview
-          </h2>
-          <Card className="h-full">
-            {regions.length === 0 ? (
-              <p className="text-sm text-zinc-500">No regions found.</p>
-            ) : (
-              <div className="space-y-3">
-                {regions.map((region) => (
-                  <div
-                    key={region.id}
-                    className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-800/30 px-4 py-3 transition-colors hover:border-zinc-300 dark:hover:border-zinc-700"
+          {/* ── Modules ──────────────────────────────────────── */}
+          <div className="a-fu1">
+            <p style={{
+              fontFamily: 'var(--font-syne)', fontSize: 8.5, fontWeight: 700,
+              letterSpacing: '2px', textTransform: 'uppercase',
+              color: 'var(--a-dim)', marginBottom: 7,
+            }}>
+              Modules
+            </p>
+            <div className="grid grid-cols-4" style={{ gap: 7 }}>
+              {MODULES.map((mod) => (
+                <Link
+                  key={mod.name}
+                  href={mod.href}
+                  className="flex flex-col rounded-lg"
+                  style={{
+                    background: 'var(--a-s1)', border: '1px solid var(--a-bd)',
+                    padding: '15px 12px 11px', minHeight: 96, borderRadius: 8,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--a-bh)';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--a-bd)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
+                  <mod.icon style={{ width: 15, height: 15, color: 'var(--a-sub)', marginBottom: 9 }} />
+                  <p style={{
+                    fontFamily: 'var(--font-dm-sans)', fontSize: 11, fontWeight: 600,
+                    color: 'var(--a-text)', marginBottom: 3,
+                  }}>
+                    {mod.name}
+                  </p>
+                  <p style={{
+                    fontFamily: 'var(--font-dm-sans)', fontSize: 9,
+                    color: 'var(--a-sub)', lineHeight: 1.5,
+                  }}>
+                    {mod.desc}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Users Table ───────────────────────────────────── */}
+          <div className="a-fu2">
+            <p style={{
+              fontFamily: 'var(--font-syne)', fontSize: 8.5, fontWeight: 700,
+              letterSpacing: '2px', textTransform: 'uppercase',
+              color: 'var(--a-dim)', marginBottom: 7,
+            }}>
+              Users
+            </p>
+
+            {/* Filters */}
+            <div className="flex items-center justify-between mb-[8px]">
+              <div className="relative">
+                <Search
+                  className="absolute left-2 top-1/2 -translate-y-1/2"
+                  style={{ width: 10, height: 10, color: 'var(--a-dim)' }}
+                />
+                <input
+                  placeholder="Search users..."
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  className="rounded-md pl-6 pr-2 py-1 outline-none"
+                  style={{
+                    fontFamily: 'var(--font-dm-sans)', fontSize: 11,
+                    color: 'var(--a-text)', background: 'var(--a-s1)',
+                    border: '1px solid var(--a-bd)', maxWidth: 260,
+                  }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--a-bh)'; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--a-bd)'; }}
+                />
+              </div>
+              <div className="flex items-center gap-[5px]">
+                <GhostBtn label="Role" />
+                <GhostBtn label="Region" />
+              </div>
+            </div>
+
+            {/* Table */}
+            <div
+              className="rounded-[7px] overflow-hidden"
+              style={{ background: 'var(--a-s1)', border: '1px solid var(--a-bd)' }}
+            >
+              {/* Header */}
+              <div
+                className="grid"
+                style={{
+                  gridTemplateColumns: '2fr 1.8fr 1fr 1fr 65px',
+                  background: 'var(--a-s2)',
+                  padding: '6px 10px',
+                }}
+              >
+                {['NAME', 'EMAIL', 'REGION', 'ROLE', ''].map((h) => (
+                  <span
+                    key={h || 'action'}
+                    style={{
+                      fontFamily: 'var(--font-geist-mono)', fontSize: 7.5,
+                      color: 'var(--a-dim)', letterSpacing: '1px',
+                      textTransform: 'uppercase',
+                    }}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-md bg-blue-500/10 text-blue-400">
-                        <svg
-                          className="h-4 w-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={1.5}
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"
-                          />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                          {region.name}
-                        </p>
-                        <p className="text-xs text-zinc-500">/{region.slug}</p>
-                      </div>
-                    </div>
-                    <Badge variant="info">
-                      {region.memberCount.toLocaleString()} members
-                    </Badge>
-                  </div>
+                    {h}
+                  </span>
                 ))}
               </div>
-            )}
-          </Card>
-        </div>
 
-        {/* Recent Users */}
-        <div>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-              Recent Users
-            </h2>
-            <Link href="/admin/users">
-              <Button variant="ghost" size="sm">
-                View All
-              </Button>
-            </Link>
-          </div>
-          <Card className="h-full">
-            {recentUsers.length === 0 ? (
-              <p className="text-sm text-zinc-500">No recent users.</p>
-            ) : (
-              <div className="space-y-3">
-                {recentUsers.map((u) => (
-                  <div
-                    key={u.id}
-                    className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-800/30 px-4 py-3 transition-colors hover:border-zinc-300 dark:hover:border-zinc-700"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Avatar
-                        src={u.avatarUrl}
-                        alt={u.displayName}
-                        size="sm"
-                      />
-                      <div>
-                        <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                          {u.displayName}
-                        </p>
-                        <p className="text-xs text-zinc-500">{u.email}</p>
-                      </div>
-                    </div>
-                    <span className="text-xs text-zinc-500">
-                      {formatDate(u.createdAt)}
+              {/* Rows */}
+              {MOCK_USERS.filter((u) =>
+                !userSearch || u.name.toLowerCase().includes(userSearch.toLowerCase()) || u.email.toLowerCase().includes(userSearch.toLowerCase()),
+              ).map((u, i) => (
+                <div
+                  key={i}
+                  className="grid items-center"
+                  style={{
+                    gridTemplateColumns: '2fr 1.8fr 1fr 1fr 65px',
+                    padding: '7px 10px',
+                    borderTop: '1px solid var(--a-bd)',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--a-s2)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                >
+                  {/* Name + online dot */}
+                  <div className="flex items-center gap-[6px]">
+                    <div
+                      className={u.online ? 'blink-g' : ''}
+                      style={{
+                        width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
+                        background: u.online ? '#3a8a50' : 'var(--a-dim)',
+                      }}
+                    />
+                    <span style={{
+                      fontFamily: 'var(--font-dm-sans)', fontSize: 11, fontWeight: 500,
+                      color: 'var(--a-text)',
+                    }}>
+                      {u.name}
                     </span>
                   </div>
-                ))}
-              </div>
-            )}
-          </Card>
+
+                  {/* Email */}
+                  <span style={{
+                    fontFamily: 'var(--font-dm-sans)', fontSize: 11,
+                    color: 'var(--a-sub)',
+                  }}>
+                    {u.email}
+                  </span>
+
+                  {/* Region */}
+                  <span style={{
+                    fontFamily: 'var(--font-dm-sans)', fontSize: 11,
+                    color: 'var(--a-sub)',
+                  }}>
+                    {u.region}
+                  </span>
+
+                  {/* Role badge */}
+                  <div>
+                    <span
+                      className="inline-block rounded-full"
+                      style={{
+                        fontFamily: 'var(--font-geist-mono)', fontSize: 8, fontWeight: 600,
+                        padding: '1px 6px',
+                        ...(u.role === 'Lead'
+                          ? { background: 'var(--a-rs)', color: 'var(--a-red)', border: '1px solid var(--a-rb)' }
+                          : { background: 'var(--a-s2)', color: 'var(--a-sub)', border: '1px solid var(--a-bd)' }
+                        ),
+                      }}
+                    >
+                      {u.role}
+                    </span>
+                  </div>
+
+                  {/* Action */}
+                  <Link
+                    href={`/admin/users`}
+                    className="flex items-center gap-[4px]"
+                    style={{
+                      fontFamily: 'var(--font-dm-sans)', fontSize: 10,
+                      color: 'var(--a-sub)',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--a-text)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--a-sub)'; }}
+                  >
+                    View <ArrowRight style={{ width: 8, height: 8 }} />
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
       </div>
-    </div>
+    </>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Ghost Button helper                                                        */
+/* -------------------------------------------------------------------------- */
+
+function GhostBtn({ label }: { label: string }) {
+  return (
+    <button
+      className="flex items-center gap-[4px] rounded-md"
+      style={{
+        fontFamily: 'var(--font-dm-sans)', fontSize: 10, fontWeight: 500,
+        color: 'var(--a-sub)', border: '1px solid var(--a-bd)',
+        padding: '3px 7px', borderRadius: 6,
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--a-bh)'; e.currentTarget.style.color = 'var(--a-text)'; }}
+      onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--a-bd)'; e.currentTarget.style.color = 'var(--a-sub)'; }}
+    >
+      {label} <ChevronDown style={{ width: 8, height: 8 }} />
+    </button>
   );
 }

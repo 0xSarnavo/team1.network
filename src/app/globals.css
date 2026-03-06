@@ -116,3 +116,54 @@ body {
 .m-count { animation: m-count-in 0.4s ease both; }
 .m-bar   { animation: m-bar-fill 1s cubic-bezier(0.22,1,0.36,1) 0.4s both; }
 .m-pulse { animation: m-pulse-ring 3s infinite; }
+
+/* ======================================================================== */
+/* Admin Panel – Scoped Design Tokens (dark default)                         */
+/* ======================================================================== */
+
+.admin-shell {
+  --a-bg:  #080809; --a-s1: #0d0d0f; --a-s2: #131315; --a-s3: #1a1a1d;
+  --a-bd:  rgba(255,255,255,0.055); --a-bh: rgba(255,255,255,0.10);
+  --a-text:#eeeef0; --a-sub:#6a6a74; --a-dim:#333338;
+  --a-red: #d93030;
+  --a-rs:  rgba(217,48,48,0.10); --a-rb: rgba(217,48,48,0.20);
+  --a-ws:  rgba(200,122,40,0.12); --a-wb: rgba(200,122,40,0.22);
+  --a-gs:  rgba(45,138,80,0.12);  --a-gb: rgba(45,138,80,0.20);
+}
+.admin-shell.light {
+  --a-bg:  #f4f4f6; --a-s1: #ffffff; --a-s2: #ebebed; --a-s3: #e0e0e3;
+  --a-bd:  rgba(0,0,0,0.07); --a-bh: rgba(0,0,0,0.13);
+  --a-text:#111113; --a-sub:#7a7a84; --a-dim:#b4b4be;
+  --a-red: #d93030;
+  --a-rs:  rgba(217,48,48,0.07); --a-rb: rgba(217,48,48,0.15);
+  --a-ws:  rgba(200,122,40,0.08); --a-wb: rgba(200,122,40,0.18);
+  --a-gs:  rgba(45,138,80,0.08);  --a-gb: rgba(45,138,80,0.15);
+}
+
+/* Theme transition */
+.admin-shell *, .admin-shell *::before, .admin-shell *::after {
+  transition: background-color 0.22s, border-color 0.22s, color 0.22s;
+}
+.admin-shell svg, .admin-shell svg * { transition: none; }
+
+/* Admin Animations */
+@keyframes a-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes a-count-in {
+  from { opacity: 0; transform: translateY(3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes blink-g {
+  0%,100% { opacity: 1; }
+  50%     { opacity: 0.3; }
+}
+
+.a-fu  { animation: a-fade-up 0.30s ease both; }
+.a-fu1 { animation: a-fade-up 0.30s ease 0.04s both; }
+.a-fu2 { animation: a-fade-up 0.30s ease 0.08s both; }
+.a-fu3 { animation: a-fade-up 0.30s ease 0.12s both; }
+.a-fu4 { animation: a-fade-up 0.30s ease 0.16s both; }
+.a-count { animation: a-count-in 0.4s ease both; }
+.blink-g { animation: blink-g 2.5s infinite; }
