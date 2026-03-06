@@ -44,7 +44,7 @@ export default function RegionAdminPlaybooksPage({ params }: { params: Promise<{
 
   // Applications modal
   const [appModalEntityId, setAppModalEntityId] = useState<string | null>(null);
-  const { data: applications, loading: appsLoading } = useApi<any[]>(
+  const { data: applications, loading: appsLoading, refetch: refetchApps } = useApi<any[]>(
     appModalEntityId ? `/api/portal/regions/${slug}/admin/playbooks/${appModalEntityId}/applications` : '',
     { immediate: !!appModalEntityId }
   );
@@ -210,17 +210,20 @@ export default function RegionAdminPlaybooksPage({ params }: { params: Promise<{
           loading={appsLoading}
           slug={slug}
           onClose={() => setAppModalEntityId(null)}
+          refetchApps={refetchApps}
         />
       )}
     </div>
   );
 }
 
-function ApplicationsModal({ applications, loading, slug, onClose }: { applications: any[] | undefined; loading: boolean; slug: string; onClose: () => void }) {
+function ApplicationsModal({ applications, loading, slug, onClose, refetchApps }: { applications: any[] | undefined; loading: boolean; slug: string; onClose: () => void; refetchApps: () => void }) {
   const { mutate: patch } = useMutation<unknown>('patch');
+  const [expandedAppId, setExpandedAppId] = useState<string | null>(null);
 
   const handleStatus = async (id: string, status: string) => {
     await patch(`/api/portal/regions/${slug}/admin/applications/${id}`, { status });
+    refetchApps();
   };
 
   return (
@@ -246,6 +249,12 @@ function ApplicationsModal({ applications, loading, slug, onClose }: { applicati
                     </div>
                     <div className="flex items-center gap-2">
                       <StatusBadge label={app.status} />
+                      <button
+                        onClick={() => setExpandedAppId(expandedAppId === app.id ? null : app.id)}
+                        className="text-xs font-semibold text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 rounded px-2 py-1"
+                      >
+                        {expandedAppId === app.id ? 'Hide' : 'View'}
+                      </button>
                       {app.status === 'pending' && (
                         <>
                           <button onClick={() => handleStatus(app.id, 'approved')} className="rounded px-2 py-1 text-xs font-semibold text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20">Approve</button>
@@ -254,11 +263,17 @@ function ApplicationsModal({ applications, loading, slug, onClose }: { applicati
                       )}
                     </div>
                   </div>
-                  {app.data && typeof app.data === 'object' && (
-                    <div className="mt-2 space-y-1">
-                      {Object.entries(app.data as Record<string, unknown>).map(([key, value]) => (
-                        <p key={key} className="text-xs text-zinc-500"><span className="font-medium text-zinc-600 dark:text-zinc-400">{key}:</span> {String(value)}</p>
-                      ))}
+                  {expandedAppId === app.id && app.data && typeof app.data === 'object' && (
+                    <div className="mt-3 rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/50">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2">Form Responses</h4>
+                      <div className="space-y-2">
+                        {Object.entries(app.data as Record<string, unknown>).map(([key, value]) => (
+                          <div key={key}>
+                            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">{key}</span>
+                            <p className="text-sm text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap">{String(value)}</p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </CardContent>

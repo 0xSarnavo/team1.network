@@ -51,11 +51,12 @@ export default function RegionAdminGuidesPage({ params }: { params: Promise<{ po
 
   // Applications modal
   const [appModalGuideId, setAppModalGuideId] = useState<string | null>(null);
-  const { data: applications, loading: appsLoading } = useApi<any[]>(
+  const { data: applications, loading: appsLoading, refetch: refetchApps } = useApi<any[]>(
     appModalGuideId ? `/api/portal/regions/${slug}/admin/guides/${appModalGuideId}/applications` : '',
     { immediate: !!appModalGuideId }
   );
   const { mutate: patchApp } = useMutation<unknown>('patch');
+  const [expandedAppId, setExpandedAppId] = useState<string | null>(null);
 
   const resetForm = () => {
     setForm({ title: '', slug: '', category: 'getting-started', content: '', markdown: '',
@@ -156,7 +157,7 @@ export default function RegionAdminGuidesPage({ params }: { params: Promise<{ po
           <div className="w-full max-w-2xl rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl dark:border-zinc-800 dark:bg-zinc-950 max-h-[80vh] overflow-y-auto">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Applications</h2>
-              <button onClick={() => setAppModalGuideId(null)} className="text-zinc-400 hover:text-zinc-600"><X className="h-5 w-5" /></button>
+              <button onClick={() => { setAppModalGuideId(null); setExpandedAppId(null); }} className="text-zinc-400 hover:text-zinc-600"><X className="h-5 w-5" /></button>
             </div>
             {appsLoading ? (
               <p className="text-sm text-zinc-500 text-center py-8">Loading...</p>
@@ -174,19 +175,31 @@ export default function RegionAdminGuidesPage({ params }: { params: Promise<{ po
                         </div>
                         <div className="flex items-center gap-2">
                           <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${app.status === 'approved' ? 'bg-green-900/30 text-green-400' : app.status === 'rejected' ? 'bg-red-900/30 text-red-400' : 'bg-amber-900/30 text-amber-400'}`}>{app.status}</span>
+                          <button
+                            onClick={() => setExpandedAppId(expandedAppId === app.id ? null : app.id)}
+                            className="text-xs font-semibold text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 rounded px-2 py-1"
+                          >
+                            {expandedAppId === app.id ? 'Hide' : 'View'}
+                          </button>
                           {app.status === 'pending' && (
                             <>
-                              <button onClick={() => patchApp(`/api/portal/regions/${slug}/admin/applications/${app.id}`, { status: 'approved' })} className="text-xs font-semibold text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded px-2 py-1">Approve</button>
-                              <button onClick={() => patchApp(`/api/portal/regions/${slug}/admin/applications/${app.id}`, { status: 'rejected' })} className="text-xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded px-2 py-1">Reject</button>
+                              <button onClick={async () => { await patchApp(`/api/portal/regions/${slug}/admin/applications/${app.id}`, { status: 'approved' }); refetchApps(); }} className="text-xs font-semibold text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded px-2 py-1">Approve</button>
+                              <button onClick={async () => { await patchApp(`/api/portal/regions/${slug}/admin/applications/${app.id}`, { status: 'rejected' }); refetchApps(); }} className="text-xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded px-2 py-1">Reject</button>
                             </>
                           )}
                         </div>
                       </div>
-                      {app.data && typeof app.data === 'object' && (
-                        <div className="mt-2 space-y-1">
-                          {Object.entries(app.data as Record<string, unknown>).map(([key, value]) => (
-                            <p key={key} className="text-xs text-zinc-500"><span className="font-medium text-zinc-600 dark:text-zinc-400">{key}:</span> {String(value)}</p>
-                          ))}
+                      {expandedAppId === app.id && app.data && typeof app.data === 'object' && (
+                        <div className="mt-3 rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/50">
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2">Form Responses</h4>
+                          <div className="space-y-2">
+                            {Object.entries(app.data as Record<string, unknown>).map(([key, value]) => (
+                              <div key={key}>
+                                <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">{key}</span>
+                                <p className="text-sm text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap">{String(value)}</p>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </CardContent>
