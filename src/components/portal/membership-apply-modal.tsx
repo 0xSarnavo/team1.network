@@ -40,6 +40,7 @@ export function MembershipApplyModal({ open, onClose }: { open: boolean; onClose
     if (open) {
       setSuccess(false);
       setConsent(false);
+      setShowErrors(false);
       setTelegram('');
       setXHandle('');
       setCountry('');
@@ -83,21 +84,28 @@ export function MembershipApplyModal({ open, onClose }: { open: boolean; onClose
     }
   };
 
-  const isFormValid =
-    telegram.trim() &&
-    xHandle.trim() &&
-    country &&
-    state &&
-    bio.trim().length >= 10 &&
-    resumeLink.trim() &&
-    skills.length > 0 &&
-    whyJoin.trim().length >= 10 &&
-    howHelp.trim().length >= 10 &&
-    expectations.trim().length >= 10 &&
-    Number(hoursWeekly) > 0 &&
-    consent;
+  // Track which fields have been interacted with (for showing errors)
+  const [showErrors, setShowErrors] = useState(false);
+
+  const validationErrors: Record<string, string> = {};
+  if (!telegram.trim()) validationErrors.telegram = 'Telegram handle is required';
+  if (!xHandle.trim()) validationErrors.xHandle = 'X handle is required';
+  if (!country) validationErrors.country = 'Country is required';
+  if (!state) validationErrors.state = 'State/Province is required';
+  if (bio.trim().length < 10) validationErrors.bio = 'Bio must be at least 10 characters';
+  if (!resumeLink.trim()) validationErrors.resumeLink = 'Resume/portfolio link is required';
+  else if (!/^https?:\/\/.+/.test(resumeLink.trim())) validationErrors.resumeLink = 'Must be a valid URL (start with https://)';
+  if (skills.length === 0) validationErrors.skills = 'Add at least one skill';
+  if (whyJoin.trim().length < 10) validationErrors.whyJoin = 'Must be at least 10 characters';
+  if (howHelp.trim().length < 10) validationErrors.howHelp = 'Must be at least 10 characters';
+  if (expectations.trim().length < 10) validationErrors.expectations = 'Must be at least 10 characters';
+  if (!hoursWeekly || Number(hoursWeekly) <= 0) validationErrors.hoursWeekly = 'Enter hours per week (at least 1)';
+  if (!consent) validationErrors.consent = 'You must agree to proceed';
+
+  const isFormValid = Object.keys(validationErrors).length === 0;
 
   const handleSubmit = async () => {
+    setShowErrors(true);
     if (!isFormValid || !user) return;
     setSubmitting(true);
     try {
@@ -131,6 +139,11 @@ export function MembershipApplyModal({ open, onClose }: { open: boolean; onClose
   };
 
   if (!open) return null;
+
+  const FieldError = ({ field }: { field: string }) =>
+    showErrors && validationErrors[field] ? (
+      <p className="mt-1 text-[11px] text-red-400">{validationErrors[field]}</p>
+    ) : null;
 
   const inputClass =
     'w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-[#FF394A]/50 focus:outline-none focus:ring-1 focus:ring-[#FF394A]/30 dark:border-zinc-800 dark:bg-zinc-900 dark:text-white dark:placeholder:text-zinc-500';
@@ -240,6 +253,7 @@ export function MembershipApplyModal({ open, onClose }: { open: boolean; onClose
                           placeholder="@username"
                           className={inputClass}
                         />
+                        <FieldError field="telegram" />
                       </div>
 
                       {/* X Handle */}
@@ -252,6 +266,7 @@ export function MembershipApplyModal({ open, onClose }: { open: boolean; onClose
                           placeholder="@username"
                           className={inputClass}
                         />
+                        <FieldError field="xHandle" />
                       </div>
 
                       {/* Country */}
@@ -267,6 +282,7 @@ export function MembershipApplyModal({ open, onClose }: { open: boolean; onClose
                             <option key={c.value} value={c.label}>{c.label}</option>
                           ))}
                         </select>
+                        <FieldError field="country" />
                       </div>
 
                       {/* State */}
@@ -292,6 +308,7 @@ export function MembershipApplyModal({ open, onClose }: { open: boolean; onClose
                             className={inputClass}
                           />
                         )}
+                        <FieldError field="state" />
                       </div>
                     </div>
                   </div>
@@ -310,6 +327,7 @@ export function MembershipApplyModal({ open, onClose }: { open: boolean; onClose
                           placeholder="Tell us about yourself, your background, and what you're working on..."
                           className={`${inputClass} resize-none`}
                         />
+                        <FieldError field="bio" />
                       </div>
 
                       {/* Resume Link */}
@@ -322,6 +340,7 @@ export function MembershipApplyModal({ open, onClose }: { open: boolean; onClose
                           placeholder="https://..."
                           className={inputClass}
                         />
+                        <FieldError field="resumeLink" />
                       </div>
 
                       {/* Skills */}
@@ -363,6 +382,7 @@ export function MembershipApplyModal({ open, onClose }: { open: boolean; onClose
                             ))}
                           </div>
                         )}
+                        <FieldError field="skills" />
                       </div>
                     </div>
                   </div>
@@ -380,6 +400,7 @@ export function MembershipApplyModal({ open, onClose }: { open: boolean; onClose
                           placeholder="What motivates you to join Team1 Network?"
                           className={`${inputClass} resize-none`}
                         />
+                        <FieldError field="whyJoin" />
                       </div>
 
                       <div>
@@ -391,6 +412,7 @@ export function MembershipApplyModal({ open, onClose }: { open: boolean; onClose
                           placeholder="What skills, experience, or contributions can you bring?"
                           className={`${inputClass} resize-none`}
                         />
+                        <FieldError field="howHelp" />
                       </div>
 
                       <div>
@@ -402,6 +424,7 @@ export function MembershipApplyModal({ open, onClose }: { open: boolean; onClose
                           placeholder="What do you hope to gain from being a member?"
                           className={`${inputClass} resize-none`}
                         />
+                        <FieldError field="expectations" />
                       </div>
 
                       <div>
@@ -415,6 +438,7 @@ export function MembershipApplyModal({ open, onClose }: { open: boolean; onClose
                           placeholder="e.g. 10"
                           className={`${inputClass} max-w-[140px]`}
                         />
+                        <FieldError field="hoursWeekly" />
                       </div>
                     </div>
                   </div>
@@ -448,7 +472,7 @@ export function MembershipApplyModal({ open, onClose }: { open: boolean; onClose
 
                   {/* ── Consent + Submit ── */}
                   <div className="pt-2">
-                    <label className="flex items-start gap-3 cursor-pointer mb-4">
+                    <label className="flex items-start gap-3 cursor-pointer mb-1">
                       <input
                         type="checkbox"
                         checked={consent}
@@ -461,11 +485,18 @@ export function MembershipApplyModal({ open, onClose }: { open: boolean; onClose
                         I may earn bounties or grants for contributions.
                       </span>
                     </label>
+                    <FieldError field="consent" />
+
+                    {showErrors && !isFormValid && (
+                      <p className="mt-3 mb-2 text-xs text-red-400 text-center">
+                        Please fill in all required fields highlighted above.
+                      </p>
+                    )}
 
                     <button
                       onClick={handleSubmit}
-                      disabled={!isFormValid || submitting}
-                      className="w-full rounded-xl bg-zinc-900 py-3 text-sm font-bold text-white transition-all hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+                      disabled={submitting}
+                      className="mt-3 w-full rounded-xl bg-zinc-900 py-3 text-sm font-bold text-white transition-all hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
                     >
                       {submitting ? 'Submitting...' : 'Submit Application'}
                     </button>
