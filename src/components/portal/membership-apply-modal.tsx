@@ -1,27 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/context/auth-context';
-import { useApi } from '@/lib/hooks/use-api';
 import { api } from '@/lib/api/client';
 import { useToast } from '@/lib/context/toast-context';
-import { X, CheckCircle2, MapPin } from 'lucide-react';
-
-/* -------------------------------------------------------------------------- */
-/* Types                                                                      */
-/* -------------------------------------------------------------------------- */
-
-interface MembershipInfoRegion {
-  id: string;
-  name: string;
-  slug: string;
-  country?: string | null;
-}
-
-interface MembershipInfoResponse {
-  isMember: boolean;
-  regions: MembershipInfoRegion[];
-}
+import { X, CheckCircle2, Plus, BadgeCheck } from 'lucide-react';
+import { COUNTRIES, STATES_BY_COUNTRY } from '@/lib/data/countries-states';
 
 /* -------------------------------------------------------------------------- */
 /* Component                                                                  */
@@ -30,30 +14,109 @@ interface MembershipInfoResponse {
 export function MembershipApplyModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { user } = useAuth();
   const { addToast } = useToast();
-  const { data: info } = useApi<MembershipInfoResponse>(
-    open && user ? '/api/portal/membership/info' : '',
-    { immediate: open && !!user },
-  );
 
-  const [selectedRegion, setSelectedRegion] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [consent, setConsent] = useState(false);
+
+  // Form fields
+  const [telegram, setTelegram] = useState('');
+  const [xHandle, setXHandle] = useState('');
+  const [country, setCountry] = useState('');
+  const [state, setState] = useState('');
+  const [bio, setBio] = useState('');
+  const [resumeLink, setResumeLink] = useState('');
+  const [skills, setSkills] = useState<string[]>([]);
+  const [skillInput, setSkillInput] = useState('');
+  const [whyJoin, setWhyJoin] = useState('');
+  const [howHelp, setHowHelp] = useState('');
+  const [expectations, setExpectations] = useState('');
+  const [hoursWeekly, setHoursWeekly] = useState('');
+  const [github, setGithub] = useState('');
+  const [referredBy, setReferredBy] = useState('');
 
   // Reset on open
   useEffect(() => {
     if (open) {
-      setSelectedRegion('');
       setSuccess(false);
+      setConsent(false);
+      setTelegram('');
+      setXHandle('');
+      setCountry('');
+      setState('');
+      setBio('');
+      setResumeLink('');
+      setSkills([]);
+      setSkillInput('');
+      setWhyJoin('');
+      setHowHelp('');
+      setExpectations('');
+      setHoursWeekly('');
+      setGithub('');
+      setReferredBy('');
     }
   }, [open]);
 
+  // Reset state when country changes
+  useEffect(() => {
+    setState('');
+  }, [country]);
+
+  const stateOptions = STATES_BY_COUNTRY[country] || [];
+
+  const addSkill = useCallback(() => {
+    const trimmed = skillInput.trim();
+    if (trimmed && !skills.includes(trimmed)) {
+      setSkills(prev => [...prev, trimmed]);
+    }
+    setSkillInput('');
+  }, [skillInput, skills]);
+
+  const removeSkill = (skill: string) => {
+    setSkills(prev => prev.filter(s => s !== skill));
+  };
+
+  const handleSkillKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addSkill();
+    }
+  };
+
+  const isFormValid =
+    telegram.trim() &&
+    xHandle.trim() &&
+    country &&
+    state &&
+    bio.trim().length >= 10 &&
+    resumeLink.trim() &&
+    skills.length > 0 &&
+    whyJoin.trim().length >= 10 &&
+    howHelp.trim().length >= 10 &&
+    expectations.trim().length >= 10 &&
+    Number(hoursWeekly) > 0 &&
+    consent;
+
   const handleSubmit = async () => {
-    if (!selectedRegion) return;
+    if (!isFormValid || !user) return;
     setSubmitting(true);
     try {
       const res = await api.post('/api/portal/membership/apply', {
-        regionId: selectedRegion,
-        isPrimary: true,
+        fullName: user.displayName,
+        email: user.email,
+        telegram: telegram.trim(),
+        xHandle: xHandle.trim(),
+        country,
+        state,
+        bio: bio.trim(),
+        resumeLink: resumeLink.trim(),
+        skills,
+        whyJoin: whyJoin.trim(),
+        howHelp: howHelp.trim(),
+        expectations: expectations.trim(),
+        hoursWeekly: Number(hoursWeekly),
+        github: github.trim() || undefined,
+        referredBy: referredBy.trim() || undefined,
       });
       if (res.success) {
         setSuccess(true);
@@ -69,7 +132,11 @@ export function MembershipApplyModal({ open, onClose }: { open: boolean; onClose
 
   if (!open) return null;
 
-  const regions = info?.regions || [];
+  const inputClass =
+    'w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-[#FF394A]/50 focus:outline-none focus:ring-1 focus:ring-[#FF394A]/30 dark:border-zinc-800 dark:bg-zinc-900 dark:text-white dark:placeholder:text-zinc-500';
+  const labelClass = 'block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5';
+  const sectionClass = 'mb-6';
+  const sectionTitleClass = 'text-sm font-bold text-zinc-900 dark:text-white mb-3 pb-2 border-b border-zinc-100 dark:border-zinc-800';
 
   return (
     <>
@@ -86,11 +153,11 @@ export function MembershipApplyModal({ open, onClose }: { open: boolean; onClose
         onClick={(e) => e.target === e.currentTarget && onClose()}
       >
         <div
-          className="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl dark:border-zinc-800 dark:bg-zinc-950"
+          className="w-full max-w-2xl rounded-2xl border border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950"
           style={{ animation: 'modalSlideUp 0.3s ease' }}
         >
           {/* Header */}
-          <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center justify-between px-6 pt-6 pb-4">
             <h2 className="text-lg font-bold text-zinc-900 dark:text-white">
               Apply for Membership
             </h2>
@@ -103,14 +170,14 @@ export function MembershipApplyModal({ open, onClose }: { open: boolean; onClose
           </div>
 
           {success ? (
-            /* ── Success State ────────────────────────────── */
-            <div className="flex flex-col items-center gap-3 py-8 text-center">
+            /* Success State */
+            <div className="flex flex-col items-center gap-3 py-12 px-6 text-center">
               <div className="flex items-center justify-center h-12 w-12 rounded-full bg-green-500/10">
                 <CheckCircle2 className="h-6 w-6 text-green-500" />
               </div>
               <h3 className="text-base font-bold text-zinc-900 dark:text-white">Application Submitted!</h3>
               <p className="text-sm text-zinc-500 max-w-xs">
-                Your membership application has been submitted. A region lead will review it shortly.
+                Your membership application has been submitted. Our team will review it and get back to you.
               </p>
               <button
                 onClick={onClose}
@@ -120,63 +187,290 @@ export function MembershipApplyModal({ open, onClose }: { open: boolean; onClose
               </button>
             </div>
           ) : (
-            /* ── Form ─────────────────────────────────────── */
             <>
               {!user ? (
-                <p className="text-sm text-zinc-500 py-6 text-center">
+                <p className="text-sm text-zinc-500 py-6 px-6 text-center">
                   Please log in to apply for membership.
                 </p>
               ) : (
-                <>
-                  {/* Region Selection */}
-                  <div className="mb-5">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">
-                      Select Region *
-                    </label>
-                    {regions.length === 0 ? (
-                      <div className="py-6 text-center text-sm text-zinc-400">
-                        Loading regions...
+                <div className="max-h-[70vh] overflow-y-auto px-6 pb-6">
+                  {/* ── Personal Details ── */}
+                  <div className={sectionClass}>
+                    <h3 className={sectionTitleClass}>Personal Details</h3>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {/* Full Name (readonly) */}
+                      <div>
+                        <label className={labelClass}>Full Name *</label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={user.displayName}
+                            readOnly
+                            className={`${inputClass} bg-zinc-50 dark:bg-zinc-900/50 pr-24 cursor-not-allowed`}
+                          />
+                          <span className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-0.5 text-[10px] font-bold text-green-600 dark:text-green-400">
+                            <BadgeCheck className="h-3 w-3" /> Verified
+                          </span>
+                        </div>
                       </div>
-                    ) : (
-                      <div className="grid gap-2 max-h-[240px] overflow-y-auto pr-1">
-                        {regions.map((r) => (
-                          <button
-                            key={r.id}
-                            type="button"
-                            onClick={() => setSelectedRegion(r.id)}
-                            className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm font-medium transition-all ${
-                              selectedRegion === r.id
-                                ? 'border-[#FF394A]/50 bg-[#FF394A]/5 text-zinc-900 dark:text-white'
-                                : 'border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-900'
-                            }`}
+
+                      {/* Email (readonly) */}
+                      <div>
+                        <label className={labelClass}>Email *</label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={user.email}
+                            readOnly
+                            className={`${inputClass} bg-zinc-50 dark:bg-zinc-900/50 pr-24 cursor-not-allowed`}
+                          />
+                          <span className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-0.5 text-[10px] font-bold text-green-600 dark:text-green-400">
+                            <BadgeCheck className="h-3 w-3" /> Verified
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Telegram */}
+                      <div>
+                        <label className={labelClass}>Telegram Handle *</label>
+                        <input
+                          type="text"
+                          value={telegram}
+                          onChange={(e) => setTelegram(e.target.value)}
+                          placeholder="@username"
+                          className={inputClass}
+                        />
+                      </div>
+
+                      {/* X Handle */}
+                      <div>
+                        <label className={labelClass}>X Handle *</label>
+                        <input
+                          type="text"
+                          value={xHandle}
+                          onChange={(e) => setXHandle(e.target.value)}
+                          placeholder="@username"
+                          className={inputClass}
+                        />
+                      </div>
+
+                      {/* Country */}
+                      <div>
+                        <label className={labelClass}>Country *</label>
+                        <select
+                          value={country}
+                          onChange={(e) => setCountry(e.target.value)}
+                          className={inputClass}
+                        >
+                          <option value="">Select country</option>
+                          {COUNTRIES.map((c) => (
+                            <option key={c.value} value={c.label}>{c.label}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* State */}
+                      <div>
+                        <label className={labelClass}>State / Province *</label>
+                        {stateOptions.length > 0 ? (
+                          <select
+                            value={state}
+                            onChange={(e) => setState(e.target.value)}
+                            className={inputClass}
                           >
-                            <MapPin className={`h-3.5 w-3.5 shrink-0 ${selectedRegion === r.id ? 'text-[#FF394A]' : 'text-zinc-400'}`} />
-                            <span className="flex-1">{r.name}</span>
-                            {r.country && (
-                              <span className="text-xs text-zinc-400">{r.country}</span>
-                            )}
-                            {selectedRegion === r.id && (
-                              <CheckCircle2 className="h-4 w-4 text-[#FF394A] shrink-0" />
-                            )}
-                          </button>
-                        ))}
+                            <option value="">Select state</option>
+                            {stateOptions.map((s) => (
+                              <option key={s.value} value={s.label}>{s.label}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            type="text"
+                            value={state}
+                            onChange={(e) => setState(e.target.value)}
+                            placeholder="Enter state or province"
+                            className={inputClass}
+                          />
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
 
-                  {/* Submit */}
-                  <button
-                    onClick={handleSubmit}
-                    disabled={!selectedRegion || submitting}
-                    className="w-full rounded-xl bg-zinc-900 py-3 text-sm font-bold text-white transition-all hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
-                  >
-                    {submitting ? 'Submitting...' : 'Submit Application'}
-                  </button>
+                  {/* ── Experience & Skills ── */}
+                  <div className={sectionClass}>
+                    <h3 className={sectionTitleClass}>Experience & Skills</h3>
+                    <div className="space-y-4">
+                      {/* Bio */}
+                      <div>
+                        <label className={labelClass}>Short Bio / About You *</label>
+                        <textarea
+                          value={bio}
+                          onChange={(e) => setBio(e.target.value)}
+                          rows={3}
+                          placeholder="Tell us about yourself, your background, and what you're working on..."
+                          className={`${inputClass} resize-none`}
+                        />
+                      </div>
 
-                  <p className="mt-3 text-[10px] text-center text-zinc-400">
-                    By applying, you agree this is a <b className="text-zinc-500 dark:text-zinc-300">volunteer opportunity</b>. As a member, you may earn bounties or grants for contributions.
-                  </p>
-                </>
+                      {/* Resume Link */}
+                      <div>
+                        <label className={labelClass}>Resume / Portfolio Link *</label>
+                        <input
+                          type="url"
+                          value={resumeLink}
+                          onChange={(e) => setResumeLink(e.target.value)}
+                          placeholder="https://..."
+                          className={inputClass}
+                        />
+                      </div>
+
+                      {/* Skills */}
+                      <div>
+                        <label className={labelClass}>Top Skills *</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={skillInput}
+                            onChange={(e) => setSkillInput(e.target.value)}
+                            onKeyDown={handleSkillKeyDown}
+                            placeholder="Type a skill and press Enter"
+                            className={`${inputClass} flex-1`}
+                          />
+                          <button
+                            type="button"
+                            onClick={addSkill}
+                            className="flex items-center justify-center h-[42px] w-[42px] rounded-lg border border-zinc-200 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:text-white dark:hover:bg-zinc-800 transition-colors"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </button>
+                        </div>
+                        {skills.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {skills.map((skill) => (
+                              <span
+                                key={skill}
+                                className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                              >
+                                {skill}
+                                <button
+                                  type="button"
+                                  onClick={() => removeSkill(skill)}
+                                  className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ── Community Fit ── */}
+                  <div className={sectionClass}>
+                    <h3 className={sectionTitleClass}>Community Fit</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className={labelClass}>Why do you want to be a member? *</label>
+                        <textarea
+                          value={whyJoin}
+                          onChange={(e) => setWhyJoin(e.target.value)}
+                          rows={3}
+                          placeholder="What motivates you to join Team1 Network?"
+                          className={`${inputClass} resize-none`}
+                        />
+                      </div>
+
+                      <div>
+                        <label className={labelClass}>How can you help Team1? *</label>
+                        <textarea
+                          value={howHelp}
+                          onChange={(e) => setHowHelp(e.target.value)}
+                          rows={3}
+                          placeholder="What skills, experience, or contributions can you bring?"
+                          className={`${inputClass} resize-none`}
+                        />
+                      </div>
+
+                      <div>
+                        <label className={labelClass}>What are you expecting from us? *</label>
+                        <textarea
+                          value={expectations}
+                          onChange={(e) => setExpectations(e.target.value)}
+                          rows={3}
+                          placeholder="What do you hope to gain from being a member?"
+                          className={`${inputClass} resize-none`}
+                        />
+                      </div>
+
+                      <div>
+                        <label className={labelClass}>Hours available weekly? *</label>
+                        <input
+                          type="number"
+                          value={hoursWeekly}
+                          onChange={(e) => setHoursWeekly(e.target.value)}
+                          min={1}
+                          max={168}
+                          placeholder="e.g. 10"
+                          className={`${inputClass} max-w-[140px]`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ── Additional Info ── */}
+                  <div className={sectionClass}>
+                    <h3 className={sectionTitleClass}>Additional Info</h3>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className={labelClass}>GitHub</label>
+                        <input
+                          type="text"
+                          value={github}
+                          onChange={(e) => setGithub(e.target.value)}
+                          placeholder="https://github.com/username"
+                          className={inputClass}
+                        />
+                      </div>
+                      <div>
+                        <label className={labelClass}>Referred By</label>
+                        <input
+                          type="text"
+                          value={referredBy}
+                          onChange={(e) => setReferredBy(e.target.value)}
+                          placeholder="Name or handle"
+                          className={inputClass}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ── Consent + Submit ── */}
+                  <div className="pt-2">
+                    <label className="flex items-start gap-3 cursor-pointer mb-4">
+                      <input
+                        type="checkbox"
+                        checked={consent}
+                        onChange={(e) => setConsent(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 rounded border-zinc-300 text-[#FF394A] focus:ring-[#FF394A] dark:border-zinc-700"
+                      />
+                      <span className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                        I confirm that the information provided is accurate. I understand this is a{' '}
+                        <b className="text-zinc-700 dark:text-zinc-300">volunteer opportunity</b> and as a member,
+                        I may earn bounties or grants for contributions.
+                      </span>
+                    </label>
+
+                    <button
+                      onClick={handleSubmit}
+                      disabled={!isFormValid || submitting}
+                      className="w-full rounded-xl bg-zinc-900 py-3 text-sm font-bold text-white transition-all hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+                    >
+                      {submitting ? 'Submitting...' : 'Submit Application'}
+                    </button>
+                  </div>
+                </div>
               )}
             </>
           )}

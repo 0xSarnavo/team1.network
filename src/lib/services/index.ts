@@ -10,3 +10,4 @@ export { notificationService } from './notification.service';
 export { uploadService } from './upload.service';
 export { homeService } from './home.service';
 export { portalService } from './portal.service';
+export { membershipApplicationService } from './membership-application.service';

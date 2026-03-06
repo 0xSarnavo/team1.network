@@ -16,7 +16,7 @@ const navLinks = [
   { href: '/portal', label: 'Portal' },
   { href: '/grants', label: 'Grants' },
   { href: '/bounty', label: 'Bounty' },
-  { href: '/ecosystem', label: 'Cascade' },
+  { href: 'https://cascade.team1.network/', label: 'Cascade', external: true },
   { href: '/member', label: 'Member', requiresAuth: true },
 ];
 
@@ -247,12 +247,16 @@ export function Navbar() {
                 );
               }
 
+              const LinkTag = (link as any).external ? 'a' : Link;
+              const extraProps = (link as any).external ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+
               return (
-                <Link
+                <LinkTag
                   key={link.href}
                   href={link.href}
                   className="group relative flex items-center w-max transition-all"
                   onClick={() => setMenuOpen(false)}
+                  {...extraProps}
                 >
                   <div className="flex items-start">
                     <div className="flex items-center justify-end overflow-hidden w-0 opacity-0 transition-all duration-300 group-hover:w-4 sm:group-hover:w-6 group-hover:opacity-100 group-hover:mr-1 text-zinc-900 dark:text-zinc-50 group-hover:!text-[#FF394A] mt-5 sm:mt-7">
@@ -268,7 +272,7 @@ export function Navbar() {
                       0{index + 1}
                     </div>
                   </div>
-                </Link>
+                </LinkTag>
               );
             })}
           </div>
