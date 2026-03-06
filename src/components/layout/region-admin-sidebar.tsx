@@ -10,9 +10,12 @@ import {
   Briefcase,
   CalendarDays,
   Megaphone,
-  FileText,
   Lightbulb,
   ArrowLeft,
+  Settings2,
+  FlaskConical,
+  Image,
+  Handshake,
 } from 'lucide-react';
 
 interface RegionAdminSidebarProps {
@@ -28,8 +31,13 @@ const navItems = [
   { id: 'programs', label: 'Programs', icon: Briefcase, path: '/programs' },
   { id: 'events', label: 'Events', icon: CalendarDays, path: '/events' },
   { id: 'announcements', label: 'Announcements', icon: Megaphone, path: '/announcements' },
-  { id: 'playbooks', label: 'Playbooks', icon: FileText, path: '/playbooks' },
   { id: 'proposals', label: 'Proposals', icon: Lightbulb, path: '/proposals' },
+  { id: 'operations', label: 'Operations', icon: Settings2, path: '/operations' },
+  { id: 'experiment', label: 'Experiment', icon: FlaskConical, path: '/experiment' },
+  { id: 'media', label: 'Media', icon: Image, path: '/media' },
+  { id: 'projects', label: 'Projects', icon: Briefcase, path: '/projects' },
+  { id: 'partners', label: 'Partners', icon: Handshake, path: '/partners' },
+  { id: 'mediakit', label: 'Mediakit', icon: Megaphone, path: '/mediakit' },
 ];
 
 export function RegionAdminSidebar({ slug, regionName, regionLogoUrl }: RegionAdminSidebarProps) {

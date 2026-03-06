@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useApi } from '@/lib/hooks/use-api';
 import { Card, CardContent } from '@/components/ui/card';
 import { PageLoader } from '@/components/ui/spinner';
-import { Users, CalendarDays, BookOpen, Briefcase, UserPlus, Megaphone, FileText, Lightbulb, Gift } from 'lucide-react';
+import { Users, CalendarDays, BookOpen, Briefcase, UserPlus, Megaphone, FileText, Lightbulb, Gift, ClipboardList, UserCheck, Settings2 } from 'lucide-react';
 
 interface OverviewStats {
   totalMembers: number;
@@ -27,19 +27,17 @@ const statCards = [
   { key: 'totalGuides', label: 'Guides', icon: BookOpen, color: 'text-purple-500' },
   { key: 'totalPrograms', label: 'Programs', icon: Briefcase, color: 'text-cyan-500' },
   { key: 'totalAnnouncements', label: 'Announcements', icon: Megaphone, color: 'text-orange-500' },
-  { key: 'totalPlaybooks', label: 'Playbooks', icon: FileText, color: 'text-indigo-500' },
   { key: 'activeProposals', label: 'Active Proposals', icon: Lightbulb, color: 'text-yellow-500' },
   { key: 'totalContributions', label: 'Contributions', icon: Gift, color: 'text-pink-500' },
 ] as const;
 
 const quickActions = [
-  { label: 'Manage Members', href: 'members', icon: Users },
-  { label: 'Manage Guides', href: 'guides', icon: BookOpen },
-  { label: 'Manage Programs', href: 'programs', icon: Briefcase },
-  { label: 'Manage Events', href: 'events', icon: CalendarDays },
+  { label: 'Applications', href: 'members', icon: FileText },
   { label: 'Announcements', href: 'announcements', icon: Megaphone },
-  { label: 'Playbooks', href: 'playbooks', icon: FileText },
-  { label: 'Proposals', href: 'proposals', icon: Lightbulb },
+  { label: 'Attendance', href: 'events', icon: UserCheck },
+  { label: 'Meeting Notes', href: 'guides', icon: ClipboardList },
+  { label: 'Vote / Polls', href: 'proposals', icon: Lightbulb },
+  { label: 'Manage Team', href: 'members', icon: Settings2 },
 ];
 
 export default function RegionAdminOverviewPage({ params }: { params: Promise<{ portalSlug: string }> }) {
