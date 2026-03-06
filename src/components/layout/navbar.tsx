@@ -156,20 +156,19 @@ export function Navbar() {
               )}
               
               <AnimatePresence>
-                <motion.div 
-                  layout
+                <motion.div                   layout
                   initial={false}
                   animate={{ 
-                    height: authDropdownOpen ? 80 : 36,
+                    height: authDropdownOpen ? 80 : 32,
                     borderRadius: 12
                   }}
                   transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                  className={`group absolute right-0 top-0 overflow-hidden flex flex-col justify-start text-zinc-900 border border-zinc-200 origin-top dark:text-zinc-50 dark:border-zinc-800 z-50 w-[96px] bg-white dark:bg-zinc-950 ${authDropdownOpen ? 'cursor-default shadow-xl' : 'hover:bg-zinc-900 hover:text-white dark:hover:bg-white dark:hover:text-black cursor-pointer transition-colors duration-300'}`}
+                  className={`group absolute right-0 top-0 overflow-hidden flex flex-col justify-start text-zinc-900 border border-zinc-200 origin-top dark:text-zinc-50 dark:border-zinc-800 z-50 w-[72px] bg-white dark:bg-zinc-950 ${authDropdownOpen ? 'cursor-default shadow-xl' : 'hover:bg-zinc-900 hover:text-white dark:hover:bg-white dark:hover:text-black cursor-pointer transition-colors duration-300'}`}
                   onClick={() => !authDropdownOpen && setAuthDropdownOpen(true)}
                 >
                   {/* Collapsed State Base Text */}
-                  <div className={`absolute top-0 right-0 w-full h-[36px] min-h-[36px] flex items-center justify-center transition-opacity duration-200 ${authDropdownOpen ? 'opacity-0 pointer-events-none' : 'opacity-100 delay-100'}`}>
-                    <span className="text-sm font-bold">Login</span>
+                  <div className={`absolute top-0 right-0 w-full h-[32px] min-h-[32px] flex items-center justify-center transition-opacity duration-200 ${authDropdownOpen ? 'opacity-0 pointer-events-none' : 'opacity-100 delay-100'}`}>
+                    <span className="text-xs font-bold">Login</span>
                   </div>
                   
                   {/* Expanded State Items */}
