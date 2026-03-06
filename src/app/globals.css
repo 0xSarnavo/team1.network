@@ -64,3 +64,55 @@ body {
   transform-origin: center;
   transform-box: fill-box;
 }
+
+/* ======================================================================== */
+/* Member Portal – Scoped Design Tokens                                      */
+/* ======================================================================== */
+
+.member-shell {
+  --m-bg:     #f7f7f8;
+  --m-s1:     #ffffff;
+  --m-s2:     #f0f0f2;
+  --m-s3:     #e6e6e9;
+  --m-border: rgba(0,0,0,0.07);
+  --m-bh:     rgba(0,0,0,0.13);
+  --m-text:   #111113;
+  --m-sub:    #7a7a84;
+  --m-dim:    #b4b4be;
+  --m-red:    #d93030;
+  --m-red-s:  rgba(217,48,48,0.1);
+}
+
+/* ======================================================================== */
+/* Member Portal – Animation Keyframes                                       */
+/* ======================================================================== */
+
+@keyframes m-fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes m-count-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes m-bar-fill {
+  from { width: 0; }
+  to   { width: var(--fill, 0%); }
+}
+@keyframes m-pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(217,48,48,0.4); }
+  70%  { box-shadow: 0 0 0 5px rgba(217,48,48,0); }
+  100% { box-shadow: 0 0 0 0 rgba(217,48,48,0); }
+}
+
+.m-fu  { animation: m-fade-up 0.36s ease both; }
+.m-fu1 { animation: m-fade-up 0.36s ease 0.05s both; }
+.m-fu2 { animation: m-fade-up 0.36s ease 0.10s both; }
+.m-fu3 { animation: m-fade-up 0.36s ease 0.15s both; }
+.m-fu4 { animation: m-fade-up 0.36s ease 0.20s both; }
+.m-fu5 { animation: m-fade-up 0.36s ease 0.25s both; }
+.m-fu6 { animation: m-fade-up 0.36s ease 0.30s both; }
+
+.m-count { animation: m-count-in 0.4s ease both; }
+.m-bar   { animation: m-bar-fill 1s cubic-bezier(0.22,1,0.36,1) 0.4s both; }
+.m-pulse { animation: m-pulse-ring 3s infinite; }
