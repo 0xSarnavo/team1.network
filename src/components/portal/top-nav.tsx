@@ -44,7 +44,7 @@ export function PortalTopNav({ currentRegion }: TopNavProps) {
             <div className="p-1">
               <DropdownMenu.Item 
                 className={`relative flex cursor-pointer select-none items-center rounded-md px-3 py-2 text-sm outline-none transition-colors data-[highlighted]:bg-zinc-100 dark:data-[highlighted]:bg-zinc-800 ${!currentRegion ? 'text-red-600 dark:text-red-400 font-medium' : 'text-zinc-700 dark:text-zinc-300'}`}
-                onSelect={() => router.push('/portal')}
+                onSelect={() => router.push('/portal/global')}
               >
                 Global
                 {!currentRegion && <Check className="ml-auto h-4 w-4" />}
@@ -58,7 +58,7 @@ export function PortalTopNav({ currentRegion }: TopNavProps) {
                 <DropdownMenu.Item 
                   key={region.id}
                   className={`relative flex cursor-pointer select-none items-center rounded-md px-3 py-2 text-sm outline-none transition-colors data-[highlighted]:bg-zinc-100 dark:data-[highlighted]:bg-zinc-800 ${currentRegion?.id === region.id ? 'text-red-600 dark:text-red-400 font-medium' : 'text-zinc-700 dark:text-zinc-300'}`}
-                  onSelect={() => router.push(`/portal/regions/${region.slug}`)}
+                  onSelect={() => router.push(`/portal/${region.slug}`)}
                 >
                   {region.name}
                   {currentRegion?.id === region.id && <Check className="ml-auto h-4 w-4" />}

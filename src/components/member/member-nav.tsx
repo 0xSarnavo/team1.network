@@ -26,7 +26,7 @@ export function MemberNav({ regionName = 'Global', userName = 'Builder', slug }:
       <div className="flex items-center gap-3">
         {/* Logo */}
         <Link
-          href="/portal"
+          href="/portal/global"
           style={{
             fontFamily: 'var(--font-syne), sans-serif',
             fontSize: 15,

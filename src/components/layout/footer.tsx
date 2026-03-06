@@ -6,7 +6,7 @@ const footerLinks = [
     title: 'Platform',
     links: [
       { label: 'Home', href: '/' },
-      { label: 'Portal', href: '/portal' },
+      { label: 'Portal', href: '/portal/global' },
       { label: 'Grants', href: '/grants' },
       { label: 'Bounty', href: '/bounty' },
       { label: 'Ecosystem', href: '/ecosystem' },

@@ -13,7 +13,7 @@ import { useGrantTab } from '@/components/grants/grant-tab-context';
 
 const navLinks = [
   { href: '/', label: 'Home' },
-  { href: '/portal', label: 'Portal' },
+  { href: '/portal/global', label: 'Portal' },
   { href: '/grants', label: 'Grants' },
   { href: '/bounty', label: 'Bounty' },
   { href: 'https://cascade.team1.network/', label: 'Cascade', external: true },

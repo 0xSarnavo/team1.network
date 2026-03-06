@@ -82,7 +82,7 @@ export default function BountySubmissionsReviewPage() {
     <div className="mx-auto max-w-5xl px-4 pb-8 pt-24">
       {/* Header */}
       <div className="mb-6">
-        <Link href={`/portal/regions/${slug}/bounties`} className="mb-3 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-zinc-400 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100">
+        <Link href={`/portal/${slug}/bounties`} className="mb-3 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-zinc-400 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100">
           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
           Back
         </Link>

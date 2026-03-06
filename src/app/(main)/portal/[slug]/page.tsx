@@ -70,7 +70,7 @@ export default function RegionDetailPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 pb-12 pt-24">
       {/* Back */}
-      <Link href="/portal" className="mb-6 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-zinc-400 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100">
+      <Link href="/portal/global" className="mb-6 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-zinc-400 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100">
         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
         Portal
       </Link>
@@ -89,7 +89,7 @@ export default function RegionDetailPage() {
         </div>
         {isLead && (
           <Link
-            href={`/portal/regions/${slug}/manage`}
+            href={`/portal/${slug}/manage`}
             className="shrink-0 inline-flex items-center rounded-full border border-zinc-300 bg-white px-5 py-2 text-xs font-bold text-zinc-900 transition-all hover:bg-zinc-900 hover:text-white dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-white dark:hover:text-zinc-900 active:scale-95"
           >
             Manage

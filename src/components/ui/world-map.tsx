@@ -240,7 +240,7 @@ export function WorldMap({ regions }: WorldMapProps) {
             className="cursor-pointer"
             onMouseEnter={() => setHovered(r.id)}
             onMouseLeave={() => setHovered(null)}
-            onClick={() => router.push(`/portal/regions/${r.slug}`)}
+            onClick={() => router.push(`/portal/${r.slug}`)}
           />
 
           {/* Label (always visible on desktop) */}

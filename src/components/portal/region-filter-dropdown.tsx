@@ -84,7 +84,7 @@ export function RegionFilterDropdown() {
                   setSelectedRegion('');
                   setIsOpen(false);
                   setSearch('');
-                  router.push('/portal');
+                  router.push('/portal/global');
                 }}
                 className={`flex w-full items-center justify-center rounded-md px-3 py-2 text-sm font-bold transition-colors ${
                   selectedRegion === '' 

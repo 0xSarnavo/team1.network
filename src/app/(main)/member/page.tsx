@@ -13,7 +13,7 @@ export default function MemberRedirectPage() {
     if (loading) return;
 
     if (!user || !user.isMember || !user.primaryRegionSlug) {
-      router.replace('/portal');
+      router.replace('/portal/global');
       return;
     }
 

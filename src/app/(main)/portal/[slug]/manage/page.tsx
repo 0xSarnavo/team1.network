@@ -46,10 +46,10 @@ export default function RegionManageOverview() {
         <h3 className="mb-4 text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">Quick Actions</h3>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { href: `/portal/regions/${slug}/manage/members`, title: 'Manage Members', desc: 'Add, accept, or remove members', badge: stats.pendingMembers > 0 ? `${stats.pendingMembers} pending` : null },
-            { href: `/portal/regions/${slug}/manage/events`, title: 'Manage Events', desc: 'Create and manage region events', badge: null },
-            { href: `/portal/regions/${slug}/manage/guides`, title: 'Manage Guides', desc: 'Create guides and playbooks', badge: null },
-            { href: `/portal/regions/${slug}/manage/bounties`, title: 'Manage Bounties', desc: 'Create bounties and review submissions', badge: null },
+            { href: `/portal/${slug}/manage/members`, title: 'Manage Members', desc: 'Add, accept, or remove members', badge: stats.pendingMembers > 0 ? `${stats.pendingMembers} pending` : null },
+            { href: `/portal/${slug}/manage/events`, title: 'Manage Events', desc: 'Create and manage region events', badge: null },
+            { href: `/portal/${slug}/manage/guides`, title: 'Manage Guides', desc: 'Create guides and playbooks', badge: null },
+            { href: `/portal/${slug}/manage/bounties`, title: 'Manage Bounties', desc: 'Create bounties and review submissions', badge: null },
           ].map((action) => (
             <Link key={action.href} href={action.href}>
               <div className="rounded-xl border border-zinc-200/60 p-4 transition-colors hover:border-zinc-300 dark:border-zinc-800/60 dark:hover:border-zinc-700 cursor-pointer h-full">

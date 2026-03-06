@@ -54,7 +54,7 @@ export default function MemberLayout({ children }: { children: React.ReactNode }
   useEffect(() => {
     if (authLoading) return;
     if (!authUser || !authUser.isMember) {
-      router.replace('/portal');
+      router.replace('/portal/global');
     }
   }, [authUser, authLoading, router]);
 

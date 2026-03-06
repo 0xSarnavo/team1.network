@@ -120,7 +120,7 @@ export default function EcosystemPage() {
           Explore the portal in the meantime.
         </p>
         <div className="flex justify-center gap-4">
-          <Link href="/portal">
+          <Link href="/portal/global">
             <Button variant="primary">Explore Portal</Button>
           </Link>
           <Link href="/grants">

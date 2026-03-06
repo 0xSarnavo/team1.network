@@ -50,17 +50,17 @@ export default function RegionManageBountiesPage() {
       <div className="mb-6 flex items-center justify-between">
         <p className="text-sm text-zinc-500">Manage bounties for {regionInfo.region.name}.</p>
         <div className="flex gap-2">
-          <Link href={`/portal/regions/${slug}/bounties/submissions`}>
+          <Link href={`/portal/${slug}/bounties/submissions`}>
             <button className="rounded-full border border-zinc-300 px-4 py-1.5 text-xs font-bold text-zinc-600 transition-all hover:bg-zinc-900 hover:text-white hover:border-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-white dark:hover:text-zinc-900 dark:hover:border-white active:scale-95">
               Review Submissions
             </button>
           </Link>
-          <Link href={`/portal/regions/${slug}/bounties/reviewers`}>
+          <Link href={`/portal/${slug}/bounties/reviewers`}>
             <button className="rounded-full border border-zinc-300 px-4 py-1.5 text-xs font-bold text-zinc-600 transition-all hover:bg-zinc-900 hover:text-white hover:border-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-white dark:hover:text-zinc-900 dark:hover:border-white active:scale-95">
               Reviewers
             </button>
           </Link>
-          <Link href={`/portal/regions/${slug}/bounties`}>
+          <Link href={`/portal/${slug}/bounties`}>
             <button className="rounded-full bg-zinc-900 px-5 py-1.5 text-xs font-bold text-white transition-all hover:opacity-90 dark:bg-white dark:text-zinc-900 active:scale-95">
               Manage Bounties
             </button>
@@ -72,7 +72,7 @@ export default function RegionManageBountiesPage() {
         <EmptyState
           title="No bounties yet"
           description="Create bounties to reward community contributions."
-          action={{ label: 'Create Bounty', onClick: () => router.push(`/portal/regions/${slug}/bounties`) }}
+          action={{ label: 'Create Bounty', onClick: () => router.push(`/portal/${slug}/bounties`) }}
         />
       ) : (
         <div className="space-y-2">
@@ -96,7 +96,7 @@ export default function RegionManageBountiesPage() {
                     {b.endsAt && <span>Ends: {new Date(b.endsAt).toLocaleDateString()}</span>}
                   </div>
                 </div>
-                <Link href={`/portal/regions/${slug}/bounties`}>
+                <Link href={`/portal/${slug}/bounties`}>
                   <button className="text-[10px] font-bold text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100">Edit</button>
                 </Link>
               </div>

@@ -148,7 +148,7 @@ export default function RegionBountiesPage() {
     <div className="mx-auto max-w-5xl px-4 pb-8 pt-24">
       {/* Header */}
       <div className="mb-6">
-        <Link href={`/portal/regions/${slug}/manage`} className="mb-3 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-zinc-400 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100">
+        <Link href={`/portal/${slug}/manage`} className="mb-3 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-zinc-400 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100">
           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
           Back
         </Link>
@@ -158,12 +158,12 @@ export default function RegionBountiesPage() {
             <p className="mt-1 text-sm text-zinc-500">Create and manage bounties for {regionInfo.region.name}</p>
           </div>
           <div className="flex gap-2">
-            <Link href={`/portal/regions/${slug}/bounties/submissions`}>
+            <Link href={`/portal/${slug}/bounties/submissions`}>
               <button className="rounded-full border border-zinc-300 px-4 py-1.5 text-xs font-bold text-zinc-600 transition-all hover:bg-zinc-900 hover:text-white hover:border-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-white dark:hover:text-zinc-900 dark:hover:border-white active:scale-95">
                 Review Submissions
               </button>
             </Link>
-            <Link href={`/portal/regions/${slug}/bounties/reviewers`}>
+            <Link href={`/portal/${slug}/bounties/reviewers`}>
               <button className="rounded-full border border-zinc-300 px-4 py-1.5 text-xs font-bold text-zinc-600 transition-all hover:bg-zinc-900 hover:text-white hover:border-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-white dark:hover:text-zinc-900 dark:hover:border-white active:scale-95">
                 Manage Reviewers
               </button>
