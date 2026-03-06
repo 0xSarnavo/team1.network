@@ -64,9 +64,6 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <CalendarDays className="h-5 w-5 text-red-500" />
         <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400">{event.type}</span>
-        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-          event.status === 'published' ? 'bg-green-900/30 text-green-400' : 'bg-zinc-800 text-zinc-400'
-        }`}>{event.status}</span>
       </div>
 
       <h1 className="mb-4 text-3xl font-black text-zinc-900 dark:text-zinc-50">{event.title}</h1>
