@@ -21,8 +21,8 @@ function ResetPasswordContent() {
 
   if (!token) {
     return (
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-8 text-center">
-        <h1 className="mb-2 text-2xl font-bold text-zinc-100">Invalid Link</h1>
+      <div className="rounded-2xl border border-zinc-200 bg-white p-8 text-center shadow-sm dark:border-zinc-800 dark:bg-black">
+        <h1 className="mb-2 text-2xl font-bold text-zinc-900 dark:text-zinc-100">Invalid Link</h1>
         <p className="text-sm text-zinc-500">This password reset link is invalid or expired.</p>
         <Link href="/auth/forgot-password">
           <Button variant="primary" className="mt-6">Request New Link</Button>
@@ -55,12 +55,12 @@ function ResetPasswordContent() {
   };
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-8">
-      <h1 className="mb-2 text-2xl font-bold text-zinc-100">Reset password</h1>
+    <div className="rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-black">
+      <h1 className="mb-2 text-2xl font-bold text-zinc-900 dark:text-zinc-100">Reset password</h1>
       <p className="mb-6 text-sm text-zinc-500">Enter your new password below.</p>
 
       {error && (
-        <div className="mb-4 rounded-lg bg-red-900/30 border border-red-800 px-4 py-3 text-sm text-red-400">{error}</div>
+        <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-600 dark:bg-red-900/30 dark:border-red-800 dark:text-red-400">{error}</div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">

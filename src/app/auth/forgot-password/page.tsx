@@ -32,11 +32,11 @@ export default function ForgotPasswordPage() {
 
   if (sent) {
     return (
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-8 text-center">
-        <svg className="mx-auto mb-4 h-12 w-12 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div className="rounded-2xl border border-zinc-200 bg-white p-8 text-center shadow-sm dark:border-zinc-800 dark:bg-black">
+        <svg className="mx-auto mb-4 h-12 w-12 text-green-500 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
         </svg>
-        <h1 className="mb-2 text-2xl font-bold text-zinc-100">Check your email</h1>
+        <h1 className="mb-2 text-2xl font-bold text-zinc-900 dark:text-zinc-100">Check your email</h1>
         <p className="text-sm text-zinc-500">
           If an account exists with <span className="text-zinc-300">{email}</span>,
           we&apos;ve sent a password reset link.
@@ -49,12 +49,12 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-8">
-      <h1 className="mb-2 text-2xl font-bold text-zinc-100">Forgot password?</h1>
+    <div className="rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-black">
+      <h1 className="mb-2 text-2xl font-bold text-zinc-900 dark:text-zinc-100">Forgot password?</h1>
       <p className="mb-6 text-sm text-zinc-500">Enter your email and we&apos;ll send you a reset link.</p>
 
       {error && (
-        <div className="mb-4 rounded-lg bg-red-900/30 border border-red-800 px-4 py-3 text-sm text-red-400">{error}</div>
+        <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-600 dark:bg-red-900/30 dark:border-red-800 dark:text-red-400">{error}</div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">

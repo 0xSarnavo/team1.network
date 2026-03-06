@@ -29,7 +29,7 @@ export function RegionFilterDropdown() {
     : 'All Regions';
 
   return (
-    <div className="relative z-50 h-[40px] w-[140px] shrink-0" ref={containerRef}>
+    <div className="relative z-50 h-[36px] w-[120px] shrink-0" ref={containerRef}>
       {isOpen && (
         <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setIsOpen(false)} />
       )}
@@ -39,22 +39,22 @@ export function RegionFilterDropdown() {
           layout
           initial={false}
           animate={{
-            height: isOpen ? 'auto' : 40,
-            borderRadius: 16
+            height: isOpen ? 'auto' : 36,
+            borderRadius: 12
           }}
           transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-          className={`group absolute left-0 top-0 w-[140px] min-w-[140px] overflow-hidden flex flex-col justify-start bg-white text-zinc-900 border border-zinc-200 origin-top dark:bg-zinc-950 dark:text-white dark:border-zinc-800 z-50 ${isOpen ? 'shadow-xl cursor-default' : 'hover:bg-zinc-900 hover:text-white dark:hover:bg-white dark:hover:text-black cursor-pointer transition-colors duration-300'}`}
+          className={`group absolute left-0 top-0 w-[120px] min-w-[120px] overflow-hidden flex flex-col justify-start bg-white text-zinc-900 border border-zinc-200 origin-top dark:bg-zinc-950 dark:text-white dark:border-zinc-800 z-50 ${isOpen ? 'shadow-xl cursor-default' : 'hover:bg-zinc-900 hover:text-white dark:hover:bg-white dark:hover:text-black cursor-pointer transition-colors duration-300'}`}
           onClick={() => !isOpen && setIsOpen(true)}
         >
           {/* Collapsed / Top Bar */}
           <div 
-            className="w-full h-[40px] min-h-[40px] shrink-0 flex items-center justify-center px-4 transition-colors cursor-pointer"
+            className="w-full h-[36px] min-h-[36px] shrink-0 flex items-center justify-center px-3 transition-colors cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
               setIsOpen(!isOpen);
             }}
           >
-            <span className="text-sm font-bold uppercase tracking-wider truncate">
+            <span className="text-xs font-bold uppercase tracking-wider truncate">
               {currentRegionName === 'All Regions' ? 'Global' : currentRegionName || 'Global'}
             </span>
           </div>

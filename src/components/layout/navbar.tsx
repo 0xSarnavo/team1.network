@@ -33,14 +33,14 @@ export function Navbar() {
   const grantTab = useGrantTab();
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 pointer-events-none p-4 mt-2">
+    <header className="fixed top-0 left-0 right-0 z-50 pointer-events-none p-3 pt-3">
       <nav className="flex w-full items-center justify-between pointer-events-auto">
         {/* Left side: Hamburger + Back button (conditional, right of menu) */}
         <div className="flex items-center justify-start gap-2">
           <motion.button 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.92 }}
-            className={`group flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white dark:bg-zinc-950 text-zinc-900 transition-colors hover:bg-zinc-900 hover:text-white dark:text-zinc-50 border border-zinc-200 dark:border-zinc-800 focus:outline-none dark:hover:bg-white dark:hover:text-black ${menuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} 
+            className={`group flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white dark:bg-zinc-950 text-zinc-900 transition-colors hover:bg-zinc-900 hover:text-white dark:text-zinc-50 border border-zinc-200 dark:border-zinc-800 focus:outline-none dark:hover:bg-white dark:hover:text-black ${menuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} 
             onClick={() => setMenuOpen(!menuOpen)}
           >
             <svg className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -50,7 +50,7 @@ export function Navbar() {
           {isGrantDetail && (
             <button
               onClick={() => router.push('/grants')}
-              className="group flex h-10 w-10 items-center justify-center rounded-xl bg-white dark:bg-zinc-950 text-zinc-900 transition-all duration-300 hover:bg-zinc-900 hover:text-white dark:text-zinc-50 border border-zinc-200 dark:border-zinc-800 focus:outline-none dark:hover:bg-white dark:hover:text-black"
+              className="group flex h-9 w-9 items-center justify-center rounded-lg bg-white dark:bg-zinc-950 text-zinc-900 transition-all duration-300 hover:bg-zinc-900 hover:text-white dark:text-zinc-50 border border-zinc-200 dark:border-zinc-800 focus:outline-none dark:hover:bg-white dark:hover:text-black"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -85,9 +85,9 @@ export function Navbar() {
           )}
           {isPortal && <RegionFilterDropdown />}
           {loading ? (
-            <div className="h-10 w-10 animate-pulse rounded-full bg-zinc-200 shadow-lg dark:bg-zinc-800" />
+            <div className="h-9 w-9 animate-pulse rounded-full bg-zinc-200 shadow-lg dark:bg-zinc-800" />
           ) : user ? (
-            <div className="relative z-50 flex justify-end items-start shrink-0 h-12 w-12">
+            <div className="relative z-50 flex justify-end items-start shrink-0 h-9 w-9">
               {profileOpen && (
                 <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setProfileOpen(false)} />
               )}
@@ -97,16 +97,16 @@ export function Navbar() {
                   layout
                   initial={false}
                   animate={{ 
-                    width: profileOpen ? 224 : 48,
-                    height: profileOpen ? (isAdmin ? 298 : 262) : 48,
-                    borderRadius: profileOpen ? 16 : 24
+                    width: profileOpen ? 224 : 36,
+                    height: profileOpen ? (isAdmin ? 298 : 262) : 36,
+                    borderRadius: profileOpen ? 16 : 18
                   }}
                   transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                   className={`absolute right-0 top-0 overflow-hidden flex flex-col justify-start bg-white border border-zinc-200 origin-top-right shadow-lg dark:bg-zinc-950 dark:border-zinc-800 z-50 ${profileOpen ? 'cursor-default' : 'hover:scale-105 cursor-pointer transition-transform duration-300'}`}
                   onClick={() => !profileOpen && setProfileOpen(true)}
                 >
                   {/* Collapsed State Base Avatar */}
-                  <div className={`absolute top-0 right-0 w-[48px] h-[48px] p-[2px] transition-opacity duration-200 flex items-center justify-center ${profileOpen ? 'opacity-0 pointer-events-none' : 'opacity-100 delay-100'}`}>
+                  <div className={`absolute top-0 right-0 w-[36px] h-[36px] p-[2px] transition-opacity duration-200 flex items-center justify-center ${profileOpen ? 'opacity-0 pointer-events-none' : 'opacity-100 delay-100'}`}>
                     <Avatar src={user.avatarUrl} alt={user.displayName} size="sm" className="h-full w-full pointer-events-none" />
                   </div>
                   
@@ -150,7 +150,7 @@ export function Navbar() {
               </AnimatePresence>
             </div>
           ) : (
-            <div className="relative z-50 h-[40px] w-[110px] flex justify-end items-start shrink-0">
+            <div className="relative z-50 h-[36px] w-[96px] flex justify-end items-start shrink-0">
               {authDropdownOpen && (
                 <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setAuthDropdownOpen(false)} />
               )}
@@ -160,24 +160,24 @@ export function Navbar() {
                   layout
                   initial={false}
                   animate={{ 
-                    height: authDropdownOpen ? 88 : 40,
-                    borderRadius: 16
+                    height: authDropdownOpen ? 80 : 36,
+                    borderRadius: 12
                   }}
                   transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                  className={`group absolute right-0 top-0 overflow-hidden flex flex-col justify-start text-zinc-900 border border-zinc-200 origin-top dark:text-zinc-50 dark:border-zinc-800 z-50 w-[110px] bg-white dark:bg-zinc-950 ${authDropdownOpen ? 'cursor-default shadow-xl' : 'hover:bg-zinc-900 hover:text-white dark:hover:bg-white dark:hover:text-black cursor-pointer transition-colors duration-300'}`}
+                  className={`group absolute right-0 top-0 overflow-hidden flex flex-col justify-start text-zinc-900 border border-zinc-200 origin-top dark:text-zinc-50 dark:border-zinc-800 z-50 w-[96px] bg-white dark:bg-zinc-950 ${authDropdownOpen ? 'cursor-default shadow-xl' : 'hover:bg-zinc-900 hover:text-white dark:hover:bg-white dark:hover:text-black cursor-pointer transition-colors duration-300'}`}
                   onClick={() => !authDropdownOpen && setAuthDropdownOpen(true)}
                 >
                   {/* Collapsed State Base Text */}
-                  <div className={`absolute top-0 right-0 w-full h-[40px] min-h-[40px] flex items-center justify-center transition-opacity duration-200 ${authDropdownOpen ? 'opacity-0 pointer-events-none' : 'opacity-100 delay-100'}`}>
+                  <div className={`absolute top-0 right-0 w-full h-[36px] min-h-[36px] flex items-center justify-center transition-opacity duration-200 ${authDropdownOpen ? 'opacity-0 pointer-events-none' : 'opacity-100 delay-100'}`}>
                     <span className="text-sm font-bold">Login</span>
                   </div>
                   
                   {/* Expanded State Items */}
-                  <div className={`flex flex-col w-full h-full p-1.5 gap-1 text-zinc-900 dark:text-zinc-100 transition-opacity duration-300 ${authDropdownOpen ? 'opacity-100 delay-150' : 'opacity-0 pointer-events-none'}`}>
-                    <Link href="/auth/login" className="flex-1 flex items-center justify-center px-4 text-sm font-bold hover:bg-zinc-900 hover:text-white rounded-lg dark:hover:bg-white dark:hover:text-black transition-colors" onClick={(e) => { e.stopPropagation(); setAuthDropdownOpen(false); }}>
+                  <div className={`flex flex-col w-full h-full p-1 gap-1 text-zinc-900 dark:text-zinc-100 transition-opacity duration-300 ${authDropdownOpen ? 'opacity-100 delay-150' : 'opacity-0 pointer-events-none'}`}>
+                    <Link href="/auth/login" className="flex-1 flex items-center justify-center px-3 text-sm font-bold hover:bg-zinc-900 hover:text-white rounded-lg dark:hover:bg-white dark:hover:text-black transition-colors" onClick={(e) => { e.stopPropagation(); setAuthDropdownOpen(false); }}>
                       Login
                     </Link>
-                    <Link href="/auth/signup" className="flex-1 flex items-center justify-center px-4 text-sm font-bold hover:bg-zinc-900 hover:text-white rounded-lg dark:hover:bg-white dark:hover:text-black transition-colors" onClick={(e) => { e.stopPropagation(); setAuthDropdownOpen(false); }}>
+                    <Link href="/auth/signup" className="flex-1 flex items-center justify-center px-3 text-sm font-bold hover:bg-zinc-900 hover:text-white rounded-lg dark:hover:bg-white dark:hover:text-black transition-colors" onClick={(e) => { e.stopPropagation(); setAuthDropdownOpen(false); }}>
                       Signup
                     </Link>
                   </div>

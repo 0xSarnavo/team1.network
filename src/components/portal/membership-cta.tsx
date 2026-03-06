@@ -21,7 +21,7 @@ export function MembershipCTA() {
   const isMember = user && data?.isMember;
 
   return (
-    <div className="relative overflow-hidden rounded-[20px] border border-zinc-200 bg-white dark:border-zinc-800/80 dark:bg-[#0f0a0a]">
+    <div className="relative overflow-hidden rounded-[20px] border border-zinc-200 bg-transparent dark:border-zinc-800/60">
       {/* Subtle top glow line to match reference */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-[#FF394A]/30 to-transparent" />
       {/* Soft dark red top gradient bleed */}

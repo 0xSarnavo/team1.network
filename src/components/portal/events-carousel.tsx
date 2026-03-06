@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useApi } from '@/lib/hooks/use-api';
 import { useRegionFilter } from './region-filter-context';
@@ -38,8 +38,30 @@ export function EventsCarousel() {
   const [eventType, setEventType] = useState('');
 
   const { data: events, loading } = useApi<Event[]>(
-    `/api/portal/events?region=${selectedRegion}&type=${eventType}&search=${search}`
+    `/api/portal/events?region=${selectedRegion}&type=${eventType === 'all' ? '' : eventType}&search=${search}`
   );
+
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const eventTypes = [
+    { value: 'all', label: 'All' },
+    { value: 'meetup', label: 'Meetup' },
+    { value: 'hackathon', label: 'Hackathon' },
+    { value: 'workshop', label: 'Workshop' },
+    { value: 'conference', label: 'Conference' },
+    { value: 'webinar', label: 'Webinar' },
+  ];
 
   const filters = (
     <div className="flex items-center gap-2">
@@ -49,18 +71,49 @@ export function EventsCarousel() {
         placeholder="Search..."
         className="h-8 w-32 rounded-lg border-zinc-200/50 bg-zinc-50 px-3 text-xs dark:border-zinc-800/80 dark:bg-zinc-950"
       />
-      <select
-        value={eventType}
-        onChange={(e) => setEventType(e.target.value)}
-        className="h-8 rounded-lg border border-zinc-200/50 bg-zinc-50 px-3 text-xs text-zinc-600 outline-none dark:border-zinc-800/80 dark:bg-zinc-950 dark:text-zinc-400"
-      >
-        <option value="">All</option>
-        <option value="meetup">Meetup</option>
-        <option value="hackathon">Hackathon</option>
-        <option value="workshop">Workshop</option>
-        <option value="conference">Conference</option>
-        <option value="webinar">Webinar</option>
-      </select>
+      
+      <div className="relative" ref={dropdownRef}>
+        <button
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          className="flex h-8 items-center gap-2 rounded-lg border border-zinc-200/50 bg-zinc-50 px-3 text-xs text-zinc-600 outline-none transition-colors hover:bg-zinc-100 dark:border-zinc-800/80 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-900"
+        >
+          {eventTypes.find((t) => t.value === (eventType || 'all'))?.label}
+          <svg className={`h-3 w-3 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {isDropdownOpen && (
+          <div className="absolute right-0 top-full mt-1 z-50 w-32 overflow-hidden rounded-xl border border-zinc-200/50 bg-white shadow-xl dark:border-zinc-800/80 dark:bg-[#111111]">
+            <div className="p-1">
+              {eventTypes.map((type) => {
+                const isSelected = (eventType || 'all') === type.value;
+                return (
+                  <button
+                    key={type.value}
+                    onClick={() => {
+                      setEventType(type.value === 'all' ? '' : type.value);
+                      setIsDropdownOpen(false);
+                    }}
+                    className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs transition-colors ${
+                      isSelected 
+                        ? 'bg-zinc-100 font-medium text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100' 
+                        : 'text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-900/50'
+                    }`}
+                  >
+                    {isSelected && (
+                      <svg className="h-3 w-3 shrink-0 text-zinc-900 dark:text-zinc-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                    <span className={isSelected ? '' : 'pl-5'}>{type.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 
